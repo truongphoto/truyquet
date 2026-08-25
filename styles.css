@@ -521,38 +521,32 @@
 .h18-title-version{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:rgba(255,225,105,.12);border:1px solid rgba(255,225,105,.22);color:#ffe88d;font-size:.82em;letter-spacing:.06em;vertical-align:1px}
 
 @media (min-width:1180px) and (hover:hover) and (pointer:fine){.h17-game-fire-buttons button{height:32px!important;font-size:7.2px!important}.h17-game-fire-mode>span{font-size:7.2px!important}}
-
-
-/* === v3.9.0 J1 FINAL · gameplay-only fire mode · balanced rails · delayed item activation · author footer === */
+\n\n/* === v3.9.0 J1 · gameplay-only fire mode · balanced rails · author footer · 3s item countdown === */
+/* AUTO / THỦ CÔNG exists only inside the live gameplay rail. */
 #desktopFireModeBlock,#pauseFireModeBlock{display:none!important}
-.j1-game-author-footer{position:absolute;z-index:16;left:190px;right:190px;bottom:2px;height:16px;display:flex;align-items:center;justify-content:center;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(207,241,237,.68);font-size:7px;font-weight:750;letter-spacing:.035em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
-.j1-pending-list{display:grid;gap:4px;flex:0 0 auto;max-height:112px;overflow:auto;pointer-events:auto;scrollbar-width:thin}
-.j1-pending-item{width:100%;min-height:34px;border:1px solid rgba(255,224,115,.28);border-radius:8px;background:linear-gradient(90deg,rgba(77,62,13,.40),rgba(5,55,59,.62));color:#effffb;display:grid;grid-template-columns:22px 1fr auto;grid-template-rows:auto 4px;align-items:center;gap:2px 5px;padding:4px 5px;cursor:pointer;text-align:left}
-.j1-pending-item:hover{filter:brightness(1.12)}.j1-pending-item:active{transform:scale(.985)}
-.j1-pending-item .icon{grid-row:1/3;font-size:15px;text-align:center}.j1-pending-item b{font-size:6.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.j1-pending-item strong{font-size:7px;color:#ffe889}.j1-pending-item i{grid-column:2/4;display:block;height:3px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}.j1-pending-item i:after{content:"";display:block;height:100%;width:var(--j1-pct,100%);background:linear-gradient(90deg,#ffe371,#63eadf)}
-.j1-pending-item.waiting{opacity:.82}.j1-pending-item.invalid{border-color:rgba(255,143,143,.38)}.j1-pending-item.invalid strong{color:#ffb4b4}
-.j1-mobile-pending-strip{position:absolute;z-index:20;display:none;gap:4px;bottom:max(80px,calc(env(safe-area-inset-bottom) + 76px));right:max(7px,env(safe-area-inset-right));max-width:64vw;pointer-events:auto;justify-content:flex-end;flex-wrap:wrap}
-.j1-mobile-pending-strip button{height:24px;padding:0 7px;border-radius:999px;border:1px solid rgba(255,226,118,.30);background:rgba(61,49,10,.84);color:#fff2ae;font-size:7px;font-weight:1000;box-shadow:0 4px 12px rgba(0,0,0,.2)}
-/* Equal desktop rail footprint. Footer gets its own thin lane under both rails. */
+.h16-fire-mode-hud{display:none!important}
+
 @media (min-width:1180px) and (hover:hover) and (pointer:fine){
-  .status-rail{width:176px!important;left:8px!important;bottom:20px!important}
-  .weapon-panel{width:176px!important;right:8px!important;bottom:20px!important}
-  .game-quick-actions{left:18px!important;right:auto!important}
-  .j1-game-author-footer{left:192px;right:192px;bottom:1px;height:17px;font-size:7px}
-  #gameFireModeBlock{display:grid!important}
+  .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
+  .weapon-panel{right:8px!important;left:auto!important;top:8px!important;bottom:50px!important;width:176px!important;height:auto!important;transform:none!important;padding:8px!important;gap:6px!important;overflow:hidden!important}
+  .right-combat-summary{flex:0 0 auto!important}
+  .h17-game-fire-mode{flex:0 0 auto!important}
+  .weapon-buttons{min-height:0!important;overflow:auto!important}
 }
+
+.j1-game-author-footer{position:absolute;z-index:19;left:50%;bottom:5px;transform:translateX(-50%);max-width:calc(100vw - 390px);padding:3px 10px;border-radius:999px;background:rgba(2,29,34,.66);border:1px solid rgba(112,231,223,.16);color:#a9d6d3;font-size:7px;font-weight:850;letter-spacing:.035em;white-space:nowrap;pointer-events:none;text-align:center}
+.j1-powerup-countdown{font-weight:1000}
 @media (max-width:1179px),(hover:none),(pointer:coarse){
-  #gameFireModeBlock{display:none!important}
-  .j1-game-author-footer{left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));bottom:1px;height:12px;font-size:5.5px;letter-spacing:0;opacity:.78}
-  .j1-mobile-pending-strip{display:flex!important}
+  .j1-game-author-footer{left:50%;bottom:1px;max-width:82vw;padding:2px 7px;font-size:5.3px;overflow:hidden;text-overflow:ellipsis}
 }
-@media (max-height:470px) and (orientation:landscape){
-  .j1-game-author-footer{font-size:5px;height:10px}
-  .j1-mobile-pending-strip{bottom:max(69px,calc(env(safe-area-inset-bottom) + 65px))}
+@media (max-height:470px) and (orientation:landscape){.j1-game-author-footer{font-size:4.8px;bottom:0}}
+
+/* J1 final rail geometry: at desktop width both combat rails are exactly 176px. */
+@media (min-width:1180px){
+  .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
+  .weapon-panel{right:8px!important;left:auto!important;top:8px!important;bottom:50px!important;width:176px!important;height:auto!important;transform:none!important;padding:8px!important;gap:6px!important;overflow:hidden!important}
 }
-/* J1 pause visibility guard + dedicated mobile footer lane. */
-#pausePanel:not(.hidden) ~ #hud #gameFireModeBlock{display:none!important}
-@media (max-width:1179px),(hover:none),(pointer:coarse){
-  .weapon-panel{bottom:max(18px,calc(env(safe-area-inset-bottom) + 16px))!important}
-  .mobile-brand{bottom:max(20px,calc(env(safe-area-inset-bottom) + 18px))!important}
+/* Touch layouts take precedence even on wide tablets. Leave a footer lane below the weapon bar. */
+@media (hover:none),(pointer:coarse){
+  .weapon-panel{right:auto!important;left:50%!important;transform:translateX(-50%)!important;top:auto!important;bottom:max(17px,calc(env(safe-area-inset-bottom) + 15px))!important;width:auto!important;height:46px!important;display:flex!important;flex-direction:row!important;padding:4px!important}
 }
