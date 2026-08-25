@@ -521,3 +521,32 @@
 .h18-title-version{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:rgba(255,225,105,.12);border:1px solid rgba(255,225,105,.22);color:#ffe88d;font-size:.82em;letter-spacing:.06em;vertical-align:1px}
 
 @media (min-width:1180px) and (hover:hover) and (pointer:fine){.h17-game-fire-buttons button{height:32px!important;font-size:7.2px!important}.h17-game-fire-mode>span{font-size:7.2px!important}}
+\n\n/* === v3.9.0 J1 · gameplay-only fire mode · balanced rails · author footer · 3s item countdown === */
+/* AUTO / THỦ CÔNG exists only inside the live gameplay rail. */
+#desktopFireModeBlock,#pauseFireModeBlock{display:none!important}
+.h16-fire-mode-hud{display:none!important}
+
+@media (min-width:1180px) and (hover:hover) and (pointer:fine){
+  .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
+  .weapon-panel{right:8px!important;left:auto!important;top:8px!important;bottom:50px!important;width:176px!important;height:auto!important;transform:none!important;padding:8px!important;gap:6px!important;overflow:hidden!important}
+  .right-combat-summary{flex:0 0 auto!important}
+  .h17-game-fire-mode{flex:0 0 auto!important}
+  .weapon-buttons{min-height:0!important;overflow:auto!important}
+}
+
+.j1-game-author-footer{position:absolute;z-index:19;left:50%;bottom:5px;transform:translateX(-50%);max-width:calc(100vw - 390px);padding:3px 10px;border-radius:999px;background:rgba(2,29,34,.66);border:1px solid rgba(112,231,223,.16);color:#a9d6d3;font-size:7px;font-weight:850;letter-spacing:.035em;white-space:nowrap;pointer-events:none;text-align:center}
+.j1-powerup-countdown{font-weight:1000}
+@media (max-width:1179px),(hover:none),(pointer:coarse){
+  .j1-game-author-footer{left:50%;bottom:1px;max-width:82vw;padding:2px 7px;font-size:5.3px;overflow:hidden;text-overflow:ellipsis}
+}
+@media (max-height:470px) and (orientation:landscape){.j1-game-author-footer{font-size:4.8px;bottom:0}}
+
+/* J1 final rail geometry: at desktop width both combat rails are exactly 176px. */
+@media (min-width:1180px){
+  .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
+  .weapon-panel{right:8px!important;left:auto!important;top:8px!important;bottom:50px!important;width:176px!important;height:auto!important;transform:none!important;padding:8px!important;gap:6px!important;overflow:hidden!important}
+}
+/* Touch layouts take precedence even on wide tablets. Leave a footer lane below the weapon bar. */
+@media (hover:none),(pointer:coarse){
+  .weapon-panel{right:auto!important;left:50%!important;transform:translateX(-50%)!important;top:auto!important;bottom:max(17px,calc(env(safe-area-inset-bottom) + 15px))!important;width:auto!important;height:46px!important;display:flex!important;flex-direction:row!important;padding:4px!important}
+}

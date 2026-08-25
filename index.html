@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.8.0 H1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.9.0 J1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -23,7 +23,7 @@
           <div class="d1-brand-row">
             <div class="brand-lockup d1-brand-lockup"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" class="brand-logo-full" /></div>
             <div class="d1-title-block">
-              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v3.8.0 H1</b></p>
+              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v3.9.0 J1</b></p>
               <h1>BÁC SĨ<br/>TRUY QUÉT</h1>
               <p class="lead">3 phút sinh tồn tăng áp lực · Boss xuất hiện đúng giây 180</p>
             </div>
@@ -73,13 +73,6 @@
             </button>
           </div>
           <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH</b><span>Nhịp độ cân bằng · độ khó tăng liên tục từ giây 1 → 180</span></div>
-          <div id="desktopFireModeBlock" class="h16-fire-mode-card desktop-only" aria-label="Chọn chế độ bắn trên PC">
-            <div class="h16-fire-mode-heading"><span>🎯 CHẾ ĐỘ BẮN PC</span><small>Ghi nhớ lựa chọn cho lần chơi sau</small></div>
-            <div class="h16-fire-mode-toggle" role="group" aria-label="Chế độ bắn PC">
-              <button id="fireModeAuto" type="button" data-fire-mode="auto" class="active"><b>⚡ AUTO</b><small>Tự bắn · click để khóa</small></button>
-              <button id="fireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Chuột ngắm · click/giữ để bắn</small></button>
-            </div>
-          </div>
           <div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
             <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
             <div class="h18-control-side-buttons">
@@ -92,7 +85,7 @@
             <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
             <div><b>8</b><span>KHU VỰC</span></div>
           </div>
-          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v3.8.0 H1</div>
+          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v3.9.0 J1</div>
           <div class="author-line d1-author-line">
             <strong>Tác giả: Ngô Quang Trường</strong>
             <span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span>
@@ -194,14 +187,6 @@
         <button id="resumeBtn" class="primary-btn">▶ TIẾP TỤC</button>
         <button id="pauseRetryBtn" class="secondary-btn">↻ CHƠI LẠI MÀN</button>
         <div class="pause-settings-label">⚙ CÀI ĐẶT NHANH</div>
-        <div id="pauseFireModeBlock" class="h16-pause-fire-mode">
-          <div class="h16-pause-fire-title">🎯 CHẾ ĐỘ BẮN</div>
-          <div class="h16-fire-mode-toggle h16-pause-toggle" role="group" aria-label="Đổi chế độ bắn">
-            <button id="pauseFireModeAuto" type="button" data-fire-mode="auto" class="active"><b>⚡ AUTO</b><small>Tự bắn</small></button>
-            <button id="pauseFireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Chuột bắn</small></button>
-          </div>
-          <small id="pauseFireModeHint" class="h16-pause-fire-hint">PC: có thể đổi chế độ bất kỳ lúc nào.</small>
-        </div>
         <div id="pauseMobileControlSide" class="h18-control-side-card h18-pause-control-side mobile-only" aria-label="Đổi bên điều khiển trên điện thoại">
           <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
           <div class="h18-control-side-buttons">
@@ -364,6 +349,8 @@
 
       <div id="mobileSupportStrip" class="mobile-support-strip mobile-only"></div>
       <div class="mobile-brand mobile-only"><img src="assets/icon-192.png" alt="" /><span>TRƯỜNG GPP</span></div>
+
+      <div id="gameAuthorFooter" class="j1-game-author-footer" aria-label="Tác giả và liên hệ">Tác giả: Ngô Quang Trường · TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</div>
 
       <div id="moveControls" class="move-controls" aria-label="Điều khiển di chuyển ngang">
         <div id="movePad" class="move-pad" aria-label="Joystick di chuyển ngang">

@@ -2254,7 +2254,7 @@ for(const id of G1_INSTALL_IDS){const b=document.getElementById(id);if(b)b.oncli
 
 
 /* === v3.5.0 H1 BALANCE · sparse Boss patterns · smart map preview · richer SUPPLY · leaderboard client === */
-const H15_VERSION='3.8.0';
+const H15_VERSION='3.9.0';
 
 // --- Boss fire: fewer, more legible projectiles with a visible telegraph and real breathing room. ---
 function h15BossShotCount(phase,diff){
@@ -2615,7 +2615,7 @@ g2IsNewer=function(v,cur=H17_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);fo
 h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 /* === v3.8.0 H1 · CONTROL SIDE + ITEM GUARANTEE + END-RESULT LEADERBOARD PREVIEW === */
-const H18_VERSION='3.8.0',H18_CONTROL_SIDE_KEY='bstq-h18-mobile-control-side-v1';
+const H18_VERSION='3.9.0',H18_CONTROL_SIDE_KEY='bstq-h18-mobile-control-side-v1';
 let h18PendingShare=null,h18PreviewOnly=false;
 function h18ReadControlSide(){try{return localStorage.getItem(H18_CONTROL_SIDE_KEY)==='right'?'right':'left'}catch{return'left'}}
 let h18ControlSide=h18ReadControlSide();
@@ -2687,5 +2687,136 @@ h16UpdateFireModeUI=function(){h18UpdateFireModeUIBase();const block=$('#gameFir
 // Version/update comparison uses this build.
 g2IsNewer=function(v,cur=H18_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
 h18ApplyControlSide(h18ControlSide,{persist:false});h18RefreshVersion();h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
+
+
+/* === v3.9.0 J1 · NPC VISIBILITY · GAMEPLAY-ONLY FIRE MODES · 3s AUTO ITEMS · UI BALANCE === */
+const J1_VERSION='3.9.0';
+
+// Mobile detection must not misclassify Windows/touchscreen PCs; only true mobile/tablet UAs are forced to AUTO.
+function j1IsRealMobile(){
+  const ua=navigator.userAgent||'';
+  const explicit=!!navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini|Mobile/i.test(ua);
+  const ipadDesktopUA=(navigator.platform==='MacIntel' && Number(navigator.maxTouchPoints||0)>1);
+  return explicit||ipadDesktopUA;
+}
+h17IsMobileGameplay=j1IsRealMobile;
+h16IsMobileControl=j1IsRealMobile;
+
+// Keep far NPCs visibly readable without destroying depth perspective.
+const j1EnemyScreenBase=enemyScreen;
+enemyScreen=function(e){const s=j1EnemyScreenBase(e);if(e&&!e.boss&&s&&Number.isFinite(s.r)){const minR=j1IsRealMobile()?11:9;s.r=Math.max(s.r,minR);}return s;};
+
+// AUTO should never erase NPCs before they become visually readable. This was the main cause of "NPC not visible" on mobile:
+// v3.7 could target a freshly spawned NPC at depth ~.99 and kill it while it was only a few pixels wide.
+function j1NpcEngageable(e){
+  if(!e||e.dead||e.boss)return false;
+  const sc=enemyScreen(e),diff=state?.difficulty||'normal';
+  const depthGate=j1IsRealMobile()?.965:(diff==='easy'?.93:diff==='hard'?.89:.91);
+  return Number.isFinite(sc?.x)&&Number.isFinite(sc?.y)&&Number.isFinite(sc?.r)&&sc.r>=10&&e.depth<=depthGate;
+}
+const j1ChooseAutoTargetBase=h16ChooseAutoTarget;
+h16ChooseAutoTarget=function(){
+  if(!state)return null;
+  const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
+  if(j1IsRealMobile()){
+    let sticky=h16ResolveTarget(state.h16AutoTarget);
+    if(sticky?.kind==='enemy'&&!sticky.entity.boss&&!j1NpcEngageable(sticky.entity))sticky=null;
+    if(sticky&&sticky.kind==='enemy'&&!sticky.entity.dead)return sticky;
+    const visible=(state.enemies||[]).filter(j1NpcEngageable).sort((a,b)=>h17ThreatScore(b)-h17ThreatScore(a));
+    if(visible[0]){state.h16AutoTarget=h16TargetRef('enemy',visible[0]);return h16ResolveTarget(state.h16AutoTarget);}
+    const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
+    const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
+    state.h16AutoTarget=null;return null;
+  }
+  return j1ChooseAutoTargetBase();
+};
+
+// Spawn anti-stall: if a stage is active and there is no living NPC before Boss time, force the next natural spawn promptly.
+const j1UpdateBase=update;
+update=function(dt){
+  j1UpdateBase(dt);
+  j1RefreshFireButtons();
+  if(!state||state.mode!=='playing'||state.transition>0)return;
+  if(!state.bossSpawned&&state.stageElapsed<G1_BOSS_TIME){
+    const alive=(state.enemies||[]).some(e=>!e.dead&&!e.boss);
+    if(!alive&&state.stageElapsed>.35)state.spawnTimer=Math.min(Number.isFinite(state.spawnTimer)?state.spawnTimer:.08,.08);
+  }
+  j1AutoActivatePowerups();
+};
+
+// Keep PC mode buttons live only in the right gameplay rail. Mobile is always AUTO.
+const j1SetFireModeBase=h16SetFireMode;
+h16SetFireMode=function(mode,opts={}){
+  if(j1IsRealMobile())mode='auto';
+  const r=j1SetFireModeBase(mode,opts);
+  if(state){state.h16FireMode=j1IsRealMobile()?'auto':(mode==='manual'?'manual':'auto');state.h16ManualLock=null;state.h16AutoTarget=null;pointer.down=false;}
+  j1RefreshFireButtons();return r;
+};
+function j1RefreshFireButtons(){
+  const mobile=j1IsRealMobile(),block=$('#gameFireModeBlock'),mode=mobile?'auto':h16CurrentFireMode();
+  if(block)block.classList.toggle('hidden',mobile||!state||state.mode==='menu');
+  for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]')){b.classList.toggle('active',b.dataset.fireMode===mode);b.disabled=mobile;}
+}
+const j1FireUiBase=h16UpdateFireModeUI;
+h16UpdateFireModeUI=function(){j1FireUiBase();j1RefreshFireButtons();};
+const j1ResumeBase=resumeGame;resumeGame=function(){const r=j1ResumeBase();j1RefreshFireButtons();return r;};
+const j1PauseBase=pauseGame;pauseGame=function(){const r=j1PauseBase();j1RefreshFireButtons();return r;};
+const j1GoHomeBase=goHome;goHome=function(){const r=j1GoHomeBase();j1RefreshFireButtons();return r;};
+
+// 3-second power-up grace period. If the player ignores a field item, it activates automatically.
+// If activating would be useless (e.g. full health), it waits safely until the effect can actually help.
+const j1DropPowerupBase=dropSpecificPowerup;
+dropSpecificPowerup=function(kind,x,y){
+  const before=state?.powerups?.length||0;j1DropPowerupBase(kind,x,y);
+  const p=state?.powerups?.[state.powerups.length-1];if(p&&state.powerups.length>before){p.j1BornAt=performance.now();p.j1AutoAt=p.j1BornAt+3000;p.life=Math.max(p.life||0,20);p.j1Waiting=false;}
+};
+function j1CanAutoUse(kind){
+  if(!state)return false;const max=state.maxHealth||10;
+  if(kind==='heal')return state.health<max-.05;
+  if(kind==='shield')return (state.shield||0)<10;
+  if(kind==='drone')return (state.drone||0)<8;
+  if(kind==='adrenaline')return (state.adrenaline||0)<4;
+  if(kind==='vaccine')return (state.vaccine||0)<5;
+  if(kind==='sterile')return (state.sterile||0)<4;
+  return true; // GPP is always valuable because it combines several effects.
+}
+function j1AutoActivatePowerups(){
+  if(!state?.powerups?.length)return;const now=performance.now();
+  for(const p of state.powerups){
+    if(p.dead)continue;
+    if(!p.j1BornAt){p.j1BornAt=now;p.j1AutoAt=now+3000;p.life=Math.max(p.life||0,20);}
+    if(now<(p.j1AutoAt||0))continue;
+    if(!j1CanAutoUse(p.kind)){p.j1Waiting=true;p.life=Math.max(p.life||0,1.2);continue;}
+    p.j1Waiting=false;
+    if(collectPowerups(p.x,p.y)){toast(`⚡ TỰ KÍCH HOẠT · ${(D1_REWARD_META[p.kind]?.name||SUPPORT_ITEMS[p.kind]?.name||p.kind).toUpperCase()}`,1.0);break;}
+  }
+}
+const j1DrawPowerupsBase=drawPowerups;
+drawPowerups=function(){
+  j1DrawPowerupsBase();if(!state?.powerups?.length)return;const now=performance.now();
+  for(const p of state.powerups){if(p.dead||!p.j1AutoAt)continue;const left=Math.max(0,(p.j1AutoAt-now)/1000),waiting=now>=p.j1AutoAt&&!j1CanAutoUse(p.kind);ctx.save();ctx.translate(p.x,p.y);ctx.globalCompositeOperation='screen';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='1000 8px system-ui';ctx.fillStyle=waiting?'#fff0a0':'#ffffff';ctx.shadowColor=waiting?'#ffd760':'#73fff0';ctx.shadowBlur=7;ctx.fillText(waiting?'ĐỢI':`${Math.max(1,Math.ceil(left))}`,0,-42);ctx.shadowBlur=0;ctx.strokeStyle=waiting?'rgba(255,216,96,.78)':'rgba(116,255,239,.80)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,35,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(left/3,0,1));ctx.stroke();ctx.restore();}
+};
+
+// Final item repair: all ordinary items must produce both real gameplay state and weapon-screen FX.
+const j1CollectBase=collectPowerups;
+collectPowerups=function(x,y){
+  const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind;
+  const before=state&&kind?{health:state.health,shield:state.shield,drone:state.drone,adrenaline:state.adrenaline,vaccine:state.vaccine,sterile:state.sterile,gppBoost:state.gppBoost}:null;
+  const ok=j1CollectBase(x,y);if(!ok||!state||!kind)return ok;const max=state.maxHealth||10;
+  if(kind==='heal')state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));
+  if(kind==='shield')state.shield=Math.max(state.shield||0,12);
+  if(kind==='drone')state.drone=Math.max(state.drone||0,10);
+  if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);
+  if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);
+  if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);
+  if(kind==='gpp'){state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);state.gppBoost=Math.max(state.gppBoost||0,8);}
+  g2SetWeaponScreenFx(kind,kind==='heal'?1800:2400);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2400;state._supportHudKey='';updateHUD();return true;
+};
+
+// J1 version is the authoritative build identity.
+function j1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent=`PHIÊN BẢN · v${J1_VERSION} J1`;if(b)b.textContent=`v${J1_VERSION} J1`;document.title=`Bác Sĩ Truy Quét · TRƯỜNG GPP · v${J1_VERSION} J1`;}
+g2IsNewer=function(v,cur=J1_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+
+j1RefreshVersion();j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 })();
