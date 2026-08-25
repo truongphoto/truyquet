@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.4.0 H1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.6.0 H1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -53,6 +53,7 @@
             <button id="startBtn" class="primary-btn d1-start-btn">▶ BẮT ĐẦU · MÀN 1</button>
             <button id="stageSelectBtn" class="secondary-btn d1-stage-select-btn">▦ CHỌN MÀN</button>
             <button id="howBtn" class="secondary-btn">❔ HƯỚNG DẪN</button>
+            <button id="leaderboardBtn" class="secondary-btn">🏆 BẢNG XẾP HẠNG</button>
             <button id="installBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
             <button id="updateBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
           </div>
@@ -72,6 +73,13 @@
             </button>
           </div>
           <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH</b><span>Nhịp độ cân bằng · độ khó tăng liên tục từ giây 1 → 180</span></div>
+          <div id="desktopFireModeBlock" class="h16-fire-mode-card desktop-only" aria-label="Chọn chế độ bắn trên PC">
+            <div class="h16-fire-mode-heading"><span>🎯 CHẾ ĐỘ BẮN PC</span><small>Ghi nhớ lựa chọn cho lần chơi sau</small></div>
+            <div class="h16-fire-mode-toggle" role="group" aria-label="Chế độ bắn PC">
+              <button id="fireModeAuto" type="button" data-fire-mode="auto" class="active"><b>⚡ AUTO</b><small>Tự bắn · click để khóa</small></button>
+              <button id="fireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Chuột ngắm · tự bắn</small></button>
+            </div>
+          </div>
           <div class="d1-menu-info-grid">
             <div><b>180s</b><span>BOSS XUẤT HIỆN</span></div>
             <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
@@ -132,6 +140,8 @@
           <article><b>🟠 Bom vitamin</b><span>Nổ diện rộng, 3 quả mỗi khu.</span></article>
           <article><b>⚡ Tia miễn dịch</b><span>Giữ để chiếu liên tục, tự hồi năng lượng.</span></article>
           <article><b>🎁 SUPPLY chuyên nghiệp</b><span>Bắn hạ SUPPLY để vật phẩm xuất hiện. Khi nhận thưởng sẽ lóe sáng, phát âm riêng, icon bay về HUD và timer hiện rõ.</span></article>
+          <article><b>⚡ AUTO FIRE + KHÓA MỤC TIÊU</b><span>Điện thoại tự bắn. Chạm NPC/Boss để khóa mục tiêu; vòng khóa hiển thị rõ và giữ mục tiêu đến khi bị tiêu diệt hoặc bạn chọn mục tiêu khác.</span></article>
+          <article><b>🎯 PC AUTO / THỦ CÔNG</b><span>PC chọn AUTO hoặc THỦ CÔNG ở menu phải và đổi được trong Pause. AUTO vẫn cho phép click để ưu tiên mục tiêu.</span></article>
           <article><b>⏱ Luật 3 phút</b><span>NPC tăng áp lực theo 3 chặng 0–60s · 61–120s · 121–180s. Boss chỉ xuất hiện đúng giây 180; sau đó NPC thường ngừng sinh tự nhiên.</span></article>
           <article><b>👹 Boss triệu hồi</b><span>Boss chỉ gọi quân đúng 3 đợt khi máu đi qua 75% · 50% · 25%.</span></article>
           <article><b>🦠 NPC G1 đa hành vi</b><span>Vi khuẩn có loại nặng chậm, chạy nhanh, zigzag, lượn ngang, phục kích, né tâm ngắm, đi cung, hỗ trợ và giả hướng; mỗi loại có tốc độ riêng.</span></article>
@@ -144,7 +154,27 @@
           <article><b>✨ LOGO TRƯỜNG GPP</b><span>Vật phẩm đặc biệt tổng hợp: hồi sinh tồn và kích hoạt đồng thời Khiên, Drone, Adrenaline, Vaccine, Sterile và GPP Boost.</span></article>
           <article><b>🧼 Khử nhiễm môi trường</b><span>Ảnh dơ phủ trên ảnh sạch; lớp dơ tan rất chậm từ ngoài vào trung tâm. Khử nhiễm tăng chậm trong 3 phút và khóa ở 50% khi Boss xuất hiện; hạ Boss hoàn tất 50→100% trong 5 giây rồi lấp lánh 2 giây.</span></article>
         </div>
-        <p class="help-note">PC: di chuột để ngắm, click/giữ để bắn; mỗi loại vũ khí có đường đạn siêu thực riêng; giữ A/D hoặc ←/→ để chạy ngang tự do toàn màn hình, nhấn đúp A/D để né nhanh; phím 1–5 đổi vũ khí; Space hoặc Esc để DỪNG/TIẾP TỤC. Điện thoại: chạm/giữ để bắn, kéo JOYSTICK ngang để di chuyển tự do và bấm ⚡ NÉ NHANH khi cần.</p>
+        <p class="help-note">PC: chọn ⚡ AUTO hoặc 🎯 THỦ CÔNG ở menu phải. AUTO tự bắn và click NPC/Boss để khóa; THỦ CÔNG dùng chuột ngắm + click/giữ để bắn. Giữ A/D hoặc ←/→ để chạy ngang, nhấn đúp để né nhanh; phím 1–5 đổi vũ khí; Space/Esc tạm dừng. Điện thoại: AUTO cố định; chỉ cần điều khiển trái/phải, chọn vũ khí/vật phẩm và chạm NPC/Boss khi muốn khóa mục tiêu ưu tiên.</p>
+      </div>
+    </section>
+
+
+    <section id="leaderboardPanel" class="overlay panel-overlay hidden" aria-label="Bảng xếp hạng">
+      <div class="panel-card glass h15-leaderboard-card">
+        <button class="panel-close" data-close="leaderboardPanel">✕</button>
+        <p class="eyebrow">THÀNH TÍCH BÁC SĨ TRUY QUÉT</p>
+        <h2>🏆 BẢNG XẾP HẠNG</h2>
+        <div class="h15-leaderboard-filters">
+          <select id="leaderboardDifficulty" aria-label="Cấp độ"><option value="easy">DỄ</option><option value="normal" selected>TRUNG BÌNH</option><option value="hard">KHÓ</option></select>
+          <select id="leaderboardStage" aria-label="Màn chơi"><option value="all">TẤT CẢ MÀN</option><option value="0">MÀN 1</option><option value="1">MÀN 2</option><option value="2">MÀN 3</option><option value="3">MÀN 4</option><option value="4">MÀN 5</option><option value="5">MÀN 6</option><option value="6">MÀN 7</option><option value="7">MÀN 8</option></select>
+        </div>
+        <div id="leaderboardMode" class="h15-leaderboard-mode">ĐANG TẢI…</div>
+        <div id="leaderboardRecordPrompt" class="h15-record-prompt hidden">
+          <strong>🎉 KỶ LỤC MỚI!</strong><span>Bạn có muốn ghi tên để lưu thành tích không?</span>
+          <div><input id="leaderboardName" maxlength="16" autocomplete="nickname" placeholder="Tên của bạn (tùy chọn)" /><button id="leaderboardSaveBtn" class="primary-btn">LƯU KỶ LỤC</button></div>
+        </div>
+        <div id="leaderboardList" class="h15-leaderboard-list"></div>
+        <p class="h15-leaderboard-note">Khi chưa cấu hình máy chủ online, bảng xếp hạng chỉ lưu trên thiết bị này. Chế độ online sẽ tự bật khi có endpoint.</p>
       </div>
     </section>
 
@@ -154,6 +184,14 @@
         <button id="resumeBtn" class="primary-btn">▶ TIẾP TỤC</button>
         <button id="pauseRetryBtn" class="secondary-btn">↻ CHƠI LẠI MÀN</button>
         <div class="pause-settings-label">⚙ CÀI ĐẶT NHANH</div>
+        <div id="pauseFireModeBlock" class="h16-pause-fire-mode">
+          <div class="h16-pause-fire-title">🎯 CHẾ ĐỘ BẮN</div>
+          <div class="h16-fire-mode-toggle h16-pause-toggle" role="group" aria-label="Đổi chế độ bắn">
+            <button id="pauseFireModeAuto" type="button" data-fire-mode="auto" class="active"><b>⚡ AUTO</b><small>Tự bắn</small></button>
+            <button id="pauseFireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Tự bắn</small></button>
+          </div>
+          <small id="pauseFireModeHint" class="h16-pause-fire-hint">PC: có thể đổi chế độ bất kỳ lúc nào.</small>
+        </div>
         <button id="soundBtn" class="secondary-btn">🔊 Âm thanh: Bật</button>
         <button id="fullscreenBtn" class="secondary-btn">⛶ Toàn màn hình</button>
         <button id="homeBtn" class="secondary-btn danger-outline">⌂ MENU CHÍNH</button>
@@ -172,6 +210,7 @@
           <div><span>Xếp hạng</span><strong id="stageRank">A</strong></div>
         </div>
         <button id="nextStageBtn" class="primary-btn">TIẾN VÀO KHU TIẾP THEO ›</button>
+        <button id="leaderboardRecordBtn" class="secondary-btn hidden">🏆 KỶ LỤC MỚI · GHI TÊN</button>
         <div class="f1-result-actions">
           <button id="upgradeBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
           <button id="stageInstallBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
@@ -214,6 +253,7 @@
         <h2>🏆 HOÀN TẤT TOÀN BỘ TRUY QUÉT</h2>
         <p id="victoryText">Bạn đã tiêu diệt nguồn bệnh cuối cùng.</p>
         <button id="victoryReplayBtn" class="primary-btn">↻ CHƠI LẠI</button>
+        <button id="victoryLeaderboardRecordBtn" class="secondary-btn hidden">🏆 KỶ LỤC MỚI · GHI TÊN</button>
         <div class="f1-result-actions">
           <button id="victoryUpgradeBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
           <button id="victoryInstallBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
@@ -262,6 +302,7 @@
 
       <div id="comboBadge" class="combo-badge hidden">🔥 COMBO ×2</div>
       <div id="eventToast" class="event-toast hidden">Virus incoming!</div>
+      <div id="fireModeHud" class="h16-fire-mode-hud">⚡ AUTO · CHẠM/CLICK ĐỂ KHÓA</div>
       <div id="damageVignette" class="damage-vignette"></div>
 
       <div class="weapon-panel glass-mini">
@@ -309,6 +350,7 @@
     </section>
   </main>
 
+  <script src="leaderboard-config.js"></script>
   <script src="game.js" defer></script>
 </body>
 </html>

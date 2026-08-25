@@ -1,55 +1,51 @@
-BÁC SĨ TRUY QUÉT · v3.4.0 H1
-VALIDATION REPORT · 2026-08-25
+BÁC SĨ TRUY QUÉT · TRƯỜNG GPP
+VALIDATION REPORT · v3.6.0 H1 AUTO FIRE + TARGET LOCK
+Base: v3.5.0 H1 Boss Balance + Dynamic Map + Supply
 
-H1 IMPLEMENTED
-- Menu chính dùng sa hình bệnh viện campaign-map.jpg, 8 hotspot tương tác.
-- Hover/focus từng khu cập nhật ảnh preview + tên + trạng thái + dẫn truyện.
-- Màn khóa vẫn không thể chọn; tiến độ A1 giữ nguyên.
-- Mỗi màn có dẫn truyện riêng. Timer chưa chạy cho tới khi bấm “VÀO NGHÊNH CHIẾN”.
-- Màn 8: bản đồ hiển thị CỔNG RA BỆNH VIỆN; gameplay vẫn là TRẬN CHIẾN CUỐI CÙNG.
-- Boss H1 tăng thêm x2 so với v3.3.0 (hiệu lực x6 so với baseline trước hardening), đứng xa hơn nhưng scale lớn hơn để tạo cảm giác khổng lồ.
-- NPC tự nhiên tăng tốc x2 và tần suất spawn x2 so với v3.3.0; active cap tăng tương ứng nhưng vẫn giới hạn tối đa.
-- Cleanup sau Boss xóa enemyShots, tracers, hitMarkers, particles, powerups, reward NPC và enemy còn sót trước 5s cleanse.
-- Có Boss death FX riêng, cập nhật theo performance time nên không bị đóng băng.
-- Hiệu ứng vật phẩm mở rộng từ tâm màn hình vũ khí: thường ~x3, đặc biệt ~x4; alpha thấp để không che tâm ngắm.
-- Khiên kéo dài 12s và tạo trường năng lượng bao phủ người chơi.
-- Logo TRƯỜNG GPP vẫn dùng đúng assets/logo-gpp.png; 16 ảnh nền sạch/dơ giữ nguyên byte-for-byte.
-- Drone đặc biệt Boss reward vẫn 20s, bay ngoài vũ khí theo quỹ đạo riêng.
-- CÀI TRÒ CHƠI: một click gọi PWA install prompt trên trình duyệt hỗ trợ; nút tự ẩn sau khi cài. iOS vẫn phải xác nhận theo quy định Safari.
-- NÂNG CẤP PHIÊN BẢN: chỉ hiện khi service worker/version.json phát hiện bản mới hơn.
+THAY ĐỔI CHÍNH
+- Mobile: AUTO FIRE cố định; người chơi tập trung di chuyển trái/phải, né nhanh, chọn vũ khí/vật phẩm.
+- Chạm NPC/Boss/SUPPLY để khóa mục tiêu ưu tiên. Có vòng khóa nhiều lớp + nhãn rõ quanh mục tiêu.
+- Mục tiêu khóa chết/mất -> tự quay lại AUTO. AUTO có độ bám mục tiêu, không nhảy liên tục.
+- AUTO chỉ khai hỏa khi NPC vào vùng giao chiến; Dễ cho vùng rộng hơn, Khó để NPC tới gần hơn.
+- Boss được AUTO bắn khi không còn NPC nguy hiểm cấp bách; người chơi luôn có thể click/chạm để ghi đè ưu tiên.
+- PC: menu phải có AUTO / THỦ CÔNG; lưu lựa chọn bằng localStorage; đổi được trong Pause.
+- PC THỦ CÔNG giữ nguyên chuột ngắm + click/giữ bắn.
+- Bom Vitamin ở AUTO có nhịp tối thiểu 1,45 giây để tránh tự dùng hết quá nhanh.
+- Mobile Pause chỉ hiển thị AUTO, ẩn THỦ CÔNG.
+- Hướng dẫn trong game đã cập nhật theo cơ chế mới.
 
-TESTS
-1) node --check game.js: PASS
-2) node --check sw.js: PASS
-3) Static/asset validation: 31/31 PASS
-   - unique HTML IDs
-   - 8 map hotspots
-   - mission brief controls
-   - install/update buttons
-   - all HTML local images exist
-   - H1 constants and cleanup paths
-   - shield 12s
-   - SW cache/version/map asset
-   - DIRECT H1 sync
-   - logo + 16 clean/dirty backgrounds byte-identical to v3.3.0
-4) Browser DOM/runtime smoke (production code, requestAnimationFrame suppressed only for test harness):
-   - Menu loads with no page error
-   - Install visible / Update hidden for current version
-   - Mission brief visible before gameplay
-   - HUD appears only after VÀO NGHÊNH CHIẾN
-   - Countdown initializes at 03:00
-   - Space pause/resume works
-5) QA-instrumented TEST COPY ONLY (no QA hook remains in production):
-   - 8 stages x 3 difficulties Boss spawn simulation: 24/24 PASS
-   - Full 180-second update simulation: 24/24 PASS
-   - Active NPC range observed: 10..17, no NaN / no anti-stall repair required
-   - Cluster mini regression: PASS, all mini depth/speed/x finite
-   - Post-Boss cleanup: all projectile/impact arrays = 0
-   - 5s cleanse + 2s sparkle reaches 100% then reward panel: PASS
-   - Shield pickup duration: 12s PASS
-   - H1 item FX + shield render: no runtime page error
-   - Normal Boss effective HP by stage: 204, 270, 348, 420, 516, 612, 684, 828
-6) Production file contains no __H1QA test hook: PASS
+GIỮ NGUYÊN TỪ v3.5
+- Boss: Dễ 1–2 viên/đợt; Trung bình 2–3; Khó chủ yếu 2–3, rất hiếm 4 ở phase cuối.
+- Cảnh báo Boss 0,66–0,88 giây + khoảng nghỉ; gọi quân 75/50/25% máu.
+- Sa hình panel động, SUPPLY tăng cường, hard cleanup sau Boss, item FX H1, Khiên 12s, BXH client.
 
-NOTES
-- Browser security does not permit a website to silently install a PWA without the browser/OS confirmation prompt. H1 reduces the flow to the game button + native confirmation on supported Chrome/Edge/Android browsers.
+KIỂM TRA RUNTIME
+PASS · Tải game không có pageerror ở desktop và mobile emulation.
+PASS · PC menu hiển thị đúng cụm AUTO / THỦ CÔNG.
+PASS · PC THỦ CÔNG: chạy 4,2 giây không thao tác -> điểm vẫn 0 (không tự bắn ngoài ý muốn).
+PASS · PC AUTO: chạy 6,5 giây -> tự tiêu diệt NPC và điểm tăng.
+PASS · Pause: THỦ CÔNG -> AUTO -> Resume, điểm tăng từ 0 lên 440 trong bài test.
+PASS · Mobile landscape 844×390: menu PC fire-mode ẩn; AUTO hoạt động; điểm tăng; nút THỦ CÔNG trong Pause không hiển thị.
+PASS · Mobile HUD: “AUTO · CHẠM ĐỂ KHÓA”.
+PASS · Target-lock test ở Hard: xuất hiện “AUTO LOCK”; click trực tiếp vị trí mục tiêu -> chuyển “ĐÃ KHÓA”, không pageerror.
+PASS · Node syntax: game.js / sw.js.
+PASS · HTML parse; 123 ID, không có ID trùng.
+PASS · Service Worker: 35 asset khai báo, 0 file thiếu.
+PASS · 16 ảnh nền sạch/dơ + logo-gpp.png + campaign-map.jpg giữ nguyên byte/hash so với v3.5: True.
+
+PWA
+- version.json: 3.6.0
+- Service Worker cache: bac-si-truy-quet-v3.6.0-h1-auto-lock
+
+FILE RUNTIME CẦN UPDATE TỪ v3.5 -> v3.6
+1. index.html
+2. game.js
+3. styles.css
+4. sw.js
+5. version.json
+6. manifest.webmanifest
+7. BAC-SI-TRUY-QUET-DIRECT.html
+
+GHI CHÚ BXH
+- BXH nhiều máy vẫn cần HTTPS backend endpoint trong leaderboard-config.js như bản v3.5.
+- Nếu chưa cấu hình endpoint, BXH hoạt động local trên từng thiết bị.

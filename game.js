@@ -2252,4 +2252,210 @@ async function h1InstallShortcut(){
 }
 for(const id of G1_INSTALL_IDS){const b=document.getElementById(id);if(b)b.onclick=h1InstallShortcut;}
 
+
+/* === v3.5.0 H1 BALANCE · sparse Boss patterns · smart map preview · richer SUPPLY · leaderboard client === */
+const H15_VERSION='3.6.0';
+
+// --- Boss fire: fewer, more legible projectiles with a visible telegraph and real breathing room. ---
+function h15BossShotCount(phase,diff){
+  if(diff==='easy')return phase>=3?2:1;
+  if(diff==='hard'){if(phase>=3&&Math.random()<.16)return 4;return phase>=2?3:2;}
+  return phase>=3?3:2;
+}
+function h15BossRest(diff,phase){const base=diff==='easy'?2.45:diff==='hard'?1.92:2.18;return Math.max(1.58,base-(phase-1)*.10);}
+function h15BossWarning(diff){return diff==='easy'?.88:diff==='hard'?.66:.76;}
+function h15FirePattern(e,phase,diff,serial){
+  if(!state||state.mode!=='playing'||state.transition>0||e.dead||e.h15AttackSerial!==serial)return;
+  const n=h15BossShotCount(phase,diff),idx=(e.h15PatternIndex=(e.h15PatternIndex||0)+1)%4;
+  let offsets=[],speed=126,size=8,damage=1.0+.10*phase;
+  if(n===1){offsets=[0];speed=102;size=13;damage+=.18;}
+  else if(n===2){offsets=idx%2?[-.24,.24]:[-.16,.18];speed=122;size=9;}
+  else if(n===3){offsets=idx===0?[-.34,0,.34]:[-.30,.08,.38];speed=128;size=8.5;}
+  else {offsets=[-.42,-.14,.16,.44];speed=122;size=8;}
+  // Keep an escape corridor: never fire more than one projectile exactly at the current lane.
+  offsets.forEach((o,i)=>setTimeout(()=>{
+    if(!state||state.mode!=='playing'||state.transition>0||e.dead||e.h15AttackSerial!==serial)return;
+    fireBossShot(e,o,damage,e.shotColor,speed+(i%2)*5,size);
+  },i*95));
+}
+bossAttack=function(e,phase,d){
+  const diff=state?.difficulty||'normal',warning=h15BossWarning(diff),serial=(e.h15AttackSerial||0)+1;e.h15AttackSerial=serial;
+  e.h15TelegraphUntil=performance.now()+warning*1000;e.h15TelegraphStart=performance.now();e.h15TelegraphPhase=phase;
+  tone(diff==='hard'?235:285,.075,'triangle',.012,80,0,.04);
+  setTimeout(()=>h15FirePattern(e,phase,diff,serial),warning*1000);
+  e.attackTimer=warning+h15BossRest(diff,phase);
+};
+// Replace H1's rapid clamp with the D1/G1 Boss logic so the longer attack rest is respected.
+updateBoss=function(e,dt,d){
+  h1UpdateBossBase(e,dt,d);
+  if(!e||e.dead||state?.bossIntro>0)return;
+  // Keep Boss fire predictable after each summon wave.
+  if(e.h15SummonPauseUntil&&performance.now()<e.h15SummonPauseUntil)e.attackTimer=Math.max(e.attackTimer,.12);
+};
+const h15SummonBase=d1BossSummon;
+d1BossSummon=function(e,wave){
+  e.h15AttackSerial=(e.h15AttackSerial||0)+1; // cancel any telegraphed shot that has not left yet
+  h15SummonBase(e,wave);e.attackTimer=Math.max(e.attackTimer,1.45);e.h15SummonPauseUntil=performance.now()+1300;
+};
+function h15DrawBossTelegraph(t){
+  if(!state||state.transition>0)return;const e=state.enemies.find(x=>x.boss&&!x.dead);if(!e||!e.h15TelegraphUntil)return;const now=performance.now();if(now>=e.h15TelegraphUntil)return;
+  const s=enemyScreen(e),start=e.h15TelegraphStart||now,dur=Math.max(1,e.h15TelegraphUntil-start),q=clamp((now-start)/dur,0,1),pulse=.5+.5*Math.sin(t*.018);
+  ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=.26+.30*q;ctx.strokeStyle=q>.62?'#ff6b72':'#ffd56b';ctx.lineWidth=2.2+2*q;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=18+12*pulse;
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1.28+.30*q),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.65+.25*pulse;ctx.font=`900 ${Math.max(14,s.r*.20)}px system-ui`;ctx.textAlign='center';ctx.fillStyle='#fff2b8';ctx.fillText('⚠',s.x,s.y-s.r*1.45);ctx.restore();
+}
+
+// --- Smart map preview: position opposite the hovered department so it never covers that department. ---
+const h15Map=$('#h1CampaignMap'),h15Preview=$('#h1MapPreview');if(h15Preview)h15Preview.classList.add('h15-smart-preview');
+function h15PlaceMapPreview(i){
+  if(!h15Map||!h15Preview||getComputedStyle(h15Preview).display==='none')return;const b=h1MapHotspots[i];if(!b)return;
+  const map=h15Map.getBoundingClientRect(),spot=b.getBoundingClientRect(),pw=h15Preview.offsetWidth||300,ph=h15Preview.offsetHeight||92,gap=38;
+  const sx=spot.left-map.left+spot.width/2,sy=spot.top-map.top+spot.height/2,mw=map.width,mh=map.height;
+  let side=sx>mw*.55?'left':'right';if(sy<mh*.27)side='bottom';else if(sy>mh*.76)side='top';
+  let left,top;
+  if(side==='left'){left=sx-pw-gap;top=sy-ph/2;}
+  else if(side==='right'){left=sx+gap;top=sy-ph/2;}
+  else if(side==='top'){left=sx-pw/2;top=sy-ph-gap;}
+  else {left=sx-pw/2;top=sy+gap;}
+  left=clamp(left,8,Math.max(8,mw-pw-8));top=clamp(top,8,Math.max(8,mh-ph-8));
+  h15Preview.style.left=`${left}px`;h15Preview.style.top=`${top}px`;h15Preview.style.right='auto';h15Preview.style.bottom='auto';h15Preview.dataset.side=side;
+}
+const h15MapPreviewBase=h1RenderMapPreview;
+h1RenderMapPreview=function(i=a1SelectedStage){h15MapPreviewBase(i);requestAnimationFrame(()=>h15PlaceMapPreview(clamp(Number(i)||0,0,7)));};
+window.addEventListener('resize',()=>requestAnimationFrame(()=>h15PlaceMapPreview(a1SelectedStage)),{passive:true});
+
+// --- More support without random droughts: higher cap plus a guaranteed SUPPLY window. ---
+Object.assign(DIFF.easy,{rewardEvery:10.0,rewardMax:13});Object.assign(DIFF.normal,{rewardEvery:12.0,rewardMax:11});Object.assign(DIFF.hard,{rewardEvery:14.0,rewardMax:9});
+const h15NewStateBase=newState;
+newState=function(stageIndex=0){const s=h15NewStateBase(stageIndex),d=s.difficulty;s.rewardNpcMax=DIFF[d].rewardMax;s.rewardNpcTimer=d==='easy'?3.0:d==='hard'?4.2:3.6;s.h15LastSupplyAt=0;s.h15SupplyGuarantee=d==='easy'?14:d==='hard'?20:17;return s;};
+const h15SpawnRewardBase=spawnRewardNpc;
+spawnRewardNpc=function(){const before=state?.rewardNpcs?.length||0,r=h15SpawnRewardBase();if(state&&(state.rewardNpcs.length>before||state.rewardNpcs.some(n=>!n.dead)))state.h15LastSupplyAt=state.stageElapsed||0;return r;};
+const h15UpdateBase=update;
+update=function(dt){h15UpdateBase(dt);if(!state||state.mode!=='playing'||state.transition>0||state.bossSpawned)return;const active=state.rewardNpcs?.some(n=>!n.dead);if(!active&&state.rewardNpcCount<state.rewardNpcMax&&(state.stageElapsed-(state.h15LastSupplyAt||0))>=(state.h15SupplyGuarantee||18)){spawnRewardNpc();state.rewardNpcTimer=Math.max(state.rewardNpcTimer||0,4.5);}};
+
+// --- Optional leaderboard client. Cross-device sharing automatically activates once a HTTPS endpoint is configured. ---
+const H15_LB_KEY='bstqLeaderboardV1',H15_LB_ENDPOINT=(window.BSTQ_LEADERBOARD_ENDPOINT||'').trim();let h15PendingRecord=null;
+function h15LoadLocalScores(){try{const a=JSON.parse(localStorage.getItem(H15_LB_KEY)||'[]');return Array.isArray(a)?a:[]}catch{return[]}}
+function h15StoreLocalScore(rec){const a=h15LoadLocalScores();a.push(rec);a.sort((x,y)=>y.score-x.score||x.bossSeconds-y.bossSeconds);localStorage.setItem(H15_LB_KEY,JSON.stringify(a.slice(0,120)));}
+function h15SafeName(v){return String(v||'').replace(/[<>\\/]/g,'').trim().slice(0,16)||'Bác sĩ ẩn danh';}
+function h15CurrentFilters(){return{difficulty:$('#leaderboardDifficulty')?.value||'normal',stage:$('#leaderboardStage')?.value||'all'};}
+async function h15FetchScores(){
+  const f=h15CurrentFilters();if(H15_LB_ENDPOINT){try{const u=new URL(H15_LB_ENDPOINT,location.href);u.searchParams.set('difficulty',f.difficulty);if(f.stage!=='all')u.searchParams.set('stage',f.stage);const r=await fetch(u,{cache:'no-store'});if(r.ok){const j=await r.json();if(Array.isArray(j.entries))return{mode:'online',entries:j.entries};}}catch{}}
+  let a=h15LoadLocalScores().filter(x=>x.difficulty===f.difficulty&&(f.stage==='all'||String(x.stage)===f.stage));return{mode:'local',entries:a};
+}
+function h15RenderLeaderRows(entries){const box=$('#leaderboardList');if(!box)return;box.replaceChildren();const list=[...entries].sort((a,b)=>Number(b.score)-Number(a.score)||Number(a.bossSeconds||999)-Number(b.bossSeconds||999)).slice(0,30);if(!list.length){const e=document.createElement('div');e.className='h15-leader-row';e.textContent='Chưa có thành tích ở mục này.';box.appendChild(e);return;}list.forEach((r,i)=>{const row=document.createElement('div');row.className='h15-leader-row'+(i<3?' top3':'');const pos=document.createElement('span');pos.className='pos';pos.textContent=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;const who=document.createElement('span');who.className='who';const b=document.createElement('b');b.textContent=h15SafeName(r.name);const sm=document.createElement('small');sm.textContent=`Màn ${Number(r.stage)+1} · ${String(r.difficulty||'normal').toUpperCase()}`;who.append(b,sm);const sc=document.createElement('span');sc.className='score';sc.textContent=Number(r.score||0).toLocaleString('vi-VN');const rk=document.createElement('span');rk.className='rank';rk.textContent=r.rank||'A';row.append(pos,who,sc,rk);box.appendChild(row);});}
+async function h15RefreshLeaderboard(){const mode=$('#leaderboardMode');if(mode)mode.textContent='ĐANG TẢI…';const r=await h15FetchScores();if(mode)mode.textContent=r.mode==='online'?'🌐 BẢNG XẾP HẠNG ONLINE · NHIỀU THIẾT BỊ':'💾 BẢNG XẾP HẠNG TRÊN THIẾT BỊ NÀY';h15RenderLeaderRows(r.entries);}
+function h15OpenLeaderboard(record=false){const p=$('#leaderboardPanel');if(!p)return;show(p);const pr=$('#leaderboardRecordPrompt');if(pr)pr.classList.toggle('hidden',!(record&&h15PendingRecord));h15RefreshLeaderboard();}
+$('#leaderboardBtn')?.addEventListener('click',()=>h15OpenLeaderboard(false));$('#leaderboardDifficulty')?.addEventListener('change',h15RefreshLeaderboard);$('#leaderboardStage')?.addEventListener('change',h15RefreshLeaderboard);$('#leaderboardRecordBtn')?.addEventListener('click',()=>h15OpenLeaderboard(true));$('#victoryLeaderboardRecordBtn')?.addEventListener('click',()=>h15OpenLeaderboard(true));
+$('#leaderboardSaveBtn')?.addEventListener('click',async()=>{if(!h15PendingRecord)return;const rec={...h15PendingRecord,name:h15SafeName($('#leaderboardName')?.value),createdAt:new Date().toISOString(),version:H15_VERSION};let online=false;if(H15_LB_ENDPOINT){try{const r=await fetch(H15_LB_ENDPOINT,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(rec)});online=r.ok;}catch{}}h15StoreLocalScore(rec);h15PendingRecord=null;$('#leaderboardRecordPrompt')?.classList.add('hidden');$('#leaderboardRecordBtn')?.classList.add('hidden');$('#victoryLeaderboardRecordBtn')?.classList.add('hidden');toast(online?'🏆 ĐÃ GHI TÊN LÊN BẢNG ONLINE!':'🏆 ĐÃ LƯU KỶ LỤC TRÊN MÁY!',1.5);h15RefreshLeaderboard();});
+function h15ConsiderRecord(){if(!state)return;const acc=state.shots?Math.round(state.hits/state.shots*100):100,rank=rankFor(acc,state.health,state.stageElapsed),bossSeconds=Math.max(0,state.stageElapsed-G1_BOSS_TIME),keyScores=h15LoadLocalScores().filter(r=>r.difficulty===state.difficulty&&Number(r.stage)===state.stageIndex),best=Math.max(-1,...keyScores.map(r=>Number(r.score)||0));if(state.score>best){h15PendingRecord={score:Math.round(state.score),stage:state.stageIndex,difficulty:state.difficulty,rank,accuracy:acc,bossSeconds:Math.round(bossSeconds*10)/10};const btn=state.cfg.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');btn?.classList.remove('hidden');toast('🏆 KỶ LỤC MỚI · CÓ THỂ GHI TÊN LÊN BẢNG XẾP HẠNG',1.8);}else{$('#leaderboardRecordBtn')?.classList.add('hidden');$('#victoryLeaderboardRecordBtn')?.classList.add('hidden');}}
+const h15StageCompleteBase=stageCompletePanel;stageCompletePanel=function(){h15StageCompleteBase();h15ConsiderRecord();};
+
+// Final render layer for the Boss telegraph.
+const h15RenderBase=render;render=function(t){h15RenderBase(t);h15DrawBossTelegraph(t);};
+
+// Version UI must compare against this build.
+g2IsNewer=function(v,cur=H15_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+
+
+
+/* === v3.6.0 H1 CONTROL · mobile AUTO FIRE · PC AUTO/MANUAL · tap/click target lock === */
+const H16_FIRE_MODE_KEY='bstq-h16-fire-mode-v1';
+function h16IsMobileControl(){return matchMedia('(hover:none) and (pointer:coarse)').matches || (innerWidth<900 && navigator.maxTouchPoints>0);}
+function h16ReadFireMode(){if(h16IsMobileControl())return'auto';try{return localStorage.getItem(H16_FIRE_MODE_KEY)==='manual'?'manual':'auto'}catch{return'auto'}}
+let h16PreferredFireMode=h16ReadFireMode();
+function h16CurrentFireMode(){return h16IsMobileControl()?'auto':(state?.h16FireMode||h16PreferredFireMode||'auto');}
+function h16UpdateFireModeUI(){
+  const mode=h16CurrentFireMode(),mobile=h16IsMobileControl();
+  for(const b of document.querySelectorAll('[data-fire-mode]')){const m=b.dataset.fireMode;b.classList.toggle('active',m===mode);if(b.id==='pauseFireModeManual')b.disabled=mobile;}
+  const hint=$('#pauseFireModeHint');if(hint)hint.textContent=mobile?'Điện thoại: AUTO cố định · chạm NPC/Boss để khóa mục tiêu.':'PC: AUTO tự bắn hoặc THỦ CÔNG bằng chuột · đổi được ngay khi Pause.';
+  const hud=$('#fireModeHud');if(hud){hud.classList.toggle('manual',mode==='manual');hud.textContent=mode==='auto'?(mobile?'⚡ AUTO · CHẠM ĐỂ KHÓA':'⚡ AUTO · CLICK ĐỂ KHÓA'):'🎯 THỦ CÔNG · CHUỘT NGẮM/BẮN';}
+}
+function h16SetFireMode(mode,{persist=true,announce=true}={}){
+  if(h16IsMobileControl())mode='auto';mode=mode==='manual'?'manual':'auto';h16PreferredFireMode=mode;
+  if(persist&&!h16IsMobileControl()){try{localStorage.setItem(H16_FIRE_MODE_KEY,mode)}catch{}}
+  if(state){state.h16FireMode=mode;state.h16ManualLock=null;state.h16AutoTarget=null;pointer.down=false;}
+  h16UpdateFireModeUI();if(announce&&state?.mode==='playing')toast(mode==='auto'?'⚡ AUTO FIRE · CLICK/CHẠM ĐỂ KHÓA':'🎯 BẮN THỦ CÔNG · CHUỘT NGẮM/BẮN',1.15);
+}
+for(const b of document.querySelectorAll('[data-fire-mode]'))b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();h16SetFireMode(b.dataset.fireMode);});
+
+const h16NewStateBase=newState;
+newState=function(stageIndex=0){const s=h16NewStateBase(stageIndex);s.h16FireMode=h16IsMobileControl()?'auto':h16PreferredFireMode;s.h16ManualLock=null;s.h16AutoTarget=null;s.h16LockFxUntil=0;s.h16LockSerial=0;s.h16AutoBombAt=0;return s;};
+
+function h16TargetRef(kind,entity){return entity?{kind,id:entity.id}:null;}
+function h16ResolveTarget(ref){
+  if(!state||!ref)return null;
+  if(ref.kind==='reward'){const n=state.rewardNpcs?.find(x=>x.id===ref.id&&!x.dead);return n?{kind:'reward',entity:n,screen:rewardNpcScreen(n)}:null;}
+  const e=state.enemies?.find(x=>x.id===ref.id&&!x.dead);return e?{kind:'enemy',entity:e,screen:enemyScreen(e)}:null;
+}
+function h16TargetAt(x,y){
+  if(!state)return null;const hits=[];
+  for(const n of state.rewardNpcs||[]){if(n.dead)continue;const s=rewardNpcScreen(n),dist=Math.hypot(x-s.x,y-s.y),r=Math.max(34,s.r*1.55);if(dist<=r)hits.push({kind:'reward',entity:n,screen:s,dist,priority:2});}
+  for(const e of state.enemies||[]){if(e.dead)continue;const s=enemyScreen(e),dist=Math.hypot(x-s.x,y-s.y),r=Math.max(e.boss?52:34,s.r*(e.boss?1.38:1.48));if(dist<=r)hits.push({kind:'enemy',entity:e,screen:s,dist,priority:e.boss?1:0});}
+  hits.sort((a,b)=>a.dist-b.dist||a.priority-b.priority);return hits[0]||null;
+}
+function h16CriticalMinor(){const gate=state?.difficulty==='easy'?.84:state?.difficulty==='hard'?.76:.80;return(state?.enemies||[]).filter(e=>!e.dead&&!e.boss&&e.depth<=gate).sort((a,b)=>{
+  const wa=(a.base?.charge?-.18:0)+(a.type==='spitter'?-.10:0)+(a.type==='elite'?-.08:0),wb=(b.base?.charge?-.18:0)+(b.type==='spitter'?-.10:0)+(b.type==='elite'?-.08:0);return(a.depth+wa)-(b.depth+wb);
+})[0]||null;}
+function h16ChooseAutoTarget(){
+  if(!state)return null;
+  const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
+  let sticky=h16ResolveTarget(state.h16AutoTarget);const critical=h16CriticalMinor();
+  if(sticky?.entity?.boss&&critical&&critical.depth<.46)sticky=null;
+  if(sticky)return sticky;
+  if(critical){state.h16AutoTarget=h16TargetRef('enemy',critical);return h16ResolveTarget(state.h16AutoTarget);}
+  const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
+  // SUPPLY becomes an automatic fallback only when combat is clear; players may always tap it to prioritize it immediately.
+  const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
+  state.h16AutoTarget=null;return null;
+}
+function h16LockTarget(target){
+  if(!state)return;if(!target){state.h16ManualLock=null;state.h16AutoTarget=null;return;}
+  state.h16ManualLock=h16TargetRef(target.kind,target.entity);state.h16AutoTarget=null;state.h16LockFxUntil=performance.now()+520;state.h16LockSerial=(state.h16LockSerial||0)+1;
+  const label=target.kind==='reward'?'SUPPLY':target.entity.boss?'BOSS':target.entity.type==='elite'?'NPC ELITE':'NPC';tone(target.entity?.boss?330:690,.055,'triangle',.014,150,0,.05);toast(`🔒 ĐÃ KHÓA ${label}`,0.72);
+}
+canvas.addEventListener('pointerdown',e=>{
+  if(!state||state.mode!=='playing'||h16CurrentFireMode()!=='auto')return;const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;
+  if(collectPowerups(p.x,p.y)){state.lastFire=performance.now();e.preventDefault();e.stopImmediatePropagation();return;}
+  h16LockTarget(h16TargetAt(p.x,p.y));
+},true);
+
+// Existing mouse/touch listeners remain installed for MANUAL mode. In AUTO mode their shot calls are suppressed.
+const h16ShootBase=shoot;
+shoot=function(x,y){if(!state||state.mode!=='playing'||state.transition>0)return;if(h16CurrentFireMode()==='auto'&&!state.h16AutoShot)return;return h16ShootBase(x,y);};
+function h16AutoFireTick(){
+  if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto'||state.stageIntro>0||state.bossIntro>0)return;const t=h16ChooseAutoTarget();if(!t)return;
+  const s=t.kind==='reward'?rewardNpcScreen(t.entity):enemyScreen(t.entity),w=WEAPONS[state.weapon],now=performance.now();
+  if(h16IsMobileControl()){pointer.x=s.x;pointer.y=s.y;}
+  // Bombs remain automatic but are paced so AUTO does not throw all three in a second.
+  if(w.kind==='bomb'&&now-(state.h16AutoBombAt||0)<1450)return;
+  const before=state.lastFire;state.h16AutoShot=true;try{shoot(s.x,s.y)}finally{state.h16AutoShot=false;}
+  if(state.lastFire!==before){weaponSingleFlashUntil=now+420;if(w.kind==='bomb')state.h16AutoBombAt=now;}
+}
+const h16UpdateBase=update;
+update=function(dt){h16UpdateBase(dt);if(state?.mode==='playing')h16AutoFireTick();};
+
+const h16CrosshairBase=drawCrosshair;
+drawCrosshair=function(){if(state&&h16CurrentFireMode()==='auto'&&h16IsMobileControl())return;h16CrosshairBase();};
+function h16DrawTargetLock(t){
+  if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto')return;const manual=h16ResolveTarget(state.h16ManualLock),target=manual||h16ChooseAutoTarget();if(!target)return;
+  const s=target.kind==='reward'?rewardNpcScreen(target.entity):enemyScreen(target.entity),boss=target.kind==='enemy'&&target.entity.boss,r=Math.max(target.kind==='reward'?35:boss?66:32,s.r*(boss?1.32:1.42)),pulse=.5+.5*Math.sin(t*.010),locked=!!manual,col=target.kind==='reward'?'#7dfff0':boss?'#ffcf6a':locked?'#ffe77d':'#7fffe8';
+  ctx.save();ctx.translate(s.x,s.y);ctx.globalCompositeOperation='screen';ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=locked?20:12;ctx.lineCap='round';ctx.lineWidth=locked?2.8:1.8;ctx.globalAlpha=locked?.88:.56;
+  const rot=t*.0012*(boss?.55:1);for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,0,r*(1+i*.14)+pulse*2.5,rot+i*2.1,rot+i*2.1+1.05);ctx.stroke();}
+  ctx.rotate(-rot*.65);const br=r*1.05,ln=Math.max(8,r*.24);for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ctx.beginPath();ctx.moveTo(sx*br,sy*(br-ln));ctx.lineTo(sx*br,sy*br);ctx.lineTo(sx*(br-ln),sy*br);ctx.stroke();}
+  ctx.rotate(rot*.65);ctx.globalAlpha=.82;ctx.beginPath();ctx.arc(0,0,Math.max(5,r*.12),0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(-r*.22,0);ctx.lineTo(r*.22,0);ctx.moveTo(0,-r*.22);ctx.lineTo(0,r*.22);ctx.stroke();
+  if(performance.now()<(state.h16LockFxUntil||0)){const q=1-(state.h16LockFxUntil-performance.now())/520;ctx.globalAlpha=.46*(1-q);ctx.lineWidth=5*(1-q)+1;ctx.beginPath();ctx.arc(0,0,r*(.72+q*.82),0,Math.PI*2);ctx.stroke();}
+  ctx.shadowBlur=8;ctx.globalAlpha=.92;ctx.fillStyle='rgba(2,25,30,.86)';const label=target.kind==='reward'?'🔒 SUPPLY':boss?'🔒 BOSS LOCK':locked?'🔒 ĐÃ KHÓA':'⚡ AUTO LOCK';ctx.font=`1000 ${Math.max(7,Math.min(12,r*.16))}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';const tw=ctx.measureText(label).width+14;ctx.beginPath();ctx.roundRect(-tw/2,-r*1.48,tw,18,8);ctx.fill();ctx.fillStyle=col;ctx.fillText(label,0,-r*1.48+9);ctx.restore();
+}
+const h16RenderBase=render;render=function(t){h16RenderBase(t);h16DrawTargetLock(t);};
+
+// Re-apply the remembered mode when resuming and force AUTO whenever the device uses coarse touch controls.
+// newState() already applies the correct mode when VÀO NGHÊNH CHIẾN creates a stage.
+const h16ResumeBase=resumeGame;resumeGame=function(){const r=h16ResumeBase();if(state&&h16IsMobileControl())state.h16FireMode='auto';h16UpdateFireModeUI();return r;};
+window.addEventListener('resize',()=>{if(h16IsMobileControl()&&state)state.h16FireMode='auto';h16UpdateFireModeUI();},{passive:true});
+
+// Current build version for PWA update checks and leaderboard records.
+g2IsNewer=function(v,cur=H15_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+h16UpdateFireModeUI();
+
+h1RefreshMap();h15PlaceMapPreview(a1SelectedStage);g1RefreshInstallUI();g1RefreshUpdateUI();
 })();
