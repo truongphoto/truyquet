@@ -1,0 +1,31 @@
+BÁC SĨ TRUY QUÉT v2.2.0 – VALIDATION REPORT
+============================================================
+
+BACKGROUND BYTE LOCK:
+[PASS] stage1.jpg == 1-khoa-dược.jpg  SHA256 a102c5e851780c4941af9d1b0846a2142a4d87ff47429d630690b52a853ed87a
+[PASS] stage2.jpg == 2-cấp-cứu.jpg  SHA256 6256bcba7f664e53910ef7b80280e15a3e0bc533b17c6341b291c0be9f95eb93
+[PASS] stage3.jpg == 3-hô-hấp.jpg  SHA256 7f8e81188d3a57f1d8d3da0657822e837dbb24a308a5ca63524e9dfb6ae5d872
+[PASS] stage4.jpg == 4-khoa-nhi.jpg  SHA256 32f2b1146f74461797839170a860aaa640f3e8a9459fae63506b6bc0742fb9b8
+[PASS] stage5.jpg == 5-khoa-sản.jpg  SHA256 6d161c63c2be060507dfb4a20a3d6f7aeabc26635d88b4338d9fd5280571d339
+[PASS] stage6.jpg == 6-khoa-thần-kinh.jpg  SHA256 4f0fc0cbc5f7df808e6826593f809b124a262d6a0e57f78ec109c4db8b0b7291
+[PASS] stage7.jpg == 7-trận-chiến-cuối-cùng.jpg  SHA256 a6f25da7d0fe99f3c8545131d28f8008786ae7c16be4c2edd02ece1c24136082
+[PASS] stage-final.jpg == 7-trận-chiến-cuối-cùng.jpg  SHA256 a6f25da7d0fe99f3c8545131d28f8008786ae7c16be4c2edd02ece1c24136082
+
+LOGIC CHECKLIST:
+[PASS] 7 stage definitions
+[PASS] final stage name = TRẬN CHIẾN CUỐI CÙNG
+[PASS] image-based stage menu
+[PASS] main menu technical mission strip removed
+[PASS] Pause has Continue / Restart / Settings / Main Menu
+[PASS] GPP item activates heal + shield + drone + adrenaline + vaccine + sterile + GPP boost
+[PASS] contamination is runtime canvas overlay only
+[PASS] no full-screen dark contamination treatment
+[PASS] 0→50→100 cleansing logic retained
+[PASS] ordinary enemy random drop override remains disabled
+[PASS] node --check game.js
+[PASS] runtime smoke: menu stage 7 selection
+[PASS] runtime smoke: start stage 7
+[PASS] runtime smoke: Pause opens
+[PASS] runtime smoke: Settings opens from Pause and returns to Pause
+[PASS] CSS parser: no syntax errors
+[PASS] DOM/asset static checks

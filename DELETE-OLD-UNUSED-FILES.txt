@@ -1,0 +1,8 @@
+TỪ v1.3.0 KHÔNG CÒN DÙNG 5 FILE SAU:
+assets/stage2.jpg
+assets/stage3.jpg
+assets/stage4.jpg
+assets/stage5.jpg
+assets/stage6.jpg
+
+Nếu cập nhật trực tiếp repo v1.2.0, bạn có thể xóa chúng. Nếu không xóa thì game vẫn chạy bình thường vì Service Worker v1.3.0 không cache và game không gọi các file này.

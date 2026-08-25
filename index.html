@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0b6f78" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.4.0 H1</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/app-icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" class="app-shell">
+    <canvas id="gameCanvas" aria-label="Khu vực chơi Bác Sĩ Truy Quét"></canvas>
+
+    <section id="menu" class="overlay menu-overlay active d1-menu-overlay">
+      <div class="menu-card glass d1-menu-card">
+        <div class="d1-menu-left">
+          <div class="d1-brand-row">
+            <div class="brand-lockup d1-brand-lockup"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" class="brand-logo-full" /></div>
+            <div class="d1-title-block">
+              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC</p>
+              <h1>BÁC SĨ<br/>TRUY QUÉT</h1>
+              <p class="lead">3 phút sinh tồn tăng áp lực · Boss xuất hiện đúng giây 180</p>
+            </div>
+          </div>
+
+          <div id="h1CampaignMap" class="h1-campaign-map" aria-label="Sa hình chiến dịch 8 khu vực">
+            <img class="h1-map-image" src="assets/campaign-map.jpg" alt="Sa hình bệnh viện với 8 khu vực chiến dịch" />
+            <button class="h1-map-hotspot" data-map-stage="0" style="--map-x:30%;--map-y:69%" aria-label="Màn 1 Khoa Dược"><span>1</span></button>
+            <button class="h1-map-hotspot" data-map-stage="1" style="--map-x:72%;--map-y:72%" aria-label="Màn 2 Khoa Cấp Cứu"><span>2</span></button>
+            <button class="h1-map-hotspot" data-map-stage="2" style="--map-x:14%;--map-y:41%" aria-label="Màn 3 Khoa Hô Hấp"><span>3</span></button>
+            <button class="h1-map-hotspot" data-map-stage="3" style="--map-x:40%;--map-y:40%" aria-label="Màn 4 Khoa Nhi"><span>4</span></button>
+            <button class="h1-map-hotspot" data-map-stage="4" style="--map-x:60%;--map-y:43%" aria-label="Màn 5 Khoa Sản"><span>5</span></button>
+            <button class="h1-map-hotspot" data-map-stage="5" style="--map-x:24%;--map-y:22%" aria-label="Màn 6 Khoa Thần Kinh"><span>6</span></button>
+            <button class="h1-map-hotspot" data-map-stage="6" style="--map-x:86%;--map-y:35%" aria-label="Màn 7 Khoa Xét Nghiệm"><span>7</span></button>
+            <button class="h1-map-hotspot h1-final-hotspot" data-map-stage="7" style="--map-x:64%;--map-y:16%" aria-label="Màn 8 Cổng ra bệnh viện"><span>8</span></button>
+            <div id="h1MapPreview" class="h1-map-preview">
+              <img id="h1MapPreviewImg" src="assets/stage1-clean.jpg" alt="Khoa Dược" />
+              <div><small id="h1MapPreviewNo">MÀN 1</small><b id="h1MapPreviewName">KHOA DƯỢC</b><p id="h1MapPreviewStory">Nguồn thuốc của bệnh viện đã bị nhiễm khuẩn.</p><em id="h1MapPreviewState">ĐÃ MỞ</em></div>
+            </div>
+          </div>
+          <button id="selectedStageHero" class="h1-stage-proxy" type="button" aria-hidden="true" tabindex="-1">
+            <img id="selectedStageHeroImg" src="assets/stage1-clean.jpg" alt="Khoa Dược" />
+            <span id="selectedStageHeroNo">MÀN 1</span><span id="selectedStageHeroName">KHOA DƯỢC</span>
+          </button>
+
+          <div class="menu-actions d1-menu-actions">
+            <button id="startBtn" class="primary-btn d1-start-btn">▶ BẮT ĐẦU · MÀN 1</button>
+            <button id="stageSelectBtn" class="secondary-btn d1-stage-select-btn">▦ CHỌN MÀN</button>
+            <button id="howBtn" class="secondary-btn">❔ HƯỚNG DẪN</button>
+            <button id="installBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
+            <button id="updateBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
+          </div>
+        </div>
+
+        <div class="d1-menu-right">
+          <div class="d1-diff-heading"><span>CHỌN CẤP ĐỘ</span><small>Mỗi cấp vẫn có đủ 8 màn</small></div>
+          <div class="difficulty-row d1-difficulty-row" role="group" aria-label="Chọn độ khó">
+            <button class="difficulty d1-difficulty easy-card" data-difficulty="easy">
+              <span class="diff-symbol">🛡</span><span class="diff-copy"><b>DỄ</b><strong>LÀM QUEN</strong><small>NPC chậm · phản ứng thoải mái · Supply nhiều</small></span><em>01</em>
+            </button>
+            <button class="difficulty d1-difficulty normal-card selected" data-difficulty="normal">
+              <span class="diff-symbol">⚠</span><span class="diff-copy"><b>TRUNG BÌNH</b><strong>CÂN BẰNG</strong><small>Màn 1 ≈ Màn 5 của cấp Dễ</small></span><em>02</em>
+            </button>
+            <button class="difficulty d1-difficulty hard-card" data-difficulty="hard">
+              <span class="diff-symbol">☣</span><span class="diff-copy"><b>KHÓ</b><strong>THỬ THÁCH</strong><small>Màn 1 ≈ Màn 5 của cấp Trung bình</small></span><em>03</em>
+            </button>
+          </div>
+          <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH</b><span>Nhịp độ cân bằng · độ khó tăng liên tục từ giây 1 → 180</span></div>
+          <div class="d1-menu-info-grid">
+            <div><b>180s</b><span>BOSS XUẤT HIỆN</span></div>
+            <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
+            <div><b>8</b><span>KHU VỰC</span></div>
+          </div>
+          <div class="author-line d1-author-line">
+            <strong>Tác giả: Ngô Quang Trường</strong>
+            <span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stageSelectPanel" class="overlay panel-overlay hidden d1-stage-panel">
+      <div class="panel-card glass d1-stage-select-card">
+        <button class="panel-close" data-close="stageSelectPanel">✕</button>
+        <p class="eyebrow">CHIẾN DỊCH 8 KHU VỰC</p>
+        <h2>CHỌN MÀN ĐÃ MỞ KHÓA</h2>
+        <p class="d1-stage-note">Hoàn thành màn trước để mở màn kế tiếp. Màn đã vượt qua luôn có thể chơi lại.</p>
+        <div id="campaignPreview" class="campaign-preview campaign-8" aria-label="8 khu vực chiến dịch">
+          <button class="stage-thumb selected" data-stage="0"><img src="assets/stage1-clean.jpg" alt="Khoa Dược" /><span><i>MÀN 1</i><b>KHOA DƯỢC</b></span><em class="stage-lock">🔒</em></button>
+          <button class="stage-thumb" data-stage="1"><img src="assets/stage2-clean.jpg" alt="Khoa Cấp Cứu" /><span><i>MÀN 2</i><b>KHOA CẤP CỨU</b></span><em class="stage-lock">🔒</em></button>
+          <button class="stage-thumb" data-stage="2"><img src="assets/stage3-clean.jpg" alt="Khoa Hô Hấp" /><span><i>MÀN 3</i><b>KHOA HÔ HẤP</b></span><em class="stage-lock">🔒</em></button>
+          <button class="stage-thumb" data-stage="3"><img src="assets/stage4-clean.jpg" alt="Khoa Nhi" /><span><i>MÀN 4</i><b>KHOA NHI</b></span><em class="stage-lock">🔒</em></button>
+          <button class="stage-thumb" data-stage="4"><img src="assets/stage5-clean.jpg" alt="Khoa Sản" /><span><i>MÀN 5</i><b>KHOA SẢN</b></span><em class="stage-lock">🔒</em></button>
+          <button class="stage-thumb" data-stage="5"><img src="assets/stage6-clean.jpg" alt="Khoa Thần Kinh" /><span><i>MÀN 6</i><b>KHOA THẦN KINH</b></span><em class="stage-lock">🔒</em></button>
+          <button class="stage-thumb" data-stage="6"><img src="assets/stage7-clean.jpg" alt="Khoa Xét Nghiệm" /><span><i>MÀN 7</i><b>KHOA XÉT NGHIỆM</b></span><em class="stage-lock">🔒</em></button>
+          <button class="stage-thumb final-thumb" data-stage="7"><img src="assets/stage8-clean.jpg" alt="Trận Chiến Cuối Cùng" /><span><i>MÀN 8</i><b>TRẬN CHIẾN CUỐI CÙNG</b></span><em class="stage-lock">🔒</em></button>
+        </div>
+        <button id="stageSelectDoneBtn" class="primary-btn">✓ XONG</button>
+      </div>
+    </section>
+
+
+    <section id="missionBriefPanel" class="overlay panel-overlay hidden h1-brief-overlay" aria-label="Dẫn truyện trước màn chơi">
+      <div class="h1-brief-card glass">
+        <div class="h1-brief-visual"><img id="missionBriefImg" src="assets/stage1-clean.jpg" alt="Khoa Dược" /><span class="h1-brief-shade"></span></div>
+        <div class="h1-brief-copy">
+          <p class="eyebrow" id="missionBriefNo">MÀN 1 · KHOA DƯỢC</p>
+          <h2 id="missionBriefTitle">KHOA DƯỢC</h2>
+          <p id="missionBriefStory">Nguồn thuốc của bệnh viện đã bị nhiễm khuẩn. Làm sạch kho dược trước khi mầm bệnh lan sang các khoa khác.</p>
+          <div class="h1-brief-actions">
+            <button id="engageBtn" class="primary-btn h1-engage-btn">VÀO NGHÊNH CHIẾN</button>
+            <button id="briefBackBtn" class="secondary-btn">← TRỞ LẠI SA HÌNH</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="helpPanel" class="overlay panel-overlay hidden">
+      <div class="panel-card glass scrollable">
+        <button class="panel-close" data-close="helpPanel">✕</button>
+        <h2>Hướng dẫn chiến đấu</h2>
+        <div class="help-grid">
+          <article><b>💊 Súng thuốc viên</b><span>Bắn nhanh, ổn định, đạn vô hạn.</span></article>
+          <article><b>💉 Kim tiêm xuyên lõi</b><span>Sát thương cao, phù hợp virus giáp/boss.</span></article>
+          <article><b>🧴 Bình xịt khử khuẩn</b><span>Sát thương vùng ở cự ly gần.</span></article>
+          <article><b>🟠 Bom vitamin</b><span>Nổ diện rộng, 3 quả mỗi khu.</span></article>
+          <article><b>⚡ Tia miễn dịch</b><span>Giữ để chiếu liên tục, tự hồi năng lượng.</span></article>
+          <article><b>🎁 SUPPLY chuyên nghiệp</b><span>Bắn hạ SUPPLY để vật phẩm xuất hiện. Khi nhận thưởng sẽ lóe sáng, phát âm riêng, icon bay về HUD và timer hiện rõ.</span></article>
+          <article><b>⏱ Luật 3 phút</b><span>NPC tăng áp lực theo 3 chặng 0–60s · 61–120s · 121–180s. Boss chỉ xuất hiện đúng giây 180; sau đó NPC thường ngừng sinh tự nhiên.</span></article>
+          <article><b>👹 Boss triệu hồi</b><span>Boss chỉ gọi quân đúng 3 đợt khi máu đi qua 75% · 50% · 25%.</span></article>
+          <article><b>🦠 NPC G1 đa hành vi</b><span>Vi khuẩn có loại nặng chậm, chạy nhanh, zigzag, lượn ngang, phục kích, né tâm ngắm, đi cung, hỗ trợ và giả hướng; mỗi loại có tốc độ riêng.</span></article>
+          <article><b>❤️ Hồi phục</b><span>Hồi ngay +2 Sinh tồn, tối đa 10.</span></article>
+          <article><b>🛡 Khiên khử nhiễm · 12s</b><span>Bao phủ người chơi bằng trường năng lượng và giảm mạnh sát thương trong 12 giây.</span></article>
+          <article><b>🤖 Drone y tế · 10s</b><span>Tự động ưu tiên bắn quái nhỏ gần bác sĩ; hết quái nhỏ mới hỗ trợ bắn Boss.</span></article>
+          <article><b>💉 Adrenaline · 5s</b><span>Tăng tốc bắn và tốc độ di chuyển ngang.</span></article>
+          <article><b>🧬 Vaccine Boost · 7s</b><span>Tăng sát thương vũ khí.</span></article>
+          <article><b>🧴 Sterile Field · 6s</b><span>Làm chậm toàn bộ virus nhỏ.</span></article>
+          <article><b>✨ LOGO TRƯỜNG GPP</b><span>Vật phẩm đặc biệt tổng hợp: hồi sinh tồn và kích hoạt đồng thời Khiên, Drone, Adrenaline, Vaccine, Sterile và GPP Boost.</span></article>
+          <article><b>🧼 Khử nhiễm môi trường</b><span>Ảnh dơ phủ trên ảnh sạch; lớp dơ tan rất chậm từ ngoài vào trung tâm. Khử nhiễm tăng chậm trong 3 phút và khóa ở 50% khi Boss xuất hiện; hạ Boss hoàn tất 50→100% trong 5 giây rồi lấp lánh 2 giây.</span></article>
+        </div>
+        <p class="help-note">PC: di chuột để ngắm, click/giữ để bắn; mỗi loại vũ khí có đường đạn siêu thực riêng; giữ A/D hoặc ←/→ để chạy ngang tự do toàn màn hình, nhấn đúp A/D để né nhanh; phím 1–5 đổi vũ khí; Space hoặc Esc để DỪNG/TIẾP TỤC. Điện thoại: chạm/giữ để bắn, kéo JOYSTICK ngang để di chuyển tự do và bấm ⚡ NÉ NHANH khi cần.</p>
+      </div>
+    </section>
+
+    <section id="pausePanel" class="overlay panel-overlay hidden">
+      <div class="panel-card glass compact-panel">
+        <img class="panel-logo" src="assets/icon-192.png" alt="TRƯỜNG GPP" /><h2>⏸ Tạm dừng</h2>
+        <button id="resumeBtn" class="primary-btn">▶ TIẾP TỤC</button>
+        <button id="pauseRetryBtn" class="secondary-btn">↻ CHƠI LẠI MÀN</button>
+        <div class="pause-settings-label">⚙ CÀI ĐẶT NHANH</div>
+        <button id="soundBtn" class="secondary-btn">🔊 Âm thanh: Bật</button>
+        <button id="fullscreenBtn" class="secondary-btn">⛶ Toàn màn hình</button>
+        <button id="homeBtn" class="secondary-btn danger-outline">⌂ MENU CHÍNH</button>
+        <div class="author-line small"><strong>Ngô Quang Trường</strong><span>TRƯỜNG GPP · 0829076979 · Zalo truongphotoart</span></div>
+      </div>
+    </section>
+
+    <section id="stagePanel" class="overlay panel-overlay hidden">
+      <div class="panel-card glass result-card">
+        <img class="panel-logo" src="assets/icon-192.png" alt="TRƯỜNG GPP" /><p class="eyebrow">KHU VỰC ĐÃ KHỬ NHIỄM</p>
+        <h2 id="stageResultTitle">Hoàn tất</h2>
+        <div class="result-stats">
+          <div><span>Điểm</span><strong id="stageScore">0</strong></div>
+          <div><span>Chính xác</span><strong id="stageAccuracy">0%</strong></div>
+          <div><span>Sinh tồn</span><strong id="stageHealth">10/10</strong></div>
+          <div><span>Xếp hạng</span><strong id="stageRank">A</strong></div>
+        </div>
+        <button id="nextStageBtn" class="primary-btn">TIẾN VÀO KHU TIẾP THEO ›</button>
+        <div class="f1-result-actions">
+          <button id="upgradeBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
+          <button id="stageInstallBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
+        </div>
+        <button id="stageHomeBtn" class="secondary-btn">⌂ MENU CHÍNH</button>
+      </div>
+    </section>
+
+    <section id="bossRewardPanel" class="overlay f1-boss-reward-overlay hidden" aria-label="Phần thưởng Boss">
+      <div class="f1-boss-reward-stage">
+        <div id="bossRewardDrops" class="f1-boss-reward-drops"></div>
+        <button id="claimBossRewardBtn" class="primary-btn f1-claim-btn">NHẬN THƯỞNG</button>
+      </div>
+    </section>
+
+    <section id="upgradePanel" class="overlay panel-overlay hidden" hidden aria-hidden="true">
+      <div class="panel-card glass f1-upgrade-panel">
+        <button class="panel-close" data-close="upgradePanel">✕</button>
+        <p class="eyebrow">NÂNG CẤP CHIẾN DỊCH</p>
+        <h2>CHỌN NÂNG CẤP VĨNH VIỄN</h2>
+        <p class="f1-upgrade-note">Mỗi Boss bị tiêu diệt nhận 1 điểm nâng cấp. Nâng cấp áp dụng cho các màn tiếp theo.</p>
+        <div id="upgradePoints" class="f1-upgrade-points">ĐIỂM NÂNG CẤP: 0</div>
+        <div id="upgradeGrid" class="f1-upgrade-grid"></div>
+      </div>
+    </section>
+
+    <section id="gameOverPanel" class="overlay panel-overlay hidden">
+      <div class="panel-card glass result-card">
+        <img class="panel-logo" src="assets/icon-192.png" alt="TRƯỜNG GPP" /><p class="eyebrow">NHIỆM VỤ THẤT BẠI</p>
+        <h2>Thanh sinh tồn đã cạn</h2>
+        <p>Virus đã áp đảo khu vực. Hãy đổi chiến thuật và thử lại.</p>
+        <button id="retryBtn" class="primary-btn">↻ CHƠI LẠI KHU NÀY</button>
+        <button id="gameOverHomeBtn" class="secondary-btn">⌂ Màn hình chính</button>
+      </div>
+    </section>
+
+    <section id="victoryPanel" class="overlay panel-overlay hidden">
+      <div class="panel-card glass result-card">
+        <img class="panel-logo" src="assets/icon-192.png" alt="TRƯỜNG GPP" /><p class="eyebrow">BỆNH VIỆN ĐÃ AN TOÀN</p>
+        <h2>🏆 HOÀN TẤT TOÀN BỘ TRUY QUÉT</h2>
+        <p id="victoryText">Bạn đã tiêu diệt nguồn bệnh cuối cùng.</p>
+        <button id="victoryReplayBtn" class="primary-btn">↻ CHƠI LẠI</button>
+        <div class="f1-result-actions">
+          <button id="victoryUpgradeBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
+          <button id="victoryInstallBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
+        </div>
+        <button id="victoryHomeBtn" class="secondary-btn">⌂ Màn hình chính</button>
+      </div>
+    </section>
+
+    <section id="hud" class="hud hidden" aria-live="polite">
+      <aside class="status-rail desktop-only" aria-label="Trạng thái chiến đấu">
+        <div class="status-rail-brand"><img src="assets/icon-192.png" alt="" /><span>TRƯỜNG GPP</span></div>
+        <div class="status-stage"><small id="leftStageNo">MÀN 1</small><b id="leftStageName">KHOA DƯỢC</b></div>
+        <div class="status-section">❤️ SINH TỒN <strong id="leftHealthText">10/10</strong></div>
+        <div class="health-bar status-health"><i id="leftHealthFill"></i></div>
+        <div class="status-section support-title">VẬT PHẨM ĐANG HOẠT ĐỘNG</div>
+        <div id="supportList" class="support-list"><div class="support-empty">CHƯA CÓ HỖ TRỢ</div></div>
+        <div class="status-rail-note">Khiên · Drone · Adrenaline · Vaccine · Sterile · GPP</div>
+      </aside>
+      <div id="difficultyBadge" class="difficulty-badge desktop-only">THƯỜNG · CÂN BẰNG</div>
+      <div class="hud-top-left glass-mini mobile-only">
+        <div class="hud-label"><span class="hud-brand-life"><img src="assets/icon-192.png" alt="" />❤️ SINH TỒN</span><b id="healthText">10/10</b></div>
+        <div class="health-bar"><i id="healthFill"></i></div>
+      </div>
+
+      <div class="hud-top-center glass-mini">
+        <b id="stageName">KHOA DƯỢC</b>
+        <span id="cleanText">KHỬ NHIỄM 0%</span>
+        <div class="clean-bar"><i id="cleanFill"></i></div>
+      </div>
+
+      <div class="hud-top-right glass-mini mobile-only">
+        <span>ĐIỂM</span><b id="scoreText">0</b>
+        <small id="enemyText">Virus: 0</small>
+        <small id="timeTextMobile">00:00</small>
+      </div>
+
+      <div class="game-quick-actions">
+        <button id="pauseBtn" class="pause-btn" aria-label="Tạm dừng">⏸ <span>DỪNG</span></button>
+        <button id="homeQuickBtn" class="home-quick-btn" aria-label="Về menu chính">⌂ <span>MENU</span></button>
+      </div>
+
+      <div id="bossBar" class="boss-bar glass-mini hidden">
+        <div><span id="bossName">BOSS</span><b id="bossHpText">100%</b></div>
+        <div class="boss-track"><i id="bossFill"></i></div>
+      </div>
+
+      <div id="comboBadge" class="combo-badge hidden">🔥 COMBO ×2</div>
+      <div id="eventToast" class="event-toast hidden">Virus incoming!</div>
+      <div id="damageVignette" class="damage-vignette"></div>
+
+      <div class="weapon-panel glass-mini">
+        <div class="right-combat-summary desktop-only">
+          <div><span>ĐIỂM</span><b id="rightScoreText">0</b></div>
+          <div><span>THỜI GIAN</span><b id="rightTimeText">00:00</b></div>
+          <div><span>VIRUS</span><b id="rightEnemyText">0</b></div>
+          <div class="right-combo"><span>COMBO</span><b id="rightComboText">×0</b></div>
+        </div>
+        <div class="weapon-rail-heading desktop-only">VŨ KHÍ Y TẾ</div>
+        <div class="weapon-info">
+          <span id="weaponIcon">💊</span>
+          <div><b id="weaponName">Súng thuốc viên</b><small id="weaponStatus">Đạn vô hạn</small></div>
+        </div>
+        <div id="weaponButtons" class="weapon-buttons">
+          <button data-weapon="0" data-key="1" class="active"><span>💊</span><small><b>THUỐC VIÊN</b><em>Bắn nhanh</em></small><i>1</i></button>
+          <button data-weapon="1" data-key="2"><span>💉</span><small><b>KIM TIÊM</b><em>Xuyên lõi</em></small><i>2</i></button>
+          <button data-weapon="2" data-key="3"><span>🧴</span><small><b>KHỬ KHUẨN</b><em>Phun diện rộng</em></small><i>3</i></button>
+          <button data-weapon="3" data-key="4"><span>🟠</span><small><b>BOM VITAMIN</b><em>Nổ diện rộng</em></small><i>4</i></button>
+          <button data-weapon="4" data-key="5"><span>⚡</span><small><b>TIA MIỄN DỊCH</b><em>Beam liên tục</em></small><i>5</i></button>
+        </div>
+
+      </div>
+
+      <aside id="bossRewardRail" class="boss-reward-rail" aria-label="Vật phẩm thưởng Boss">
+        <div class="boss-reward-title"><span>PHẦN THƯỞNG BOSS</span><small>DÙNG Q · W · E · R</small></div>
+        <div class="boss-reward-slots">
+          <button class="boss-reward-slot" data-boss-reward="survival" data-hotkey="Q" aria-label="Hộp sinh tồn"><kbd>Q</kbd><span>❤️</span><b>HỘP +5</b><em id="bossRewardCount-survival">×0</em></button>
+          <button class="boss-reward-slot" data-boss-reward="eliteDrone" data-hotkey="W" aria-label="Drone đặc biệt"><kbd>W</kbd><span>🛸</span><b>DRONE 20s</b><em id="bossRewardCount-eliteDrone">×0</em></button>
+          <button class="boss-reward-slot" data-boss-reward="annihilator" data-hotkey="E" aria-label="Bơm hủy diệt"><kbd>E</kbd><span>💥</span><b>HỦY DIỆT</b><em id="bossRewardCount-annihilator">×0</em></button>
+          <button class="boss-reward-slot boss-reward-gpp" data-boss-reward="bossGpp" data-hotkey="R" aria-label="Logo TRƯỜNG GPP tổng hợp"><kbd>R</kbd><span class="boss-reward-logo-wrap"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" /></span><b>GPP TỔNG HỢP</b><em id="bossRewardCount-bossGpp">×0</em></button>
+        </div>
+      </aside>
+
+      <div id="mobileSupportStrip" class="mobile-support-strip mobile-only"></div>
+      <div class="mobile-brand mobile-only"><img src="assets/icon-192.png" alt="" /><span>TRƯỜNG GPP</span></div>
+
+      <div id="moveControls" class="move-controls" aria-label="Điều khiển di chuyển ngang">
+        <div id="movePad" class="move-pad" aria-label="Joystick di chuyển ngang">
+          <span class="move-arrow left">◀</span><span class="move-track"></span><i id="moveKnob" class="move-knob"></i><span class="move-arrow right">▶</span>
+          <small>DI CHUYỂN</small>
+        </div>
+        <button id="dashBtn" class="dash-btn" aria-label="Né nhanh">⚡ <span>NÉ NHANH</span></button>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+BẢN v2.2.0 DÙNG ĐỦ 7 ẢNH NỀN:
+assets/stage1.jpg
+assets/stage2.jpg
+assets/stage3.jpg
+assets/stage4.jpg
+assets/stage5.jpg
+assets/stage6.jpg
+assets/stage7.jpg
+
+KHÔNG XÓA CÁC FILE NÀY.
+`assets/stage-final.jpg` được giữ làm fallback/victory và có nội dung byte-for-byte giống stage7.jpg.

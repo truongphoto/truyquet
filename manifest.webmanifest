@@ -1,0 +1,31 @@
+{
+  "name": "Bác Sĩ Truy Quét · TRƯỜNG GPP",
+  "short_name": "BS Truy Quét",
+  "description": "Game y tế 8 màn · sa hình bệnh viện tương tác · 3 phút sinh tồn · H1 Boss/NPC nâng cao · vật phẩm TRƯỜNG GPP · PWA.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#061e22",
+  "theme_color": "#0b6f78",
+  "icons": [
+    {
+      "src": "assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
