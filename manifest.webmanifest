@@ -1,7 +1,7 @@
 {
   "name": "Bác Sĩ Truy Quét · TRƯỜNG GPP",
   "short_name": "BS Truy Quét",
-  "description": "Game y tế 8 màn · AUTO FIRE + khóa mục tiêu trên điện thoại · PC AUTO/THỦ CÔNG · sa hình bệnh viện · H1.",
+  "description": "Bác Sĩ Truy Quét v3.7.0 H1 · 8 màn · Mobile AUTO TARGET + AUTO FIRE · chạm khóa mục tiêu · PC AUTO/THỦ CÔNG trong trận · NPC phản kích nhẹ.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

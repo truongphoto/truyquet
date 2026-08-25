@@ -476,3 +476,21 @@
 .h16-fire-mode-hud.manual{color:#ffe69a;border-color:rgba(255,226,128,.28);background:rgba(51,42,8,.72)}
 @media (max-width:1179px),(hover:none),(pointer:coarse){.h16-fire-mode-card{display:none!important}.h16-pause-fire-mode{padding:5px;gap:4px}.h16-pause-toggle #pauseFireModeManual{display:none}.h16-pause-toggle{grid-template-columns:1fr}.h16-pause-fire-hint{font-size:6px}.h16-fire-mode-hud{top:max(50px,calc(env(safe-area-inset-top) + 45px));padding:3px 7px;font-size:5.8px;letter-spacing:.05em}}
 @media (max-height:470px) and (orientation:landscape){.h16-pause-fire-mode{padding:4px}.h16-pause-toggle button{min-height:30px;padding:3px}.h16-fire-mode-hud{top:max(45px,calc(env(safe-area-inset-top) + 42px));font-size:5px}}
+
+
+/* === v3.7.0 H1 · MOBILE AUTO TARGET FIX · LIVE PC FIRE MODE · NPC COUNTERFIRE · HUD SAFETY === */
+.h17-game-fire-mode{display:grid!important;gap:4px!important;width:100%;padding:5px!important;border-radius:9px;border:1px solid rgba(122,244,232,.18);background:rgba(5,48,54,.55);flex:0 0 auto!important}
+.h17-game-fire-mode>span{font-size:6.6px;font-weight:1000;letter-spacing:.10em;color:#9feee7;text-align:center}
+.h17-game-fire-buttons{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.h17-game-fire-buttons button{min-width:0;height:27px;padding:0 3px;border-radius:7px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:#d9f5f2;font-size:6.2px;font-weight:1000;line-height:1;cursor:pointer;white-space:nowrap}
+.h17-game-fire-buttons button.active{background:linear-gradient(135deg,rgba(126,255,237,.94),rgba(54,196,194,.88));border-color:#bafff5;color:#063d44;box-shadow:0 0 13px rgba(91,235,218,.20)}
+/* Runtime notices live below the top HUD/Boss bar, never above the weapon at screen centre-bottom. */
+.event-toast{top:126px!important;bottom:auto!important;z-index:25!important;max-width:min(540px,56vw)!important;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.h17-hit-indicator{pointer-events:none}
+@media (max-width:1179px),(hover:none),(pointer:coarse){
+  .h17-game-fire-mode{display:none!important}
+  .event-toast{top:104px!important;bottom:auto!important;max-width:68vw!important;padding:5px 9px!important;font-size:8px!important}
+}
+@media (max-height:470px) and (orientation:landscape){
+  .event-toast{top:91px!important;font-size:7px!important;padding:4px 8px!important;max-width:64vw!important}
+}

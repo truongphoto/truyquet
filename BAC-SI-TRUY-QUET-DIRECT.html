@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.6.0 H1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.7.0 H1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -491,6 +491,24 @@
 @media (max-width:1179px),(hover:none),(pointer:coarse){.h16-fire-mode-card{display:none!important}.h16-pause-fire-mode{padding:5px;gap:4px}.h16-pause-toggle #pauseFireModeManual{display:none}.h16-pause-toggle{grid-template-columns:1fr}.h16-pause-fire-hint{font-size:6px}.h16-fire-mode-hud{top:max(50px,calc(env(safe-area-inset-top) + 45px));padding:3px 7px;font-size:5.8px;letter-spacing:.05em}}
 @media (max-height:470px) and (orientation:landscape){.h16-pause-fire-mode{padding:4px}.h16-pause-toggle button{min-height:30px;padding:3px}.h16-fire-mode-hud{top:max(45px,calc(env(safe-area-inset-top) + 42px));font-size:5px}}
 
+
+/* === v3.7.0 H1 · MOBILE AUTO TARGET FIX · LIVE PC FIRE MODE · NPC COUNTERFIRE · HUD SAFETY === */
+.h17-game-fire-mode{display:grid!important;gap:4px!important;width:100%;padding:5px!important;border-radius:9px;border:1px solid rgba(122,244,232,.18);background:rgba(5,48,54,.55);flex:0 0 auto!important}
+.h17-game-fire-mode>span{font-size:6.6px;font-weight:1000;letter-spacing:.10em;color:#9feee7;text-align:center}
+.h17-game-fire-buttons{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.h17-game-fire-buttons button{min-width:0;height:27px;padding:0 3px;border-radius:7px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:#d9f5f2;font-size:6.2px;font-weight:1000;line-height:1;cursor:pointer;white-space:nowrap}
+.h17-game-fire-buttons button.active{background:linear-gradient(135deg,rgba(126,255,237,.94),rgba(54,196,194,.88));border-color:#bafff5;color:#063d44;box-shadow:0 0 13px rgba(91,235,218,.20)}
+/* Runtime notices live below the top HUD/Boss bar, never above the weapon at screen centre-bottom. */
+.event-toast{top:126px!important;bottom:auto!important;z-index:25!important;max-width:min(540px,56vw)!important;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.h17-hit-indicator{pointer-events:none}
+@media (max-width:1179px),(hover:none),(pointer:coarse){
+  .h17-game-fire-mode{display:none!important}
+  .event-toast{top:104px!important;bottom:auto!important;max-width:68vw!important;padding:5px 9px!important;font-size:8px!important}
+}
+@media (max-height:470px) and (orientation:landscape){
+  .event-toast{top:91px!important;font-size:7px!important;padding:4px 8px!important;max-width:64vw!important}
+}
+
 </style>
 </head>
 <body>
@@ -791,6 +809,13 @@
           <div><span>THỜI GIAN</span><b id="rightTimeText">00:00</b></div>
           <div><span>VIRUS</span><b id="rightEnemyText">0</b></div>
           <div class="right-combo"><span>COMBO</span><b id="rightComboText">×0</b></div>
+        </div>
+        <div id="gameFireModeBlock" class="h17-game-fire-mode desktop-only" aria-label="Chế độ bắn khi chơi trên PC">
+          <span>CHẾ ĐỘ BẮN</span>
+          <div class="h17-game-fire-buttons">
+            <button id="gameFireModeAuto" type="button" data-fire-mode="auto">⚡ AUTO</button>
+            <button id="gameFireModeManual" type="button" data-fire-mode="manual">🎯 THỦ CÔNG</button>
+          </div>
         </div>
         <div class="weapon-rail-heading desktop-only">VŨ KHÍ Y TẾ</div>
         <div class="weapon-info">
@@ -3298,6 +3323,162 @@ g2IsNewer=function(v,cur=H15_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);fo
 h16UpdateFireModeUI();
 
 h1RefreshMap();h15PlaceMapPreview(a1SelectedStage);g1RefreshInstallUI();g1RefreshUpdateUI();
+
+/* === v3.7.0 H1 · REAL MOBILE AUTO TARGET/FIRE + PC LIVE MODE + NPC COUNTERFIRE + ITEM/HIT REPAIR === */
+const H17_VERSION='3.7.0';
+function h17IsMobileGameplay(){
+  const ua=navigator.userAgent||'', uaMobile=!!navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(ua);
+  const touch=Number(navigator.maxTouchPoints||0)>0;
+  let smallScreen=false;try{smallScreen=Math.min(screen.width||innerWidth,screen.height||innerHeight)<900}catch{smallScreen=Math.min(innerWidth,innerHeight)<900}
+  return uaMobile || (touch&&smallScreen) || (touch&&Math.min(innerWidth,innerHeight)<700);
+}
+// Real phones/tablets are always AUTO even when a browser reports a mouse/fine pointer in landscape/PWA mode.
+h16IsMobileControl=h17IsMobileGameplay;
+
+const h17NewStateBase=newState;
+newState=function(stageIndex=0){
+  const s=h17NewStateBase(stageIndex);s.h17NpcShots=[];s.h17DamageIFrame=0;s.h17PlayerHitFx=null;s.h17LastAutoShotAt=0;
+  if(h17IsMobileGameplay())s.h16FireMode='auto';return s;
+};
+
+// Faster NPC pressure, but only a moderate step above v3.6 so motion remains readable.
+const h17SpeedTargetBase=d1SpeedTarget;
+d1SpeedTarget=function(diff=state?.difficulty||'normal',stage=state?.stageIndex||0){return h17SpeedTargetBase(diff,stage)*1.18;};
+
+function h17ShooterChance(type){
+  return ({spitter:.95,flyer:.62,elite:.70,support:.58,nucleus:.40,flagella:.28,shield:.18,basic:.08,zigzag:.12,sprinter:.14,dodger:.12,arc:.10}[type]||0);
+}
+const h17SpawnEnemyBase=spawnEnemy;
+spawnEnemy=function(type,boss=false){
+  const e=h17SpawnEnemyBase(type,boss);if(!e||boss)return e;
+  const diff=state?.difficulty||'normal',scale=diff==='easy'?.62:diff==='hard'?1:.82;
+  e.h17Ranged=!e.bossSummoned&&Math.random()<h17ShooterChance(type)*scale;
+  e.h17ShotCooldown=2.4+Math.random()*2.2;e.h17ShotWarn=0;e.h17ShotQueued=false;e.h17ThreatPulse=0;return e;
+};
+function h17MaxNpcShots(){const mobile=h17IsMobileGameplay(),diff=state?.difficulty||'normal';return diff==='hard'?(mobile?3:3):(mobile?2:3);}
+function h17NpcShotDamage(){const diff=state?.difficulty||'normal';return diff==='easy'?.07:diff==='hard'?.12:.09;}
+function h17NpcWarnSeconds(){const diff=state?.difficulty||'normal';return diff==='easy'?.60:diff==='hard'?.44:.52;}
+function h17LaunchNpcShot(e){
+  if(!state||!e||e.dead||e.boss||state.transition>0)return;const s=enemyScreen(e),tx=playerScreenX(),ty=innerHeight*.76,dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy)||1;
+  const speed=150+(state.difficulty==='hard'?16:state.difficulty==='easy'?-8:0),life=Math.max(.62,l/speed);
+  state.h17NpcShots.push({x:s.x,y:s.y,px:s.x,py:s.y,vx:dx/l*speed,vy:dy/l*speed,t:0,life,r:2.2,damage:h17NpcShotDamage(),targetPlayerX:state.playerX,color:'#dc83ff',dead:false,sourceX:s.x});
+  e.h17ThreatPulse=.38;
+}
+function h17UpdateNpcCounterfire(dt){
+  if(!state||state.mode!=='playing'||state.transition>0)return;state.h17DamageIFrame=Math.max(0,(state.h17DamageIFrame||0)-dt);
+  const shots=state.h17NpcShots||(state.h17NpcShots=[]),cap=h17MaxNpcShots();
+  if(!state.bossIntro){
+    const candidates=state.enemies.filter(e=>!e.dead&&!e.boss&&!e.bossSummoned&&e.h17Ranged&&e.depth<.76&&e.depth>.10).sort((a,b)=>a.depth-b.depth);
+    let pending=candidates.filter(e=>e.h17ShotWarn>0||e.h17ShotQueued).length+shots.filter(s=>!s.dead).length;
+    for(const e of candidates){
+      e.h17ThreatPulse=Math.max(0,(e.h17ThreatPulse||0)-dt);e.h17ShotCooldown=(e.h17ShotCooldown||0)-dt;
+      if(e.h17ShotWarn>0){e.h17ShotWarn-=dt;if(e.h17ShotWarn<=0&&e.h17ShotQueued){e.h17ShotQueued=false;h17LaunchNpcShot(e);e.h17ShotCooldown=3.1+Math.random()*2.4;pending++;}continue;}
+      if(e.h17ShotCooldown<=0&&pending<cap){e.h17ShotWarn=h17NpcWarnSeconds();e.h17ShotQueued=true;e.h17ShotCooldown=99;pending++;}
+    }
+  }
+  for(const sh of shots){
+    if(sh.dead)continue;sh.t+=dt;sh.px=sh.x;sh.py=sh.y;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;
+    if(sh.t>=sh.life){
+      const hitRadius=Math.max(28,Math.min(52,innerWidth*.032));
+      if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius){state.h17IncomingHit=true;state.h17IncomingFromX=sh.sourceX;damagePlayer(sh.damage);state.h17IncomingHit=false;}
+      else state.score+=3;sh.dead=true;
+    }
+  }
+  state.h17NpcShots=shots.filter(s=>!s.dead&&s.t<s.life+.2);
+}
+
+// Tiny counterfire has a short damage grace window so overlapping low-damage bullets never melt the player.
+const h17DamagePlayerBase=damagePlayer;
+damagePlayer=function(amount){
+  if(!state)return;if(state.h17IncomingHit){
+    if((state.h17DamageIFrame||0)>0)return;let dmg=Math.max(0,Number(amount)||0),shielded=state.shield>0;if(shielded)dmg*=.35;
+    const before=state.health;state.health=Math.max(0,state.health-dmg);if(state.health<before){state.h17DamageIFrame=.34;state.shake=Math.max(state.shake||0,.055);state.h17PlayerHitFx={start:performance.now(),dur:360,fromX:state.h17IncomingFromX||gameplayViewport().center,shielded};tone(shielded?690:210,.045,'triangle',.010,shielded?110:-55,0,.03);try{navigator.vibrate?.(10)}catch{}}
+    if(state.health<=0){state.mode='over';show(UI.over);}return;
+  }
+  return h17DamagePlayerBase(amount);
+};
+
+// Mobile AUTO target hierarchy: manual tap lock > current sticky target > ranged threat > closest dangerous NPC > Boss > SUPPLY.
+function h17ThreatScore(e){
+  const shooter=e.h17Ranged?120:0,warning=e.h17ShotWarn>0?220:0,fast=(e.g1Motion==='sprinter'||e.type==='charger'||e.type==='sprinter')?70:0,support=e.base?.support?65:0,close=(1-clamp(e.depth,0,1))*180;return warning+shooter+fast+support+close;
+}
+const h17ChooseAutoTargetBase=h16ChooseAutoTarget;
+h16ChooseAutoTarget=function(){
+  if(!state)return null;const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
+  if(h17IsMobileGameplay()){
+    let sticky=h16ResolveTarget(state.h16AutoTarget);
+    const minors=(state.enemies||[]).filter(e=>!e.dead&&!e.boss).sort((a,b)=>h17ThreatScore(b)-h17ThreatScore(a));
+    if(sticky&&sticky.kind==='enemy'&&!sticky.entity.dead){const best=minors[0];if(!best||best.id===sticky.entity.id||h17ThreatScore(best)<h17ThreatScore(sticky.entity)+145)return sticky;}
+    if(minors[0]){state.h16AutoTarget=h16TargetRef('enemy',minors[0]);return h16ResolveTarget(state.h16AutoTarget);}
+    const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
+    const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
+    state.h16AutoTarget=null;return null;
+  }
+  return h17ChooseAutoTargetBase();
+};
+// No post-briefing dead time on mobile: once gameplay begins it immediately selects a target and fires.
+h16AutoFireTick=function(){
+  if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto'||state.bossIntro>0)return;const t=h16ChooseAutoTarget();if(!t)return;
+  const s=t.screen|| (t.kind==='reward'?rewardNpcScreen(t.entity):enemyScreen(t.entity));if(!s)return;pointer.x=s.x;pointer.y=s.y;
+  const w=WEAPONS[state.weapon],now=performance.now();if(w.kind==='bomb'&&now-(state.h16AutoBombAt||0)<1450)return;
+  const before=state.lastFire;state.h16AutoShot=true;try{shoot(s.x,s.y)}finally{state.h16AutoShot=false;}
+  if(state.lastFire!==before){state.h17LastAutoShotAt=now;weaponSingleFlashUntil=now+420;if(w.kind==='bomb')state.h16AutoBombAt=now;}
+};
+
+// Capture AUTO taps before the legacy manual pointer handler: power-up tap uses the item; NPC/Boss tap only locks target.
+canvas.addEventListener('pointerdown',e=>{
+  if(!state||state.mode!=='playing'||h16CurrentFireMode()!=='auto')return;const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;ensureAudio();
+  if(collectPowerups(p.x,p.y)){state.lastFire=performance.now();e.preventDefault();e.stopImmediatePropagation();return;}
+  const target=h16TargetAt(p.x,p.y);if(target){h16LockTarget(target);e.preventDefault();e.stopImmediatePropagation();}
+},true);
+
+// Ensure every ordinary support item has both a gameplay function and a fresh weapon-monitor effect.
+const h17CollectPowerupsBase=collectPowerups;
+collectPowerups=function(x,y){
+  const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind,before=state?{health:state.health,shield:state.shield,drone:state.drone,adrenaline:state.adrenaline,vaccine:state.vaccine,sterile:state.sterile,gppBoost:state.gppBoost}:null;
+  const ok=h17CollectPowerupsBase(x,y);if(!ok||!state||!kind)return ok;
+  // Repair guards: guarantee the intended minimum effect even if an older override did not extend it.
+  if(kind==='heal')state.health=Math.min(state.maxHealth||10,Math.max(state.health,(before?.health||0)+2));
+  if(kind==='shield')state.shield=Math.max(state.shield||0,12);
+  if(kind==='drone')state.drone=Math.max(state.drone||0,10);
+  if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);
+  if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);
+  if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);
+  if(kind==='gpp'){state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);state.gppBoost=Math.max(state.gppBoost||0,8);}
+  g2SetWeaponScreenFx(kind,kind==='heal'?1700:2200);state._supportHudKey='';updateHUD();return true;
+};
+
+function h17DrawNpcCounterfire(t){
+  if(!state)return;ctx.save();ctx.beginPath();const v=gameplayViewport();ctx.rect(v.left,0,v.width,innerHeight);ctx.clip();
+  for(const e of state.enemies){if(e.dead||e.boss||!e.h17Ranged)continue;const s=enemyScreen(e);if(e.h17ShotWarn>0){const q=1-clamp(e.h17ShotWarn/h17NpcWarnSeconds(),0,1),pulse=.55+.45*Math.sin(t*.025);ctx.globalCompositeOperation='screen';ctx.globalAlpha=.25+.35*q;ctx.strokeStyle='#ff9fe8';ctx.lineWidth=1.3+q;ctx.shadowColor='#ff6ed7';ctx.shadowBlur=9;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1.10+.18*q),0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=`rgba(255,220,245,${.55+.3*pulse})`;ctx.font=`900 ${Math.max(7,Math.min(12,s.r*.17))}px system-ui`;ctx.textAlign='center';ctx.fillText('⚠ PHẢN KÍCH',s.x,s.y-s.r*1.24);}}
+  for(const sh of state.h17NpcShots||[]){const a=clamp(1-sh.t/sh.life,0,1);ctx.globalCompositeOperation='screen';ctx.globalAlpha=.80*a+.16;ctx.strokeStyle='#e59bff';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(sh.px,sh.py);ctx.lineTo(sh.x,sh.y);ctx.stroke();ctx.fillStyle='#fff0ff';ctx.shadowColor='#ce65ff';ctx.shadowBlur=7;ctx.beginPath();ctx.arc(sh.x,sh.y,Math.max(1.5,sh.r),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+  ctx.restore();
+}
+function h17DrawPlayerHitFx(t){
+  const f=state?.h17PlayerHitFx;if(!f)return;const q=clamp((t-f.start)/f.dur,0,1);if(q>=1){state.h17PlayerHitFx=null;return;}const v=gameplayViewport(),cx=playerScreenX(),cy=innerHeight*.70,side=f.fromX<cx?-1:1,col=f.shielded?'#8cf5ff':'#ff8fa3';ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=(1-q)*.55;ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.shadowColor=col;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(cx,cy,32+q*34,side<0?Math.PI*.55:-Math.PI*.45,side<0?Math.PI*1.45:Math.PI*.45);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<5;i++){const yy=innerHeight*(.30+i*.095),x=side<0?v.left+5:v.left+v.width-5;ctx.globalAlpha=(1-q)*(.17+i*.025);ctx.fillStyle=col;ctx.fillRect(side<0?x:x-4,yy,4,22);}ctx.restore();
+}
+const h17DrawTargetLockBase=h16DrawTargetLock;
+h16DrawTargetLock=function(t){h17DrawTargetLockBase(t);if(!state||h16CurrentFireMode()!=='auto')return;const tar=h16ResolveTarget(state.h16ManualLock)||h16ResolveTarget(state.h16AutoTarget);if(!tar||tar.kind!=='enemy'||!tar.entity.h17Ranged)return;const s=tar.screen||enemyScreen(tar.entity);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle='#ff9fe8';ctx.font=`1000 ${Math.max(8,Math.min(13,s.r*.18))}px system-ui`;ctx.textAlign='center';ctx.fillText('↯ PHẢN KÍCH',s.x,s.y+s.r*1.47);ctx.restore();};
+
+const h17CombatCleanupBase=h1CombatCleanup;
+h1CombatCleanup=function(){if(state){if(state.h17NpcShots)state.h17NpcShots.length=0;state.h17PlayerHitFx=null;state.h17DamageIFrame=0;for(const e of state.enemies||[]){e.h17ShotWarn=0;e.h17ShotQueued=false;}}return h17CombatCleanupBase();};
+
+const h17UpdateBase=update;
+update=function(dt){h17UpdateBase(dt);if(state?.mode==='playing')h17UpdateNpcCounterfire(dt);};
+const h17RenderBase=render;
+render=function(t){h17RenderBase(t);h17DrawNpcCounterfire(t);h17DrawPlayerHitFx(t);};
+
+// Keep live PC mode buttons synced and force true mobile state after orientation/resume changes.
+const h17UpdateFireModeUIBase=h16UpdateFireModeUI;
+h16UpdateFireModeUI=function(){h17UpdateFireModeUIBase();const mode=h16CurrentFireMode();for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]'))b.classList.toggle('active',b.dataset.fireMode===mode);const hud=$('#fireModeHud');if(hud&&h17IsMobileGameplay())hud.textContent='⚡ AUTO · TỰ CHỌN MỤC TIÊU · CHẠM ĐỂ KHÓA';};
+function h17ForceMobileAuto(){if(!h17IsMobileGameplay())return;if(state){state.h16FireMode='auto';state.h16AutoTarget=null;}h16PreferredFireMode='auto';h16UpdateFireModeUI();}
+window.addEventListener('orientationchange',()=>setTimeout(h17ForceMobileAuto,80),{passive:true});window.addEventListener('pageshow',h17ForceMobileAuto,{passive:true});
+const h17ResumeBase=resumeGame;resumeGame=function(){const r=h17ResumeBase();h17ForceMobileAuto();return r;};
+
+// Update build comparison and UI now that v3.7 is active.
+g2IsNewer=function(v,cur=H17_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
+
 })();
 
 </script>
