@@ -2254,7 +2254,7 @@ for(const id of G1_INSTALL_IDS){const b=document.getElementById(id);if(b)b.oncli
 
 
 /* === v3.5.0 H1 BALANCE · sparse Boss patterns · smart map preview · richer SUPPLY · leaderboard client === */
-const H15_VERSION='3.6.0';
+const H15_VERSION='3.8.0';
 
 // --- Boss fire: fewer, more legible projectiles with a visible telegraph and real breathing room. ---
 function h15BossShotCount(phase,diff){
@@ -2342,7 +2342,7 @@ async function h15FetchScores(){
   const f=h15CurrentFilters();if(H15_LB_ENDPOINT){try{const u=new URL(H15_LB_ENDPOINT,location.href);u.searchParams.set('difficulty',f.difficulty);if(f.stage!=='all')u.searchParams.set('stage',f.stage);const r=await fetch(u,{cache:'no-store'});if(r.ok){const j=await r.json();if(Array.isArray(j.entries))return{mode:'online',entries:j.entries};}}catch{}}
   let a=h15LoadLocalScores().filter(x=>x.difficulty===f.difficulty&&(f.stage==='all'||String(x.stage)===f.stage));return{mode:'local',entries:a};
 }
-function h15RenderLeaderRows(entries){const box=$('#leaderboardList');if(!box)return;box.replaceChildren();const list=[...entries].sort((a,b)=>Number(b.score)-Number(a.score)||Number(a.bossSeconds||999)-Number(b.bossSeconds||999)).slice(0,30);if(!list.length){const e=document.createElement('div');e.className='h15-leader-row';e.textContent='Chưa có thành tích ở mục này.';box.appendChild(e);return;}list.forEach((r,i)=>{const row=document.createElement('div');row.className='h15-leader-row'+(i<3?' top3':'');const pos=document.createElement('span');pos.className='pos';pos.textContent=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;const who=document.createElement('span');who.className='who';const b=document.createElement('b');b.textContent=h15SafeName(r.name);const sm=document.createElement('small');sm.textContent=`Màn ${Number(r.stage)+1} · ${String(r.difficulty||'normal').toUpperCase()}`;who.append(b,sm);const sc=document.createElement('span');sc.className='score';sc.textContent=Number(r.score||0).toLocaleString('vi-VN');const rk=document.createElement('span');rk.className='rank';rk.textContent=r.rank||'A';row.append(pos,who,sc,rk);box.appendChild(row);});}
+function h15RenderLeaderRows(entries){const box=$('#leaderboardList');if(!box)return;box.replaceChildren();const list=[...entries].sort((a,b)=>Number(b.score)-Number(a.score)||Number(a.bossSeconds||999)-Number(b.bossSeconds||999)).slice(0,30);if(!list.length){const e=document.createElement('div');e.className='h15-leader-row';e.textContent='Chưa có thành tích ở mục này.';box.appendChild(e);return;}list.forEach((r,i)=>{const row=document.createElement('div');row.className='h15-leader-row'+(i<3?' top3':'');const pos=document.createElement('span');pos.className='pos';pos.textContent=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;const who=document.createElement('span');who.className='who';const b=document.createElement('b');b.textContent=h15SafeName(r.name);const sm=document.createElement('small');sm.textContent=`Màn ${Number(r.stage)+1} · ${h18DiffLabel(r.difficulty||'normal')}`;who.append(b,sm);const sc=document.createElement('span');sc.className='score';sc.textContent=Number(r.score||0).toLocaleString('vi-VN');const rk=document.createElement('span');rk.className='rank';rk.textContent=r.rank||'A';row.append(pos,who,sc,rk);box.appendChild(row);});}
 async function h15RefreshLeaderboard(){const mode=$('#leaderboardMode');if(mode)mode.textContent='ĐANG TẢI…';const r=await h15FetchScores();if(mode)mode.textContent=r.mode==='online'?'🌐 BẢNG XẾP HẠNG ONLINE · NHIỀU THIẾT BỊ':'💾 BẢNG XẾP HẠNG TRÊN THIẾT BỊ NÀY';h15RenderLeaderRows(r.entries);}
 function h15OpenLeaderboard(record=false){const p=$('#leaderboardPanel');if(!p)return;show(p);const pr=$('#leaderboardRecordPrompt');if(pr)pr.classList.toggle('hidden',!(record&&h15PendingRecord));h15RefreshLeaderboard();}
 $('#leaderboardBtn')?.addEventListener('click',()=>h15OpenLeaderboard(false));$('#leaderboardDifficulty')?.addEventListener('change',h15RefreshLeaderboard);$('#leaderboardStage')?.addEventListener('change',h15RefreshLeaderboard);$('#leaderboardRecordBtn')?.addEventListener('click',()=>h15OpenLeaderboard(true));$('#victoryLeaderboardRecordBtn')?.addEventListener('click',()=>h15OpenLeaderboard(true));
@@ -2613,5 +2613,79 @@ const h17ResumeBase=resumeGame;resumeGame=function(){const r=h17ResumeBase();h17
 // Update build comparison and UI now that v3.7 is active.
 g2IsNewer=function(v,cur=H17_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
 h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
+
+/* === v3.8.0 H1 · CONTROL SIDE + ITEM GUARANTEE + END-RESULT LEADERBOARD PREVIEW === */
+const H18_VERSION='3.8.0',H18_CONTROL_SIDE_KEY='bstq-h18-mobile-control-side-v1';
+let h18PendingShare=null,h18PreviewOnly=false;
+function h18ReadControlSide(){try{return localStorage.getItem(H18_CONTROL_SIDE_KEY)==='right'?'right':'left'}catch{return'left'}}
+let h18ControlSide=h18ReadControlSide();
+function h18ApplyControlSide(side,{persist=true,announce=false}={}){
+  h18ControlSide=side==='right'?'right':'left';document.documentElement.dataset.mobileControls=h18ControlSide;
+  if(persist){try{localStorage.setItem(H18_CONTROL_SIDE_KEY,h18ControlSide)}catch{}}
+  for(const b of document.querySelectorAll('[data-mobile-control-side]'))b.classList.toggle('active',b.dataset.mobileControlSide===h18ControlSide);
+  try{releaseMovePad()}catch{}
+  if(announce&&state?.mode==='playing')toast(`🕹 ĐIỀU KHIỂN · ${h18ControlSide==='right'?'BÊN PHẢI':'BÊN TRÁI'}`,1.0);
+}
+for(const b of document.querySelectorAll('[data-mobile-control-side]'))b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();h18ApplyControlSide(b.dataset.mobileControlSide,{announce:true});});
+h18ApplyControlSide(h18ControlSide,{persist:false});
+window.addEventListener('orientationchange',()=>setTimeout(()=>h18ApplyControlSide(h18ControlSide,{persist:false}),100),{passive:true});
+window.addEventListener('pageshow',()=>h18ApplyControlSide(h18ControlSide,{persist:false}),{passive:true});
+
+// Always expose the exact running build on the main menu.
+function h18RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent=`PHIÊN BẢN · v${H18_VERSION} H1`;if(b)b.textContent=`v${H18_VERSION} H1`;document.title=`Bác Sĩ Truy Quét · TRƯỜNG GPP · v${H18_VERSION} H1`;}
+h18RefreshVersion();
+
+// Final ordinary-item guarantee. Every pickup must change real gameplay state AND refresh its monitor/expanded FX.
+const h18CollectPowerupsBase=collectPowerups;
+collectPowerups=function(x,y){
+  const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind,before=state?{health:state.health,shield:state.shield,drone:state.drone,adrenaline:state.adrenaline,vaccine:state.vaccine,sterile:state.sterile,gppBoost:state.gppBoost}:null;
+  const ok=h18CollectPowerupsBase(x,y);if(!ok||!state||!kind)return ok;const max=state.maxHealth||10;
+  if(kind==='heal')state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));
+  else if(kind==='shield')state.shield=Math.max(state.shield||0,12);
+  else if(kind==='drone')state.drone=Math.max(state.drone||0,10);
+  else if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);
+  else if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);
+  else if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);
+  else if(kind==='gpp'){
+    state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);state.gppBoost=Math.max(state.gppBoost||0,8);
+  }
+  g2SetWeaponScreenFx(kind,kind==='heal'?1800:2300);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2300;state._supportHudKey='';updateHUD();return true;
+};
+
+function h18ScoreRecord(){if(!state)return null;const acc=state.shots?Math.round(state.hits/state.shots*100):100,rank=rankFor(acc,state.health,state.stageElapsed),bossSeconds=Math.max(0,state.stageElapsed-G1_BOSS_TIME);return{score:Math.round(state.score),stage:state.stageIndex,difficulty:state.difficulty,rank,accuracy:acc,bossSeconds:Math.round(bossSeconds*10)/10,version:H18_VERSION,__preview:true};}
+function h18PreviewMatches(rec){const f=h15CurrentFilters();return !!rec&&rec.difficulty===f.difficulty&&(f.stage==='all'||String(rec.stage)===String(f.stage));}
+function h18DiffLabel(d){return d==='easy'?'DỄ':d==='hard'?'KHÓ':'TRUNG BÌNH';}
+function h18RenderCurrentResult(position,total){const box=$('#leaderboardCurrentResult');if(!box)return;if(!h18PendingShare){box.classList.add('hidden');box.replaceChildren();return;}box.classList.remove('hidden');const pos=Number.isFinite(position)?`#${position}`:'—';box.innerHTML=`<div><b>ĐIỂM VỪA ĐẠT</b><span>Màn ${h18PendingShare.stage+1} · ${h18DiffLabel(h18PendingShare.difficulty)} · ${h18PendingShare.rank}</span></div><div><strong>${Number(h18PendingShare.score).toLocaleString('vi-VN')}</strong><em>${pos} TẠM TÍNH</em></div>`;}
+const h18LeaderRowsBase=h15RenderLeaderRows;
+h15RenderLeaderRows=function(entries){
+  const box=$('#leaderboardList');if(!box)return;let all=[...(Array.isArray(entries)?entries:[])],preview=h18PreviewMatches(h18PendingShare)?{...h18PendingShare,name:'BẠN · CHƯA CÔNG KHAI',__preview:true}:null;
+  if(preview)all.push(preview);all.sort((a,b)=>Number(b.score)-Number(a.score)||Number(a.bossSeconds||999)-Number(b.bossSeconds||999));const pidx=preview?all.indexOf(preview):-1;h18RenderCurrentResult(pidx>=0?pidx+1:null,all.length);
+  let list=all.slice(0,30);if(preview&&pidx>=30){list=all.slice(0,29);list.push(preview);}box.replaceChildren();if(!list.length){const e=document.createElement('div');e.className='h15-leader-row';e.textContent='Chưa có thành tích ở mục này.';box.appendChild(e);return;}
+  for(const r of list){const actual=all.indexOf(r),row=document.createElement('div');row.className='h15-leader-row'+(actual<3?' top3':'')+(r.__preview?' h18-you-preview':'');const pos=document.createElement('span');pos.className='pos';pos.textContent=actual===0?'🥇':actual===1?'🥈':actual===2?'🥉':`#${actual+1}`;const who=document.createElement('span');who.className='who';const b=document.createElement('b');b.textContent=r.__preview?'BẠN · CHƯA CÔNG KHAI':h15SafeName(r.name);if(r.__preview){const tag=document.createElement('i');tag.className='h18-preview-tag';tag.textContent='XEM TRƯỚC';b.appendChild(tag);}const sm=document.createElement('small');sm.textContent=`Màn ${Number(r.stage)+1} · ${h18DiffLabel(r.difficulty||'normal')}`;who.append(b,sm);const sc=document.createElement('span');sc.className='score';sc.textContent=Number(r.score||0).toLocaleString('vi-VN');const rk=document.createElement('span');rk.className='rank';rk.textContent=r.rank||'A';row.append(pos,who,sc,rk);box.appendChild(row);}
+};
+function h18PrepareEndLeaderboard(){
+  const rec=h18ScoreRecord();if(!rec)return;h18PendingShare=rec;h18PreviewOnly=false;h15PendingRecord={...rec};const d=$('#leaderboardDifficulty'),s=$('#leaderboardStage');if(d)d.value=rec.difficulty;if(s)s.value=String(rec.stage);const resultBtn=state?.cfg?.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');if(resultBtn){resultBtn.textContent='🏆 XEM BXH / KHOE THÀNH TÍCH';resultBtn.classList.remove('hidden');}const hint=$('#leaderboardShareHint');if(hint)hint.textContent=H15_LB_ENDPOINT?'Điểm của bạn đang nằm thử đúng vị trí. Chỉ khi bấm KHOE THÀNH TÍCH mới gửi lên bảng online.':'Điểm của bạn đang nằm thử đúng vị trí. Chưa có máy chủ online: bấm KHOE sẽ lưu trên thiết bị này; CHỈ XEM sẽ không lưu.';show($('#leaderboardRecordPrompt'));h15OpenLeaderboard(true);
+}
+const h18StageCompleteBase=stageCompletePanel;
+stageCompletePanel=function(){h18StageCompleteBase();setTimeout(h18PrepareEndLeaderboard,120);};
+
+$('#leaderboardShareBtn')?.addEventListener('click',async()=>{
+  if(!h18PendingShare)return;const rec={...h18PendingShare,name:h15SafeName($('#leaderboardName')?.value),createdAt:new Date().toISOString(),version:H18_VERSION};delete rec.__preview;let online=false;
+  if(H15_LB_ENDPOINT){try{const r=await fetch(H15_LB_ENDPOINT,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(rec)});online=r.ok;}catch{}}
+  h15StoreLocalScore(rec);h18PendingShare=null;h15PendingRecord=null;h18PreviewOnly=false;$('#leaderboardRecordPrompt')?.classList.add('hidden');const rb=state?.cfg?.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');if(rb){rb.textContent='🏆 XEM BẢNG XẾP HẠNG';rb.classList.remove('hidden');}toast(online?'🏆 ĐÃ KHOE THÀNH TÍCH TRÊN BẢNG ONLINE!':'🏆 ĐÃ LƯU THÀNH TÍCH TRÊN THIẾT BỊ!',1.45);h15RefreshLeaderboard();
+});
+$('#leaderboardSkipShareBtn')?.addEventListener('click',()=>{if(!h18PendingShare)return;h18PreviewOnly=true;h15PendingRecord=null;$('#leaderboardRecordPrompt')?.classList.add('hidden');const rb=state?.cfg?.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');if(rb){rb.textContent='🏆 XEM BẢNG XẾP HẠNG';rb.classList.remove('hidden');}toast('👀 CHỈ XEM · THÀNH TÍCH CHƯA ĐƯỢC CÔNG KHAI',1.1);h15RefreshLeaderboard();});
+
+// A new round clears the previous unsaved preview; saved scores remain untouched.
+const h18NewStateBase=newState;
+newState=function(stageIndex=0){const s=h18NewStateBase(stageIndex);h18PendingShare=null;h18PreviewOnly=false;h15PendingRecord=null;$('#leaderboardCurrentResult')?.classList.add('hidden');return s;};
+
+// PC live mode selector remains visible in the right combat rail; mobile remains AUTO-only.
+const h18UpdateFireModeUIBase=h16UpdateFireModeUI;
+h16UpdateFireModeUI=function(){h18UpdateFireModeUIBase();const block=$('#gameFireModeBlock');if(block)block.classList.toggle('hidden',h17IsMobileGameplay());for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]'))b.classList.toggle('active',b.dataset.fireMode===h16CurrentFireMode());};
+
+// Version/update comparison uses this build.
+g2IsNewer=function(v,cur=H18_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+h18ApplyControlSide(h18ControlSide,{persist:false});h18RefreshVersion();h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 })();

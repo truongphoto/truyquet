@@ -1,7 +1,7 @@
 {
   "name": "Bác Sĩ Truy Quét · TRƯỜNG GPP",
   "short_name": "BS Truy Quét",
-  "description": "Bác Sĩ Truy Quét v3.7.0 H1 · 8 màn · Mobile AUTO TARGET + AUTO FIRE · chạm khóa mục tiêu · PC AUTO/THỦ CÔNG trong trận · NPC phản kích nhẹ.",
+  "description": "Bác Sĩ Truy Quét v3.8.0 H1 · mobile AUTO + chọn cụm điều khiển trái/phải · PC AUTO/THỦ CÔNG trực tiếp · vật phẩm thường được kiểm tra/khôi phục · điểm cuối trận xem trước trên BXH trước khi chọn khoe.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

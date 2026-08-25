@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.7.0 H1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.8.0 H1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -23,7 +23,7 @@
           <div class="d1-brand-row">
             <div class="brand-lockup d1-brand-lockup"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" class="brand-logo-full" /></div>
             <div class="d1-title-block">
-              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC</p>
+              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v3.8.0 H1</b></p>
               <h1>BÁC SĨ<br/>TRUY QUÉT</h1>
               <p class="lead">3 phút sinh tồn tăng áp lực · Boss xuất hiện đúng giây 180</p>
             </div>
@@ -77,7 +77,14 @@
             <div class="h16-fire-mode-heading"><span>🎯 CHẾ ĐỘ BẮN PC</span><small>Ghi nhớ lựa chọn cho lần chơi sau</small></div>
             <div class="h16-fire-mode-toggle" role="group" aria-label="Chế độ bắn PC">
               <button id="fireModeAuto" type="button" data-fire-mode="auto" class="active"><b>⚡ AUTO</b><small>Tự bắn · click để khóa</small></button>
-              <button id="fireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Chuột ngắm · tự bắn</small></button>
+              <button id="fireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Chuột ngắm · click/giữ để bắn</small></button>
+            </div>
+          </div>
+          <div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
+            <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
+            <div class="h18-control-side-buttons">
+              <button type="button" data-mobile-control-side="left">⬅ BÊN TRÁI</button>
+              <button type="button" data-mobile-control-side="right">BÊN PHẢI ➡</button>
             </div>
           </div>
           <div class="d1-menu-info-grid">
@@ -85,6 +92,7 @@
             <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
             <div><b>8</b><span>KHU VỰC</span></div>
           </div>
+          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v3.8.0 H1</div>
           <div class="author-line d1-author-line">
             <strong>Tác giả: Ngô Quang Trường</strong>
             <span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span>
@@ -169,9 +177,11 @@
           <select id="leaderboardStage" aria-label="Màn chơi"><option value="all">TẤT CẢ MÀN</option><option value="0">MÀN 1</option><option value="1">MÀN 2</option><option value="2">MÀN 3</option><option value="3">MÀN 4</option><option value="4">MÀN 5</option><option value="5">MÀN 6</option><option value="6">MÀN 7</option><option value="7">MÀN 8</option></select>
         </div>
         <div id="leaderboardMode" class="h15-leaderboard-mode">ĐANG TẢI…</div>
-        <div id="leaderboardRecordPrompt" class="h15-record-prompt hidden">
-          <strong>🎉 KỶ LỤC MỚI!</strong><span>Bạn có muốn ghi tên để lưu thành tích không?</span>
-          <div><input id="leaderboardName" maxlength="16" autocomplete="nickname" placeholder="Tên của bạn (tùy chọn)" /><button id="leaderboardSaveBtn" class="primary-btn">LƯU KỶ LỤC</button></div>
+        <div id="leaderboardCurrentResult" class="h18-current-result hidden" aria-live="polite"></div>
+        <div id="leaderboardRecordPrompt" class="h15-record-prompt h18-share-prompt hidden">
+          <strong>🏆 THÀNH TÍCH VỪA ĐẠT</strong><span id="leaderboardShareHint">Điểm của bạn đang được hiển thị thử trên bảng. Chỉ công khai khi bạn chọn KHOE THÀNH TÍCH.</span>
+          <input id="leaderboardName" maxlength="16" autocomplete="nickname" placeholder="Tên của bạn (tùy chọn)" />
+          <div class="h18-share-actions"><button id="leaderboardShareBtn" class="primary-btn">🏆 KHOE THÀNH TÍCH</button><button id="leaderboardSkipShareBtn" class="secondary-btn">CHỈ XEM</button></div>
         </div>
         <div id="leaderboardList" class="h15-leaderboard-list"></div>
         <p class="h15-leaderboard-note">Khi chưa cấu hình máy chủ online, bảng xếp hạng chỉ lưu trên thiết bị này. Chế độ online sẽ tự bật khi có endpoint.</p>
@@ -188,9 +198,17 @@
           <div class="h16-pause-fire-title">🎯 CHẾ ĐỘ BẮN</div>
           <div class="h16-fire-mode-toggle h16-pause-toggle" role="group" aria-label="Đổi chế độ bắn">
             <button id="pauseFireModeAuto" type="button" data-fire-mode="auto" class="active"><b>⚡ AUTO</b><small>Tự bắn</small></button>
-            <button id="pauseFireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Tự bắn</small></button>
+            <button id="pauseFireModeManual" type="button" data-fire-mode="manual"><b>🎯 THỦ CÔNG</b><small>Chuột bắn</small></button>
           </div>
           <small id="pauseFireModeHint" class="h16-pause-fire-hint">PC: có thể đổi chế độ bất kỳ lúc nào.</small>
+        </div>
+        <div id="pauseMobileControlSide" class="h18-control-side-card h18-pause-control-side mobile-only" aria-label="Đổi bên điều khiển trên điện thoại">
+          <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
+          <div class="h18-control-side-buttons">
+            <button type="button" data-mobile-control-side="left">⬅ BÊN TRÁI</button>
+            <button type="button" data-mobile-control-side="right">BÊN PHẢI ➡</button>
+          </div>
+          <small>Đổi bên ngay trong trận · game sẽ ghi nhớ lựa chọn.</small>
         </div>
         <button id="soundBtn" class="secondary-btn">🔊 Âm thanh: Bật</button>
         <button id="fullscreenBtn" class="secondary-btn">⛶ Toàn màn hình</button>

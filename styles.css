@@ -494,3 +494,30 @@
 @media (max-height:470px) and (orientation:landscape){
   .event-toast{top:91px!important;font-size:7px!important;padding:4px 8px!important;max-width:64vw!important}
 }
+
+
+/* === v3.8.0 H1 · MOBILE CONTROL SIDE · LIVE VERSION · RESULT PREVIEW LEADERBOARD === */
+.h18-menu-version{margin:7px 0 1px;padding:6px 8px;border-radius:9px;border:1px solid rgba(132,241,231,.16);background:rgba(3,43,50,.52);color:#9feee7;font-size:7px;font-weight:1000;letter-spacing:.12em;text-align:center}
+.h18-control-side-card{display:none;gap:5px;padding:7px;border-radius:11px;border:1px solid rgba(127,242,232,.18);background:rgba(3,43,50,.58);flex-direction:column}.h18-control-side-card>span{font-size:7px;font-weight:1000;letter-spacing:.08em;color:#cafff8}.h18-control-side-card>small{font-size:6px;color:#92bdb9;line-height:1.3}.h18-control-side-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px}.h18-control-side-buttons button{min-height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);color:#dff8f5;font-size:7px;font-weight:1000}.h18-control-side-buttons button.active{background:linear-gradient(135deg,rgba(126,255,237,.94),rgba(54,196,194,.88));border-color:#bafff5;color:#063d44;box-shadow:0 0 13px rgba(91,235,218,.18)}
+.h18-current-result{margin:6px 0 10px;padding:10px 12px;border-radius:13px;border:1px solid rgba(255,224,111,.38);background:linear-gradient(135deg,rgba(85,64,7,.50),rgba(4,47,53,.82));display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}.h18-current-result b{font-size:13px;color:#fff0a5}.h18-current-result strong{font-size:22px;color:#fff}.h18-current-result span{font-size:9px;color:#bfe7e2}.h18-current-result em{font-size:10px;color:#8dffe8;font-style:normal;font-weight:1000;text-align:right}
+.h18-share-prompt>input{width:100%;min-height:42px}.h18-share-actions{display:grid!important;grid-template-columns:1.2fr .8fr!important;gap:7px}.h18-share-actions button{min-height:42px}
+.h15-leader-row.h18-you-preview{border-color:rgba(255,228,105,.72)!important;background:linear-gradient(90deg,rgba(126,91,7,.48),rgba(6,62,66,.88))!important;box-shadow:0 0 18px rgba(255,216,90,.12)}.h15-leader-row.h18-you-preview .who b{color:#fff0a1}.h15-leader-row.h18-you-preview .pos{color:#fff0a1}.h18-preview-tag{display:inline-block;margin-left:5px;padding:1px 4px;border-radius:99px;background:rgba(255,227,105,.14);color:#ffe783;font-size:6px;font-weight:1000}
+@media (max-width:1179px),(hover:none),(pointer:coarse){
+  .h18-control-side-card{display:flex!important}.h18-menu-version{font-size:6px;padding:4px 6px;margin-top:4px}
+  html[data-mobile-controls="right"] .move-pad{left:auto!important;right:max(10px,env(safe-area-inset-right))!important}
+  html[data-mobile-controls="right"] .dash-btn{left:auto!important;right:max(174px,calc(env(safe-area-inset-right) + 174px))!important}
+  html[data-mobile-controls="right"] .mobile-support-strip{right:auto!important;left:max(7px,env(safe-area-inset-left))!important;justify-content:flex-start!important}
+  html[data-mobile-controls="left"] .move-pad{right:auto!important;left:max(10px,env(safe-area-inset-left))!important}
+  html[data-mobile-controls="left"] .dash-btn{right:auto!important;left:max(174px,calc(env(safe-area-inset-left) + 174px))!important}
+  html[data-mobile-controls="left"] .mobile-support-strip{left:auto!important;right:max(7px,env(safe-area-inset-right))!important;justify-content:flex-end!important}
+}
+@media (max-height:430px) and (orientation:landscape){
+  html[data-mobile-controls="right"] .dash-btn{right:max(158px,calc(env(safe-area-inset-right) + 158px))!important;left:auto!important}
+  html[data-mobile-controls="left"] .dash-btn{left:max(158px,calc(env(safe-area-inset-left) + 158px))!important;right:auto!important}
+  .h18-pause-control-side{padding:4px;gap:3px}.h18-control-side-buttons button{min-height:28px;font-size:6px}.h18-pause-control-side>small{display:none}
+  .h18-current-result{padding:6px 8px}.h18-current-result strong{font-size:17px}.h18-share-actions button{min-height:32px;font-size:8px}
+}
+
+.h18-title-version{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:rgba(255,225,105,.12);border:1px solid rgba(255,225,105,.22);color:#ffe88d;font-size:.82em;letter-spacing:.06em;vertical-align:1px}
+
+@media (min-width:1180px) and (hover:hover) and (pointer:fine){.h17-game-fire-buttons button{height:32px!important;font-size:7.2px!important}.h17-game-fire-mode>span{font-size:7.2px!important}}
