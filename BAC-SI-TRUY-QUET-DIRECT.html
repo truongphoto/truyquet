@@ -535,37 +535,43 @@
 .h18-title-version{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:rgba(255,225,105,.12);border:1px solid rgba(255,225,105,.22);color:#ffe88d;font-size:.82em;letter-spacing:.06em;vertical-align:1px}
 
 @media (min-width:1180px) and (hover:hover) and (pointer:fine){.h17-game-fire-buttons button{height:32px!important;font-size:7.2px!important}.h17-game-fire-mode>span{font-size:7.2px!important}}
-\n\n/* === v3.9.0 J1 · gameplay-only fire mode · balanced rails · author footer · 3s item countdown === */
-/* AUTO / THỦ CÔNG exists only inside the live gameplay rail. */
+
+
+/* === v3.9.0 J1 FINAL · gameplay-only fire mode · balanced rails · delayed item activation · author footer === */
 #desktopFireModeBlock,#pauseFireModeBlock{display:none!important}
-.h16-fire-mode-hud{display:none!important}
-
+.j1-game-author-footer{position:absolute;z-index:16;left:190px;right:190px;bottom:2px;height:16px;display:flex;align-items:center;justify-content:center;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(207,241,237,.68);font-size:7px;font-weight:750;letter-spacing:.035em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+.j1-pending-list{display:grid;gap:4px;flex:0 0 auto;max-height:112px;overflow:auto;pointer-events:auto;scrollbar-width:thin}
+.j1-pending-item{width:100%;min-height:34px;border:1px solid rgba(255,224,115,.28);border-radius:8px;background:linear-gradient(90deg,rgba(77,62,13,.40),rgba(5,55,59,.62));color:#effffb;display:grid;grid-template-columns:22px 1fr auto;grid-template-rows:auto 4px;align-items:center;gap:2px 5px;padding:4px 5px;cursor:pointer;text-align:left}
+.j1-pending-item:hover{filter:brightness(1.12)}.j1-pending-item:active{transform:scale(.985)}
+.j1-pending-item .icon{grid-row:1/3;font-size:15px;text-align:center}.j1-pending-item b{font-size:6.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.j1-pending-item strong{font-size:7px;color:#ffe889}.j1-pending-item i{grid-column:2/4;display:block;height:3px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}.j1-pending-item i:after{content:"";display:block;height:100%;width:var(--j1-pct,100%);background:linear-gradient(90deg,#ffe371,#63eadf)}
+.j1-pending-item.waiting{opacity:.82}.j1-pending-item.invalid{border-color:rgba(255,143,143,.38)}.j1-pending-item.invalid strong{color:#ffb4b4}
+.j1-mobile-pending-strip{position:absolute;z-index:20;display:none;gap:4px;bottom:max(80px,calc(env(safe-area-inset-bottom) + 76px));right:max(7px,env(safe-area-inset-right));max-width:64vw;pointer-events:auto;justify-content:flex-end;flex-wrap:wrap}
+.j1-mobile-pending-strip button{height:24px;padding:0 7px;border-radius:999px;border:1px solid rgba(255,226,118,.30);background:rgba(61,49,10,.84);color:#fff2ae;font-size:7px;font-weight:1000;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+/* Equal desktop rail footprint. Footer gets its own thin lane under both rails. */
 @media (min-width:1180px) and (hover:hover) and (pointer:fine){
-  .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
-  .weapon-panel{right:8px!important;left:auto!important;top:8px!important;bottom:50px!important;width:176px!important;height:auto!important;transform:none!important;padding:8px!important;gap:6px!important;overflow:hidden!important}
-  .right-combat-summary{flex:0 0 auto!important}
-  .h17-game-fire-mode{flex:0 0 auto!important}
-  .weapon-buttons{min-height:0!important;overflow:auto!important}
+  .status-rail{width:176px!important;left:8px!important;bottom:20px!important}
+  .weapon-panel{width:176px!important;right:8px!important;bottom:20px!important}
+  .game-quick-actions{left:18px!important;right:auto!important}
+  .j1-game-author-footer{left:192px;right:192px;bottom:1px;height:17px;font-size:7px}
+  #gameFireModeBlock{display:grid!important}
 }
-
-.j1-game-author-footer{position:absolute;z-index:19;left:50%;bottom:5px;transform:translateX(-50%);max-width:calc(100vw - 390px);padding:3px 10px;border-radius:999px;background:rgba(2,29,34,.66);border:1px solid rgba(112,231,223,.16);color:#a9d6d3;font-size:7px;font-weight:850;letter-spacing:.035em;white-space:nowrap;pointer-events:none;text-align:center}
-.j1-powerup-countdown{font-weight:1000}
 @media (max-width:1179px),(hover:none),(pointer:coarse){
-  .j1-game-author-footer{left:50%;bottom:1px;max-width:82vw;padding:2px 7px;font-size:5.3px;overflow:hidden;text-overflow:ellipsis}
+  #gameFireModeBlock{display:none!important}
+  .j1-game-author-footer{left:max(6px,env(safe-area-inset-left));right:max(6px,env(safe-area-inset-right));bottom:1px;height:12px;font-size:5.5px;letter-spacing:0;opacity:.78}
+  .j1-mobile-pending-strip{display:flex!important}
 }
-@media (max-height:470px) and (orientation:landscape){.j1-game-author-footer{font-size:4.8px;bottom:0}}
+@media (max-height:470px) and (orientation:landscape){
+  .j1-game-author-footer{font-size:5px;height:10px}
+  .j1-mobile-pending-strip{bottom:max(69px,calc(env(safe-area-inset-bottom) + 65px))}
+}
+/* J1 pause visibility guard + dedicated mobile footer lane. */
+#pausePanel:not(.hidden) ~ #hud #gameFireModeBlock{display:none!important}
+@media (max-width:1179px),(hover:none),(pointer:coarse){
+  .weapon-panel{bottom:max(18px,calc(env(safe-area-inset-bottom) + 16px))!important}
+  .mobile-brand{bottom:max(20px,calc(env(safe-area-inset-bottom) + 18px))!important}
+}
 
-/* J1 final rail geometry: at desktop width both combat rails are exactly 176px. */
-@media (min-width:1180px){
-  .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
-  .weapon-panel{right:8px!important;left:auto!important;top:8px!important;bottom:50px!important;width:176px!important;height:auto!important;transform:none!important;padding:8px!important;gap:6px!important;overflow:hidden!important}
-}
-/* Touch layouts take precedence even on wide tablets. Leave a footer lane below the weapon bar. */
-@media (hover:none),(pointer:coarse){
-  .weapon-panel{right:auto!important;left:50%!important;transform:translateX(-50%)!important;top:auto!important;bottom:max(17px,calc(env(safe-area-inset-bottom) + 15px))!important;width:auto!important;height:46px!important;display:flex!important;flex-direction:row!important;padding:4px!important}
-}
-
-</style>
+  </style>
 </head>
 <body>
   <main id="app" class="app-shell">
@@ -627,7 +633,7 @@
             </button>
           </div>
           <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH</b><span>Nhịp độ cân bằng · độ khó tăng liên tục từ giây 1 → 180</span></div>
-          <div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
+<div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
             <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
             <div class="h18-control-side-buttons">
               <button type="button" data-mobile-control-side="left">⬅ BÊN TRÁI</button>
@@ -696,7 +702,7 @@
           <article><b>⚡ Tia miễn dịch</b><span>Giữ để chiếu liên tục, tự hồi năng lượng.</span></article>
           <article><b>🎁 SUPPLY chuyên nghiệp</b><span>Bắn hạ SUPPLY để vật phẩm xuất hiện. Khi nhận thưởng sẽ lóe sáng, phát âm riêng, icon bay về HUD và timer hiện rõ.</span></article>
           <article><b>⚡ AUTO FIRE + KHÓA MỤC TIÊU</b><span>Điện thoại tự bắn. Chạm NPC/Boss để khóa mục tiêu; vòng khóa hiển thị rõ và giữ mục tiêu đến khi bị tiêu diệt hoặc bạn chọn mục tiêu khác.</span></article>
-          <article><b>🎯 PC AUTO / THỦ CÔNG</b><span>PC chọn AUTO hoặc THỦ CÔNG ở menu phải và đổi được trong Pause. AUTO vẫn cho phép click để ưu tiên mục tiêu.</span></article>
+          <article><b>🎯 PC AUTO / THỦ CÔNG</b><span>PC chỉ hiện AUTO / THỦ CÔNG trong rail phải khi đang gameplay. AUTO vẫn cho phép click để ưu tiên mục tiêu; Pause và menu chính không hiển thị điều khiển này.</span></article>
           <article><b>⏱ Luật 3 phút</b><span>NPC tăng áp lực theo 3 chặng 0–60s · 61–120s · 121–180s. Boss chỉ xuất hiện đúng giây 180; sau đó NPC thường ngừng sinh tự nhiên.</span></article>
           <article><b>👹 Boss triệu hồi</b><span>Boss chỉ gọi quân đúng 3 đợt khi máu đi qua 75% · 50% · 25%.</span></article>
           <article><b>🦠 NPC G1 đa hành vi</b><span>Vi khuẩn có loại nặng chậm, chạy nhanh, zigzag, lượn ngang, phục kích, né tâm ngắm, đi cung, hỗ trợ và giả hướng; mỗi loại có tốc độ riêng.</span></article>
@@ -709,7 +715,7 @@
           <article><b>✨ LOGO TRƯỜNG GPP</b><span>Vật phẩm đặc biệt tổng hợp: hồi sinh tồn và kích hoạt đồng thời Khiên, Drone, Adrenaline, Vaccine, Sterile và GPP Boost.</span></article>
           <article><b>🧼 Khử nhiễm môi trường</b><span>Ảnh dơ phủ trên ảnh sạch; lớp dơ tan rất chậm từ ngoài vào trung tâm. Khử nhiễm tăng chậm trong 3 phút và khóa ở 50% khi Boss xuất hiện; hạ Boss hoàn tất 50→100% trong 5 giây rồi lấp lánh 2 giây.</span></article>
         </div>
-        <p class="help-note">PC: chọn ⚡ AUTO hoặc 🎯 THỦ CÔNG ở menu phải. AUTO tự bắn và click NPC/Boss để khóa; THỦ CÔNG dùng chuột ngắm + click/giữ để bắn. Giữ A/D hoặc ←/→ để chạy ngang, nhấn đúp để né nhanh; phím 1–5 đổi vũ khí; Space/Esc tạm dừng. Điện thoại: AUTO cố định; chỉ cần điều khiển trái/phải, chọn vũ khí/vật phẩm và chạm NPC/Boss khi muốn khóa mục tiêu ưu tiên.</p>
+        <p class="help-note">PC: khi đang gameplay, chọn ⚡ AUTO hoặc 🎯 THỦ CÔNG trong rail phải. AUTO tự bắn và click NPC/Boss để khóa; THỦ CÔNG dùng chuột ngắm + click/giữ để bắn. Giữ A/D hoặc ←/→ để chạy ngang, nhấn đúp để né nhanh; phím 1–5 đổi vũ khí; Space/Esc tạm dừng. Điện thoại: AUTO cố định; chỉ cần điều khiển trái/phải, chọn vũ khí/vật phẩm và chạm NPC/Boss khi muốn khóa mục tiêu ưu tiên.</p>
       </div>
     </section>
 
@@ -825,6 +831,8 @@
         <div class="status-stage"><small id="leftStageNo">MÀN 1</small><b id="leftStageName">KHOA DƯỢC</b></div>
         <div class="status-section">❤️ SINH TỒN <strong id="leftHealthText">10/10</strong></div>
         <div class="health-bar status-health"><i id="leftHealthFill"></i></div>
+        <div class="status-section support-title">VẬT PHẨM CHỜ KÍCH HOẠT</div>
+        <div id="pendingItemList" class="j1-pending-list"><div class="support-empty">CHƯA CÓ VẬT PHẨM CHỜ</div></div>
         <div class="status-section support-title">VẬT PHẨM ĐANG HOẠT ĐỘNG</div>
         <div id="supportList" class="support-list"><div class="support-empty">CHƯA CÓ HỖ TRỢ</div></div>
         <div class="status-rail-note">Khiên · Drone · Adrenaline · Vaccine · Sterile · GPP</div>
@@ -902,9 +910,9 @@
       </aside>
 
       <div id="mobileSupportStrip" class="mobile-support-strip mobile-only"></div>
+      <div id="mobilePendingStrip" class="j1-mobile-pending-strip mobile-only"></div>
       <div class="mobile-brand mobile-only"><img src="assets/icon-192.png" alt="" /><span>TRƯỜNG GPP</span></div>
-
-      <div id="gameAuthorFooter" class="j1-game-author-footer" aria-label="Tác giả và liên hệ">Tác giả: Ngô Quang Trường · TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</div>
+      <div id="gameAuthorFooter" class="j1-game-author-footer">Tác giả: Ngô Quang Trường · TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</div>
 
       <div id="moveControls" class="move-controls" aria-label="Điều khiển di chuyển ngang">
         <div id="movePad" class="move-pad" aria-label="Joystick di chuyển ngang">
@@ -922,7 +930,7 @@
 // When a backend is available, set a full HTTPS endpoint implementing GET/POST as documented in LEADERBOARD-ONLINE-SETUP.md.
 window.BSTQ_LEADERBOARD_ENDPOINT = window.BSTQ_LEADERBOARD_ENDPOINT || '';
 
-</script>
+  </script>
   <script>
 (() => {
 'use strict';
@@ -3180,7 +3188,7 @@ for(const id of G1_INSTALL_IDS){const b=document.getElementById(id);if(b)b.oncli
 
 
 /* === v3.5.0 H1 BALANCE · sparse Boss patterns · smart map preview · richer SUPPLY · leaderboard client === */
-const H15_VERSION='3.9.0';
+const H15_VERSION='3.8.0';
 
 // --- Boss fire: fewer, more legible projectiles with a visible telegraph and real breathing room. ---
 function h15BossShotCount(phase,diff){
@@ -3342,7 +3350,7 @@ function h16LockTarget(target){
 canvas.addEventListener('pointerdown',e=>{
   if(!state||state.mode!=='playing'||h16CurrentFireMode()!=='auto')return;const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;
   if(collectPowerups(p.x,p.y)){state.lastFire=performance.now();e.preventDefault();e.stopImmediatePropagation();return;}
-  h16LockTarget(h16TargetAt(p.x,p.y));
+  const target=h16TargetAt(p.x,p.y);if(target){h16LockTarget(target);e.preventDefault();e.stopImmediatePropagation();}
 },true);
 
 // Existing mouse/touch listeners remain installed for MANUAL mode. In AUTO mode their shot calls are suppressed.
@@ -3615,138 +3623,134 @@ g2IsNewer=function(v,cur=H18_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);fo
 h18ApplyControlSide(h18ControlSide,{persist:false});h18RefreshVersion();h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 
-/* === v3.9.0 J1 · NPC VISIBILITY · GAMEPLAY-ONLY FIRE MODES · 3s AUTO ITEMS · UI BALANCE === */
+/* === v3.9.0 J1 FINAL · NPC visibility · gameplay-only fire mode · 3s item queue · balanced UI/footer === */
 const J1_VERSION='3.9.0';
+const J1_ITEM_DELAY_MS=3000;
 
-// Mobile detection must not misclassify Windows/touchscreen PCs; only true mobile/tablet UAs are forced to AUTO.
-function j1IsRealMobile(){
-  const ua=navigator.userAgent||'';
-  const explicit=!!navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini|Mobile/i.test(ua);
-  const ipadDesktopUA=(navigator.platform==='MacIntel' && Number(navigator.maxTouchPoints||0)>1);
-  return explicit||ipadDesktopUA;
+function j1RefreshVersion(){
+  const v=$('#menuVersion'),b=$('#menuVersionBadge');
+  if(v)v.textContent=`PHIÊN BẢN · v${J1_VERSION} J1`;
+  if(b)b.textContent=`v${J1_VERSION} J1`;
+  document.title=`Bác Sĩ Truy Quét · TRƯỜNG GPP · v${J1_VERSION} J1`;
 }
-h17IsMobileGameplay=j1IsRealMobile;
-h16IsMobileControl=j1IsRealMobile;
 
-// Keep far NPCs visibly readable without destroying depth perspective.
-const j1EnemyScreenBase=enemyScreen;
-enemyScreen=function(e){const s=j1EnemyScreenBase(e);if(e&&!e.boss&&s&&Number.isFinite(s.r)){const minR=j1IsRealMobile()?11:9;s.r=Math.max(s.r,minR);}return s;};
+// Fire-mode controls are a gameplay control only. Mobile is always AUTO.
+const j1UpdateFireModeUIBase=h16UpdateFireModeUI;
+h16UpdateFireModeUI=function(){
+  j1UpdateFireModeUIBase();
+  const mobile=h17IsMobileGameplay(),mode=h16CurrentFireMode(),playing=state?.mode==='playing';
+  const block=$('#gameFireModeBlock');if(block){block.classList.toggle('hidden',mobile||!playing);block.style.display=(!mobile&&playing)?'grid':'none';}
+  for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]'))b.classList.toggle('active',b.dataset.fireMode===mode);
+  const hud=$('#fireModeHud');if(hud){hud.classList.toggle('hidden',!playing);hud.textContent=mobile?'⚡ AUTO · TỰ CHỌN MỤC TIÊU · CHẠM ĐỂ KHÓA':mode==='auto'?'⚡ AUTO · CLICK ĐỂ KHÓA':'🎯 THỦ CÔNG · CHUỘT NGẮM/BẮN';}
+};
 
-// AUTO should never erase NPCs before they become visually readable. This was the main cause of "NPC not visible" on mobile:
-// v3.7 could target a freshly spawned NPC at depth ~.99 and kill it while it was only a few pixels wide.
-function j1NpcEngageable(e){
-  if(!e||e.dead||e.boss)return false;
-  const sc=enemyScreen(e),diff=state?.difficulty||'normal';
-  const depthGate=j1IsRealMobile()?.965:(diff==='easy'?.93:diff==='hard'?.89:.91);
-  return Number.isFinite(sc?.x)&&Number.isFinite(sc?.y)&&Number.isFinite(sc?.r)&&sc.r>=10&&e.depth<=depthGate;
+// NPC must enter a readable part of the corridor before AUTO can shoot it.
+function j1EnemyReadable(e){
+  if(!e||e.dead)return false;if(e.boss)return true;
+  const sc=enemyScreen(e),v=gameplayViewport();
+  const depthGate=state?.difficulty==='hard'?.89:state?.difficulty==='easy'?.84:.865;
+  return e.depth<=depthGate && sc.r>=7 && sc.x>=v.left-12 && sc.x<=v.left+v.width+12 && sc.y>=innerHeight*.36 && sc.y<=innerHeight*.91;
 }
-const j1ChooseAutoTargetBase=h16ChooseAutoTarget;
+function j1ThreatScore(e){
+  const shooter=e.h17Ranged?120:0,warning=e.h17ShotWarn>0?220:0,fast=(e.g1Motion==='sprinter'||e.type==='charger'||e.type==='sprinter')?70:0,support=e.base?.support?65:0,close=(1-clamp(e.depth,0,1))*180;
+  return warning+shooter+fast+support+close;
+}
 h16ChooseAutoTarget=function(){
   if(!state)return null;
   const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
-  if(j1IsRealMobile()){
-    let sticky=h16ResolveTarget(state.h16AutoTarget);
-    if(sticky?.kind==='enemy'&&!sticky.entity.boss&&!j1NpcEngageable(sticky.entity))sticky=null;
-    if(sticky&&sticky.kind==='enemy'&&!sticky.entity.dead)return sticky;
-    const visible=(state.enemies||[]).filter(j1NpcEngageable).sort((a,b)=>h17ThreatScore(b)-h17ThreatScore(a));
-    if(visible[0]){state.h16AutoTarget=h16TargetRef('enemy',visible[0]);return h16ResolveTarget(state.h16AutoTarget);}
-    const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
-    const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
-    state.h16AutoTarget=null;return null;
-  }
-  return j1ChooseAutoTargetBase();
+  let sticky=h16ResolveTarget(state.h16AutoTarget);
+  if(sticky?.kind==='enemy'&&!j1EnemyReadable(sticky.entity)&&!sticky.entity.boss)sticky=null;
+  if(sticky?.kind==='reward')return sticky;
+  const minors=(state.enemies||[]).filter(e=>!e.dead&&!e.boss&&j1EnemyReadable(e)).sort((a,b)=>j1ThreatScore(b)-j1ThreatScore(a)||a.depth-b.depth);
+  if(sticky?.kind==='enemy'&&sticky.entity&&!sticky.entity.dead){const best=minors[0];if(!best||best.id===sticky.entity.id||j1ThreatScore(best)<j1ThreatScore(sticky.entity)+145)return sticky;}
+  if(minors[0]){state.h16AutoTarget=h16TargetRef('enemy',minors[0]);return h16ResolveTarget(state.h16AutoTarget);}
+  const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
+  const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
+  state.h16AutoTarget=null;return null;
 };
 
-// Spawn anti-stall: if a stage is active and there is no living NPC before Boss time, force the next natural spawn promptly.
-const j1UpdateBase=update;
-update=function(dt){
-  j1UpdateBase(dt);
-  j1RefreshFireButtons();
-  if(!state||state.mode!=='playing'||state.transition>0)return;
-  if(!state.bossSpawned&&state.stageElapsed<G1_BOSS_TIME){
-    const alive=(state.enemies||[]).some(e=>!e.dead&&!e.boss);
-    if(!alive&&state.stageElapsed>.35)state.spawnTimer=Math.min(Number.isFinite(state.spawnTimer)?state.spawnTimer:.08,.08);
-  }
-  j1AutoActivatePowerups();
-};
-
-// Keep PC mode buttons live only in the right gameplay rail. Mobile is always AUTO.
-const j1SetFireModeBase=h16SetFireMode;
-h16SetFireMode=function(mode,opts={}){
-  if(j1IsRealMobile())mode='auto';
-  const r=j1SetFireModeBase(mode,opts);
-  if(state){state.h16FireMode=j1IsRealMobile()?'auto':(mode==='manual'?'manual':'auto');state.h16ManualLock=null;state.h16AutoTarget=null;pointer.down=false;}
-  j1RefreshFireButtons();return r;
-};
-function j1RefreshFireButtons(){
-  const mobile=j1IsRealMobile(),block=$('#gameFireModeBlock'),mode=mobile?'auto':h16CurrentFireMode();
-  if(block)block.classList.toggle('hidden',mobile||!state||state.mode==='menu');
-  for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]')){b.classList.toggle('active',b.dataset.fireMode===mode);b.disabled=mobile;}
+// Pending support queue: pickup first, activate manually or automatically after 3 seconds.
+function j1ItemMeta(kind){
+  if(kind==='heal')return{icon:'❤️',name:'SINH TỒN +2'};
+  const m=SUPPORT_ITEMS[kind];return{icon:kind==='gpp'?'✨':(m?.icon||'🎁'),name:m?.name||String(kind||'VẬT PHẨM').toUpperCase()};
 }
-const j1FireUiBase=h16UpdateFireModeUI;
-h16UpdateFireModeUI=function(){j1FireUiBase();j1RefreshFireButtons();};
-const j1ResumeBase=resumeGame;resumeGame=function(){const r=j1ResumeBase();j1RefreshFireButtons();return r;};
-const j1PauseBase=pauseGame;pauseGame=function(){const r=j1PauseBase();j1RefreshFireButtons();return r;};
-const j1GoHomeBase=goHome;goHome=function(){const r=j1GoHomeBase();j1RefreshFireButtons();return r;};
-
-// 3-second power-up grace period. If the player ignores a field item, it activates automatically.
-// If activating would be useless (e.g. full health), it waits safely until the effect can actually help.
-const j1DropPowerupBase=dropSpecificPowerup;
-dropSpecificPowerup=function(kind,x,y){
-  const before=state?.powerups?.length||0;j1DropPowerupBase(kind,x,y);
-  const p=state?.powerups?.[state.powerups.length-1];if(p&&state.powerups.length>before){p.j1BornAt=performance.now();p.j1AutoAt=p.j1BornAt+3000;p.life=Math.max(p.life||0,20);p.j1Waiting=false;}
-};
-function j1CanAutoUse(kind){
+function j1CanActivate(kind){
   if(!state)return false;const max=state.maxHealth||10;
-  if(kind==='heal')return state.health<max-.05;
-  if(kind==='shield')return (state.shield||0)<10;
-  if(kind==='drone')return (state.drone||0)<8;
-  if(kind==='adrenaline')return (state.adrenaline||0)<4;
-  if(kind==='vaccine')return (state.vaccine||0)<5;
-  if(kind==='sterile')return (state.sterile||0)<4;
-  return true; // GPP is always valuable because it combines several effects.
+  if(kind==='heal')return state.health<max;
+  if(kind==='shield')return (state.shield||0)<12;
+  if(kind==='drone')return (state.drone||0)<15;
+  if(kind==='adrenaline')return (state.adrenaline||0)<8;
+  if(kind==='vaccine')return (state.vaccine||0)<11;
+  if(kind==='sterile')return (state.sterile||0)<10;
+  if(kind==='gpp')return state.health<max||(state.shield||0)<12||(state.drone||0)<15||(state.adrenaline||0)<8||(state.vaccine||0)<11||(state.sterile||0)<10||(state.gppBoost||0)<12;
+  return true;
 }
-function j1AutoActivatePowerups(){
-  if(!state?.powerups?.length)return;const now=performance.now();
-  for(const p of state.powerups){
-    if(p.dead)continue;
-    if(!p.j1BornAt){p.j1BornAt=now;p.j1AutoAt=now+3000;p.life=Math.max(p.life||0,20);}
-    if(now<(p.j1AutoAt||0))continue;
-    if(!j1CanAutoUse(p.kind)){p.j1Waiting=true;p.life=Math.max(p.life||0,1.2);continue;}
-    p.j1Waiting=false;
-    if(collectPowerups(p.x,p.y)){toast(`⚡ TỰ KÍCH HOẠT · ${(D1_REWARD_META[p.kind]?.name||SUPPORT_ITEMS[p.kind]?.name||p.kind).toUpperCase()}`,1.0);break;}
+function j1ApplyItem(kind){
+  if(!state||!j1CanActivate(kind))return false;const max=state.maxHealth||10;
+  if(kind==='heal'){state.health=Math.min(max,state.health+2);toast('❤️ +2 SINH TỒN',1);sfx.power();}
+  else if(kind==='shield'){supportExtend('shield',12,12);toast('🛡 KHIÊN KHỬ NHIỄM · 12s',1);sfx.power();}
+  else if(kind==='drone'){supportExtend('drone',10,15);toast('🤖 DRONE Y TẾ · 10s',1);sfx.power();}
+  else if(kind==='adrenaline'){supportExtend('adrenaline',5,8);toast('💉 ADRENALINE · 5s',1);sfx.power();}
+  else if(kind==='vaccine'){supportExtend('vaccine',7,11);toast('🧬 VACCINE BOOST · 7s',1);sfx.power();}
+  else if(kind==='sterile'){supportExtend('sterile',6,10);toast('🧴 STERILE FIELD · 6s',1);sfx.power();}
+  else if(kind==='gpp'){
+    supportExtend('gppBoost',8,12);state.health=Math.min(max,state.health+2);state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);toast('✨ TRƯỜNG GPP TỔNG HỢP · KÍCH HOẠT',1.3);sfx.gpp();
   }
+  g2SetWeaponScreenFx(kind,kind==='heal'?1800:2300);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2300;state._supportHudKey='';updateHUD();return true;
 }
-const j1DrawPowerupsBase=drawPowerups;
-drawPowerups=function(){
-  j1DrawPowerupsBase();if(!state?.powerups?.length)return;const now=performance.now();
-  for(const p of state.powerups){if(p.dead||!p.j1AutoAt)continue;const left=Math.max(0,(p.j1AutoAt-now)/1000),waiting=now>=p.j1AutoAt&&!j1CanAutoUse(p.kind);ctx.save();ctx.translate(p.x,p.y);ctx.globalCompositeOperation='screen';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='1000 8px system-ui';ctx.fillStyle=waiting?'#fff0a0':'#ffffff';ctx.shadowColor=waiting?'#ffd760':'#73fff0';ctx.shadowBlur=7;ctx.fillText(waiting?'ĐỢI':`${Math.max(1,Math.ceil(left))}`,0,-42);ctx.shadowBlur=0;ctx.strokeStyle=waiting?'rgba(255,216,96,.78)':'rgba(116,255,239,.80)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,35,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(left/3,0,1));ctx.stroke();ctx.restore();}
-};
+function j1QueueItem(kind){
+  if(!state)return false;if(!Array.isArray(state.j1PendingItems))state.j1PendingItems=[];
+  const now=performance.now(),id=++state.j1PendingSerial;state.j1PendingItems.push({id,kind,pickedAt:now,dueAt:now+J1_ITEM_DELAY_MS});
+  const m=j1ItemMeta(kind);toast(`${m.icon} ${m.name} · TỰ KÍCH HOẠT SAU 3 GIÂY`,1.05);sfx.power();j1RenderPendingItems();return true;
+}
+function j1ActivatePending(id,manual=false){
+  if(!state||!Array.isArray(state.j1PendingItems))return false;const i=state.j1PendingItems.findIndex(x=>x.id===id);if(i<0)return false;const item=state.j1PendingItems[i];
+  if(!j1CanActivate(item.kind)){if(manual)toast('⏳ CHƯA THỂ DÙNG · VẬT PHẨM ĐƯỢC GIỮ LẠI',.9);item.dueAt=performance.now()+650;return false;}
+  if(!j1ApplyItem(item.kind))return false;state.j1PendingItems.splice(i,1);j1RenderPendingItems();return true;
+}
+function j1ProcessPending(){
+  if(!state||state.mode!=='playing'||!Array.isArray(state.j1PendingItems)||!state.j1PendingItems.length)return;const now=performance.now();
+  for(const item of [...state.j1PendingItems])if(now>=item.dueAt){if(!j1ActivatePending(item.id,false))item.dueAt=now+650;}
+  if(now-(state.j1PendingLastRender||0)>90){state.j1PendingLastRender=now;j1RenderPendingItems();}
+}
+function j1RenderPendingItems(){
+  if(!state)return;const list=state.j1PendingItems||[],now=performance.now(),desktop=$('#pendingItemList'),mobile=$('#mobilePendingStrip');
+  const rows=list.map(it=>{const m=j1ItemMeta(it.kind),left=Math.max(0,(it.dueAt-now)/1000),pct=clamp((it.dueAt-now)/J1_ITEM_DELAY_MS*100,0,100),valid=j1CanActivate(it.kind);return`<button class="j1-pending-item ${valid?'waiting':'invalid'}" data-j1-pending="${it.id}" style="--j1-pct:${pct}%"><span class="icon">${m.icon}</span><b>${m.name}</b><strong>${valid?(left>0?left.toFixed(1)+'s':'DÙNG'):'ĐANG GIỮ'}</strong><i></i></button>`;}).join('');
+  if(desktop)desktop.innerHTML=rows||'<div class="support-empty">CHƯA CÓ VẬT PHẨM CHỜ</div>';
+  if(mobile)mobile.innerHTML=list.slice(0,4).map(it=>{const m=j1ItemMeta(it.kind),left=Math.max(0,(it.dueAt-now)/1000);return`<button data-j1-pending="${it.id}">${m.icon} ${j1CanActivate(it.kind)?(left>0?left.toFixed(1)+'s':'DÙNG'):'GIỮ'}</button>`;}).join('');
+}
+document.addEventListener('click',e=>{const b=e.target.closest?.('[data-j1-pending]');if(!b)return;e.preventDefault();e.stopPropagation();j1ActivatePending(Number(b.dataset.j1Pending),true);},true);
 
-// Final item repair: all ordinary items must produce both real gameplay state and weapon-screen FX.
-const j1CollectBase=collectPowerups;
+// Replace the final direct-activation pickup handler with the J1 queue.
 collectPowerups=function(x,y){
-  const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind;
-  const before=state&&kind?{health:state.health,shield:state.shield,drone:state.drone,adrenaline:state.adrenaline,vaccine:state.vaccine,sterile:state.sterile,gppBoost:state.gppBoost}:null;
-  const ok=j1CollectBase(x,y);if(!ok||!state||!kind)return ok;const max=state.maxHealth||10;
-  if(kind==='heal')state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));
-  if(kind==='shield')state.shield=Math.max(state.shield||0,12);
-  if(kind==='drone')state.drone=Math.max(state.drone||0,10);
-  if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);
-  if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);
-  if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);
-  if(kind==='gpp'){state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);state.gppBoost=Math.max(state.gppBoost||0,8);}
-  g2SetWeaponScreenFx(kind,kind==='heal'?1800:2400);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2400;state._supportHudKey='';updateHUD();return true;
+  if(!state)return false;const p=(state.powerups||[]).find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48);if(!p)return false;
+  p.dead=true;j1QueueItem(p.kind);return true;
 };
 
-// J1 version is the authoritative build identity.
-function j1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent=`PHIÊN BẢN · v${J1_VERSION} J1`;if(b)b.textContent=`v${J1_VERSION} J1`;document.title=`Bác Sĩ Truy Quét · TRƯỜNG GPP · v${J1_VERSION} J1`;}
-g2IsNewer=function(v,cur=J1_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+const j1NewStateBase=newState;
+newState=function(stageIndex=0){const s=j1NewStateBase(stageIndex);s.j1PendingItems=[];s.j1PendingSerial=0;s.j1PendingLastRender=0;s.j1LastFireUiKey='';if(h17IsMobileGameplay())s.h16FireMode='auto';return s;};
+const j1UpdateBase=update;
+update=function(dt){j1UpdateBase(dt);j1ProcessPending();if(state?.mode==='playing'){const key=`${h17IsMobileGameplay()?'m':'d'}:${h16CurrentFireMode()}:${state.mode}`;if(state.j1LastFireUiKey!==key){state.j1LastFireUiKey=key;h16UpdateFireModeUI();}}};
+const j1ResumeBase=resumeGame;
+resumeGame=function(){const r=j1ResumeBase();if(state&&h17IsMobileGameplay())state.h16FireMode='auto';h16UpdateFireModeUI();return r;};
+const j1PauseBase=pauseGame;
+pauseGame=function(){const r=j1PauseBase();h16UpdateFireModeUI();return r;};
 
-j1RefreshVersion();j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
+// Cleanup pending UI and keep author/footer from intercepting gameplay.
+const j1CombatCleanupBase=h1CombatCleanup;
+h1CombatCleanup=function(){if(state){state.j1PendingItems=[];state.j1PendingSerial=0;}j1RenderPendingItems();return j1CombatCleanupBase();};
+
+g2IsNewer=function(v,cur=J1_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+// Sync gameplay-only controls even when legacy button handlers hold older function references.
+const j1PausePanel=$('#pausePanel');
+if(j1PausePanel&&typeof MutationObserver!=='undefined'){new MutationObserver(()=>h16UpdateFireModeUI()).observe(j1PausePanel,{attributes:true,attributeFilter:['class']});}
+$('#pauseBtn')?.addEventListener('click',()=>queueMicrotask(h16UpdateFireModeUI));
+$('#resumeBtn')?.addEventListener('click',()=>queueMicrotask(h16UpdateFireModeUI));
+
+j1RefreshVersion();h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 })();
 
-</script>
+  </script>
 </body>
 </html>

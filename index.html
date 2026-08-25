@@ -73,7 +73,7 @@
             </button>
           </div>
           <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH</b><span>Nhịp độ cân bằng · độ khó tăng liên tục từ giây 1 → 180</span></div>
-          <div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
+<div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
             <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
             <div class="h18-control-side-buttons">
               <button type="button" data-mobile-control-side="left">⬅ BÊN TRÁI</button>
@@ -142,7 +142,7 @@
           <article><b>⚡ Tia miễn dịch</b><span>Giữ để chiếu liên tục, tự hồi năng lượng.</span></article>
           <article><b>🎁 SUPPLY chuyên nghiệp</b><span>Bắn hạ SUPPLY để vật phẩm xuất hiện. Khi nhận thưởng sẽ lóe sáng, phát âm riêng, icon bay về HUD và timer hiện rõ.</span></article>
           <article><b>⚡ AUTO FIRE + KHÓA MỤC TIÊU</b><span>Điện thoại tự bắn. Chạm NPC/Boss để khóa mục tiêu; vòng khóa hiển thị rõ và giữ mục tiêu đến khi bị tiêu diệt hoặc bạn chọn mục tiêu khác.</span></article>
-          <article><b>🎯 PC AUTO / THỦ CÔNG</b><span>PC chọn AUTO hoặc THỦ CÔNG ở menu phải và đổi được trong Pause. AUTO vẫn cho phép click để ưu tiên mục tiêu.</span></article>
+          <article><b>🎯 PC AUTO / THỦ CÔNG</b><span>PC chỉ hiện AUTO / THỦ CÔNG trong rail phải khi đang gameplay. AUTO vẫn cho phép click để ưu tiên mục tiêu; Pause và menu chính không hiển thị điều khiển này.</span></article>
           <article><b>⏱ Luật 3 phút</b><span>NPC tăng áp lực theo 3 chặng 0–60s · 61–120s · 121–180s. Boss chỉ xuất hiện đúng giây 180; sau đó NPC thường ngừng sinh tự nhiên.</span></article>
           <article><b>👹 Boss triệu hồi</b><span>Boss chỉ gọi quân đúng 3 đợt khi máu đi qua 75% · 50% · 25%.</span></article>
           <article><b>🦠 NPC G1 đa hành vi</b><span>Vi khuẩn có loại nặng chậm, chạy nhanh, zigzag, lượn ngang, phục kích, né tâm ngắm, đi cung, hỗ trợ và giả hướng; mỗi loại có tốc độ riêng.</span></article>
@@ -155,7 +155,7 @@
           <article><b>✨ LOGO TRƯỜNG GPP</b><span>Vật phẩm đặc biệt tổng hợp: hồi sinh tồn và kích hoạt đồng thời Khiên, Drone, Adrenaline, Vaccine, Sterile và GPP Boost.</span></article>
           <article><b>🧼 Khử nhiễm môi trường</b><span>Ảnh dơ phủ trên ảnh sạch; lớp dơ tan rất chậm từ ngoài vào trung tâm. Khử nhiễm tăng chậm trong 3 phút và khóa ở 50% khi Boss xuất hiện; hạ Boss hoàn tất 50→100% trong 5 giây rồi lấp lánh 2 giây.</span></article>
         </div>
-        <p class="help-note">PC: chọn ⚡ AUTO hoặc 🎯 THỦ CÔNG ở menu phải. AUTO tự bắn và click NPC/Boss để khóa; THỦ CÔNG dùng chuột ngắm + click/giữ để bắn. Giữ A/D hoặc ←/→ để chạy ngang, nhấn đúp để né nhanh; phím 1–5 đổi vũ khí; Space/Esc tạm dừng. Điện thoại: AUTO cố định; chỉ cần điều khiển trái/phải, chọn vũ khí/vật phẩm và chạm NPC/Boss khi muốn khóa mục tiêu ưu tiên.</p>
+        <p class="help-note">PC: khi đang gameplay, chọn ⚡ AUTO hoặc 🎯 THỦ CÔNG trong rail phải. AUTO tự bắn và click NPC/Boss để khóa; THỦ CÔNG dùng chuột ngắm + click/giữ để bắn. Giữ A/D hoặc ←/→ để chạy ngang, nhấn đúp để né nhanh; phím 1–5 đổi vũ khí; Space/Esc tạm dừng. Điện thoại: AUTO cố định; chỉ cần điều khiển trái/phải, chọn vũ khí/vật phẩm và chạm NPC/Boss khi muốn khóa mục tiêu ưu tiên.</p>
       </div>
     </section>
 
@@ -271,6 +271,8 @@
         <div class="status-stage"><small id="leftStageNo">MÀN 1</small><b id="leftStageName">KHOA DƯỢC</b></div>
         <div class="status-section">❤️ SINH TỒN <strong id="leftHealthText">10/10</strong></div>
         <div class="health-bar status-health"><i id="leftHealthFill"></i></div>
+        <div class="status-section support-title">VẬT PHẨM CHỜ KÍCH HOẠT</div>
+        <div id="pendingItemList" class="j1-pending-list"><div class="support-empty">CHƯA CÓ VẬT PHẨM CHỜ</div></div>
         <div class="status-section support-title">VẬT PHẨM ĐANG HOẠT ĐỘNG</div>
         <div id="supportList" class="support-list"><div class="support-empty">CHƯA CÓ HỖ TRỢ</div></div>
         <div class="status-rail-note">Khiên · Drone · Adrenaline · Vaccine · Sterile · GPP</div>
@@ -348,9 +350,9 @@
       </aside>
 
       <div id="mobileSupportStrip" class="mobile-support-strip mobile-only"></div>
+      <div id="mobilePendingStrip" class="j1-mobile-pending-strip mobile-only"></div>
       <div class="mobile-brand mobile-only"><img src="assets/icon-192.png" alt="" /><span>TRƯỜNG GPP</span></div>
-
-      <div id="gameAuthorFooter" class="j1-game-author-footer" aria-label="Tác giả và liên hệ">Tác giả: Ngô Quang Trường · TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</div>
+      <div id="gameAuthorFooter" class="j1-game-author-footer">Tác giả: Ngô Quang Trường · TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</div>
 
       <div id="moveControls" class="move-controls" aria-label="Điều khiển di chuyển ngang">
         <div id="movePad" class="move-pad" aria-label="Joystick di chuyển ngang">

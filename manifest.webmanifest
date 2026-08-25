@@ -1,7 +1,7 @@
 {
   "name": "Bác Sĩ Truy Quét · TRƯỜNG GPP",
   "short_name": "BS Truy Quét",
-  "description": "Bác Sĩ Truy Quét v3.9.0 J1 · J1 · mobile AUTO tự chọn mục tiêu · PC AUTO/THỦ CÔNG chỉ trong gameplay · vật phẩm tự kích hoạt sau 3 giây · NPC hiển thị ổn định · rail cân đối.",
+  "description": "Bác Sĩ Truy Quét v3.9.0 J1 · sửa NPC/Auto Target · AUTO/THỦ CÔNG chỉ trong gameplay PC · mobile AUTO cố định · vật phẩm chờ 3 giây và không tiêu hao khi chưa hợp lệ · rail cân đối · footer tác giả.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
