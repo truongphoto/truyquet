@@ -1,7 +1,7 @@
 {
   "name": "BÁC SĨ TRUY QUÉT · E1",
   "short_name": "BÁC SĨ E1",
-  "description": "Bác Sĩ Truy Quét v4.3.4 E1 · mobile counterfire chậm và dịu hơn · thanh SINH TỒN mobile chuyên nghiệp · kế thừa toàn bộ E1 v4.3.3.",
+  "description": "Bác Sĩ Truy Quét v4.3.5 E1 · mobile counterfire chậm và dịu hơn · thanh SINH TỒN mobile chuyên nghiệp · kế thừa toàn bộ E1 v4.3.3.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
@@ -28,5 +28,5 @@
       "purpose": "maskable"
     }
   ],
-  "version": "4.3.4"
+  "version": "4.3.5"
 }

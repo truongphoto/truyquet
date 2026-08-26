@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-const L1_VERSION='4.3.4';
+const L1_VERSION='4.3.5';
 const L1_BUILD='E1';
 
 const $ = (s) => document.querySelector(s);
@@ -2099,7 +2099,7 @@ const j1GoHomeBase=goHome;goHome=function(){const r=j1GoHomeBase();j1RefreshFire
 /* L1 consolidated: stale J1 version refresh removed */j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 
-/* === v4.3.4 E1 · MOBILE COUNTERFIRE TUNING + SURVIVAL HUD === */
+/* === v4.3.5 E1 · MOBILE COUNTERFIRE TUNING + SURVIVAL HUD === */
 const L1_DIFF={
   easy:{speed:.90,density:.68,capLo:3,capHi:4},
   normal:{speed:1,density:1,capLo:4,capHi:5},
@@ -2196,11 +2196,11 @@ function updateGame(dt){if(!state||state.mode!=='playing')return;const d=DIFF[st
   if(!state.bossSpawned&&!state.rewardNpcs.some(n=>!n.dead)&&state.rewardNpcCount<state.rewardNpcMax&&(state.stageElapsed-(state.h15LastSupplyAt||0))>=(state.h15SupplyGuarantee||18)){spawnRewardNpc();state.rewardNpcTimer=Math.max(state.rewardNpcTimer||0,4.5);}h17UpdateNpcCounterfire(dt);if(h16CurrentFireMode()==='auto')h16AutoFireTick();else if(pointer.down&&performance.now()-weaponPressStarted>120)shoot(pointer.x,pointer.y);h16UpdateFireModeUI();updateHUD();}
 function update(dt){return updateGame(dt);}
 function q1DrawDangerIndicator(){if(!state||state.mode!=='playing')return;const incoming=[...(state.enemyShots||[]).map(s=>({...s,q1Boss:true})),...(state.h17NpcShots||[]).map(s=>({...s,q1Boss:false}))].filter(s=>!s.dead&&!s.resolved&&s.life>0&&s.life-s.t<.85);if(!incoming.length)return;const v=gameplayViewport(),cx=playerScreenX(),left=incoming.some(s=>s.x<cx),right=incoming.some(s=>s.x>=cx),boss=incoming.some(s=>s.q1Boss);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=boss?'#ff4f68':'#ff7387';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=10;ctx.globalAlpha=.55+.30*Math.sin(performance.now()*.02);const y=innerHeight*.56;if(left){ctx.beginPath();ctx.moveTo(v.left+8,y);ctx.lineTo(v.left+24,y-13);ctx.lineTo(v.left+24,y+13);ctx.closePath();ctx.fill();}if(right){const x=v.left+v.width-8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-16,y-13);ctx.lineTo(x-16,y+13);ctx.closePath();ctx.fill();}ctx.restore();}
-function renderGame(t){v270PrepareWeaponPose(t);drawBackground(t);if(!state)return;const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs||[])drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();drawB1StageIntro();drawD1PickupFeedback(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);h15DrawBossTelegraph(t);h16DrawTargetLock(t);h17DrawNpcCounterfire(t);q1DrawDangerIndicator();h17DrawPlayerHitFx(t);}
+function renderGame(t){v270PrepareWeaponPose(t);drawBackground(t);if(!state)return;const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs||[])drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);/* E1 v4.3.5: NPC counterfire is rendered BEFORE the foreground weapon. A missed projectile now passes visually behind/below the weapon instead of painting over it and falsely looking like a hit. Real hits are still communicated by h17DrawPlayerHitFx after collision. */h17DrawNpcCounterfire(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();drawB1StageIntro();drawD1PickupFeedback(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);h15DrawBossTelegraph(t);h16DrawTargetLock(t);q1DrawDangerIndicator();h17DrawPlayerHitFx(t);}
 function render(t){return renderGame(t);}
-function g2IsNewer(v,cur='4.3.4'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
+function g2IsNewer(v,cur='4.3.5'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
 function f1UseReward(kind,fromCombo=false){if(!state||state.mode!=='playing'||state.transition>0)return false;const inv=f1Inventory();if((inv[kind]||0)<=0){toast('Vật phẩm Boss chưa sẵn sàng',.7);return false;}if(kind==='survival'){if(state.health>=state.maxHealth-.01){toast('❤️ SINH TỒN ĐÃ ĐẦY',.8);return false;}state.health=Math.min(state.maxHealth,state.health+5);g2SetWeaponScreenFx('survival',1800);}else if(kind==='eliteDrone'){state.bossDrone=Math.max(state.bossDrone||0,20);state._bossDroneTimer=.03;g2SetWeaponScreenFx('eliteDrone',20000);}else if(kind==='annihilator'){const targets=state.enemies.filter(e=>!e.dead&&!e.boss);if(!targets.length)return false;for(const e of targets){if(Math.random()<.5)hitEnemy(e,e.hp+1,false,true);}state.f1AnnihilatorFx=1;g2SetWeaponScreenFx('annihilator',1600);}else if(kind==='bossGpp')activateLogoUltimate('bossGpp');inv[kind]--;f1SaveInventory(inv);updateHUD();return true;}
-function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.3.4 E1';if(b)b.textContent='v4.3.4 E1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.3.4 E1';}
+function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.3.5 E1';if(b)b.textContent='v4.3.5 E1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.3.5 E1';}
 async function l1EnterLandscape(){if(!j1IsRealMobile())return true;try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch{}try{await screen.orientation?.lock?.('landscape');}catch{}document.documentElement.classList.add('l1-gameplay-landscape');return innerWidth>=innerHeight;}
 function l1LeaveLandscape(){document.documentElement.classList.remove('l1-gameplay-landscape');try{screen.orientation?.unlock?.();}catch{}}
 let l1PausedForOrientation=false;function l1UpdateOrientationGate(){const gate=$('#l1OrientationGate');if(!gate)return;const need=!!state&&state.mode!=='menu'&&j1IsRealMobile()&&innerHeight>innerWidth;gate.classList.toggle('hidden',!need);if(need&&state?.mode==='playing'){l1PausedForOrientation=true;pauseGame();}else if(!need&&l1PausedForOrientation&&state?.mode==='paused'){l1PausedForOrientation=false;resumeGame();}if(!state||state.mode==='menu')l1PausedForOrientation=false;}
