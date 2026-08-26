@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.0.0 L1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.1.0 Q1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -568,12 +568,12 @@
 }
 
 
-/* === L1 CONSOLIDATED UI · COMMON === */
+/* === Q1 CONSOLIDATED UI · COMMON === */
 .weapon-panel{position:absolute;z-index:23;border-radius:11px;padding:8px;display:flex;pointer-events:auto;border:1px solid rgba(48,219,214,.38);background:linear-gradient(180deg,rgba(2,22,28,.94),rgba(3,35,41,.90));box-shadow:0 12px 30px rgba(0,0,0,.25)}
 .event-toast{position:absolute;z-index:25;left:50%;top:126px;bottom:auto;transform:translateX(-50%);max-width:min(540px,56vw);padding:7px 12px;border-radius:999px;background:rgba(4,48,53,.90);border:1px solid rgba(177,255,248,.30);font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:toastIn .2s ease-out}
 .l1-orientation-gate{position:fixed;inset:0;z-index:9999;background:#031d22ef;display:grid;place-items:center;padding:24px;text-align:center}.l1-orientation-gate.hidden{display:none}.l1-orientation-gate>div{max-width:360px;padding:22px;border:1px solid rgba(126,255,242,.4);border-radius:18px;background:rgba(4,45,51,.96)}.l1-orientation-gate b{display:block;font-size:20px;color:#fff4a7}.l1-orientation-gate span{display:block;margin-top:8px;font-size:12px;color:#c9efeb}
 
-/* === L1 CONSOLIDATED UI · DESKTOP GAMEPLAY === */
+/* === Q1 CONSOLIDATED UI · DESKTOP GAMEPLAY === */
 @media (min-width:1180px){
   .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
   .weapon-panel{right:8px;left:auto;top:8px;bottom:50px;width:176px;height:auto;transform:none;flex-direction:column;align-items:stretch;gap:6px;overflow:hidden}
@@ -583,13 +583,19 @@
 /* Main menu may remain portrait; only live mobile gameplay is landscape-gated. */
 @media (max-width:900px) and (orientation:portrait){.menu-overlay{align-items:flex-start;overflow:auto}.menu-card{width:min(94vw,560px);max-height:none;margin:10px auto}.h1-campaign-map{min-height:250px}.l1-gameplay-landscape #hud{visibility:hidden}}
 
-/* === L1 CONSOLIDATED UI · MOBILE LANDSCAPE GAMEPLAY === */
+/* === Q1 CONSOLIDATED UI · MOBILE LANDSCAPE GAMEPLAY === */
 @media (max-width:1179px) and (orientation:landscape){
   .weapon-panel{left:auto;right:max(6px,env(safe-area-inset-right));top:58px;bottom:58px;transform:none;width:62px;height:auto;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:5px;gap:5px}
   .weapon-panel .weapon-info{display:flex!important;min-width:0!important;flex-direction:column!important;gap:2px!important;text-align:center!important}.weapon-panel .weapon-info>span{font-size:22px!important}.weapon-panel .weapon-info div{display:block!important}.weapon-panel .weapon-info b{display:block!important;font-size:6px!important;line-height:1.1!important}.weapon-panel .weapon-info small{display:block!important;font-size:5.4px!important;line-height:1.1!important}.weapon-panel .weapon-buttons{display:grid!important;grid-template-columns:1fr!important;gap:4px!important}.weapon-panel .weapon-buttons button{width:100%!important;height:36px!important;min-width:0!important}
   .event-toast{top:91px;max-width:64vw;padding:4px 8px;font-size:7px}
   .h17-game-fire-mode{display:none!important}.mobile-support-strip{right:72px!important;left:auto!important}
 }
+
+
+/* === Q1 · RIGHT RAIL AUTHOR FOOTER === */
+.q1-right-author-footer{margin-top:auto;padding-top:6px;border-top:1px solid rgba(112,231,223,.16);display:grid;gap:2px;color:#9fcac8;font-size:6.2px;line-height:1.25;letter-spacing:.02em;text-align:left;white-space:normal;pointer-events:none}
+.q1-right-author-footer strong{color:#dff7f4;font-size:6.5px}.q1-right-author-footer span{color:#87b8b5}
+@media (max-width:1179px){.q1-right-author-footer{display:none!important}}
 
 </style>
 </head>
@@ -603,7 +609,7 @@
           <div class="d1-brand-row">
             <div class="brand-lockup d1-brand-lockup"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" class="brand-logo-full" /></div>
             <div class="d1-title-block">
-              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v4.0.0 L1</b></p>
+              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v4.1.0 Q1</b></p>
               <h1>BÁC SĨ<br/>TRUY QUÉT</h1>
               <p class="lead">3 phút sinh tồn tăng áp lực · Boss xuất hiện đúng giây 180</p>
             </div>
@@ -646,13 +652,13 @@
               <span class="diff-symbol">🛡</span><span class="diff-copy"><b>DỄ</b><strong>LÀM QUEN</strong><small>NPC ít hơn rõ rệt · tốc độ giảm nhẹ · hỏa lực giữ nguyên</small></span><em>01</em>
             </button>
             <button class="difficulty d1-difficulty normal-card selected" data-difficulty="normal">
-              <span class="diff-symbol">⚠</span><span class="diff-copy"><b>TRUNG BÌNH</b><strong>CÂN BẰNG</strong><small>Mật độ chuẩn L1 · tốc độ chuẩn · hỏa lực giữ nguyên</small></span><em>02</em>
+              <span class="diff-symbol">⚠</span><span class="diff-copy"><b>TRUNG BÌNH</b><strong>CÂN BẰNG</strong><small>Mật độ chuẩn Q1 · tốc độ chuẩn · hỏa lực giữ nguyên</small></span><em>02</em>
             </button>
             <button class="difficulty d1-difficulty hard-card" data-difficulty="hard">
               <span class="diff-symbol">☣</span><span class="diff-copy"><b>KHÓ</b><strong>THỬ THÁCH</strong><small>NPC dày hơn rõ rệt · tốc độ tăng nhẹ · hỏa lực giữ nguyên</small></span><em>03</em>
             </button>
           </div>
-          <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH · CÂN BẰNG</b><span>Mật độ chuẩn L1 · tốc độ chuẩn · hỏa lực giống mọi cấp</span></div>
+          <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH · CÂN BẰNG</b><span>Mật độ chuẩn Q1 · tốc độ chuẩn · hỏa lực giống mọi cấp</span></div>
           <div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
             <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
             <div class="h18-control-side-buttons">
@@ -665,7 +671,7 @@
             <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
             <div><b>8</b><span>KHU VỰC</span></div>
           </div>
-          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v4.0.0 L1</div>
+          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v4.1.0 Q1</div>
           <div class="author-line d1-author-line">
             <strong>Tác giả: Ngô Quang Trường</strong>
             <span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span>
@@ -833,7 +839,7 @@
       </div>
     </section>
 
-    <div id="l1OrientationGate" class="l1-orientation-gate hidden"><div><b>↻ XOAY ĐIỆN THOẠI NGANG</b><span>Gameplay L1 chạy ở chế độ ngang để ngắm và khóa mục tiêu chính xác.</span></div></div>
+    <div id="l1OrientationGate" class="l1-orientation-gate hidden"><div><b>↻ XOAY ĐIỆN THOẠI NGANG</b><span>Gameplay Q1 chạy ở chế độ ngang để ngắm và khóa mục tiêu chính xác.</span></div></div>
 
     <section id="hud" class="hud hidden" aria-live="polite">
       <aside class="status-rail desktop-only" aria-label="Trạng thái chiến đấu">
@@ -904,6 +910,7 @@
           <button data-weapon="3" data-key="4"><span>🟠</span><small><b>BOM VITAMIN</b><em>Nổ diện rộng</em></small><i>4</i></button>
           <button data-weapon="4" data-key="5"><span>⚡</span><small><b>TIA MIỄN DỊCH</b><em>Beam liên tục</em></small><i>5</i></button>
         </div>
+        <div id="gameAuthorFooter" class="q1-right-author-footer desktop-only" aria-label="Tác giả và liên hệ"><strong>Tác giả: Ngô Quang Trường</strong><span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span></div>
 
       </div>
 
@@ -920,7 +927,7 @@
       <div id="mobileSupportStrip" class="mobile-support-strip mobile-only"></div>
       <div class="mobile-brand mobile-only"><img src="assets/icon-192.png" alt="" /><span>TRƯỜNG GPP</span></div>
 
-      <div id="gameAuthorFooter" class="j1-game-author-footer" aria-label="Tác giả và liên hệ">Tác giả: Ngô Quang Trường · TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</div>
+      
 
       <div id="moveControls" class="move-controls" aria-label="Điều khiển di chuyển ngang">
         <div id="movePad" class="move-pad" aria-label="Joystick di chuyển ngang">
@@ -943,8 +950,8 @@ window.BSTQ_LEADERBOARD_ENDPOINT = window.BSTQ_LEADERBOARD_ENDPOINT || '';
 (() => {
 'use strict';
 
-const L1_VERSION='4.0.0';
-const L1_BUILD='L1';
+const L1_VERSION='4.1.0';
+const L1_BUILD='Q1';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -1128,8 +1135,10 @@ function stageCompletePanel(){
 function rankFor(acc,hp,time){ const v=acc*.55+hp*4+(time<80?12:time<110?7:2); return v>=85?'S+':v>=72?'S':v>=56?'A':'B'; }
 
 function enemyScreen(e){
-  const w=innerWidth,h=innerHeight; const horizon=h*.41; const prog=Math.pow(1-e.depth,1.55); const y=horizon+prog*h*.49 + (e.base.fly?Math.sin(e.phase*2)*18-45:0) + (e.base.wall?(e.side<0?-30:10):0);
-  const spread=.28+.72*prog;const v=gameplayViewport();const x=v.center+(e.x-.5)*v.width*spread*1.52;const scale=.38+prog*1.25;return {x,y,scale,r:e.rad*scale*(e.boss?1.1:1)};
+  const h=innerHeight,horizon=h*.405,v=gameplayViewport();
+  if(e?.boss){const phase=e.phase||0,scale=.82+.026*Math.sin(phase*.58);return{x:v.center+(e.x-.5)*v.width*.50,y:h*.458+Math.sin(phase*.47)*2.0,scale,r:e.rad*scale*1.04};}
+  const prog=Math.pow(clamp(1-e.depth,0,1),1.34),y=horizon+prog*h*.535+(e.base.fly?Math.sin(e.phase*2)*13-30:0)+(e.base.wall?(e.side<0?-18:7):0),spread=.20+.80*prog,x=v.center+(e.x-.5)*v.width*spread*1.42,scale=.20+prog*1.02,minR=(typeof j1IsRealMobile==='function'&&j1IsRealMobile())?11:9;
+  return{x,y,scale,r:Math.max(e.rad*scale,minR)};
 }
 
 /* L1 consolidated: legacy aimHit implementation removed */
@@ -1264,7 +1273,9 @@ function drawHitMarkers(){for(const hm of state.hitMarkers){const a=Math.max(0,h
 function drawEnemyShots(){ for(const s of state.enemyShots){ctx.save();const g=ctx.createRadialGradient(s.x,s.y,1,s.x,s.y,s.r*2.2);g.addColorStop(0,'#ffffff');g.addColorStop(.2,s.color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(s.x,s.y,s.r*2.2,0,Math.PI*2);ctx.fill();ctx.restore();}}
 function drawParticles(){ for(const p of state.particles){ctx.globalAlpha=p.a;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1; }
 /* L1 consolidated: legacy drawPowerups implementation removed */
-function drawDrone(t){ if(!state||state.drone<=0)return;const x=Math.max(34,Math.min(innerWidth-34,playerScreenX()-innerWidth*.115+Math.sin(t*.004)*16)),y=innerHeight*.66+Math.sin(t*.006)*9;ctx.save();ctx.translate(x,y);ctx.fillStyle='#d8fffb';ctx.strokeStyle='#157a81';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-25,-13,50,26,9);ctx.fill();ctx.stroke();ctx.fillStyle='#4ed8d2';ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(178,255,250,.7)';ctx.beginPath();ctx.moveTo(-31,-15);ctx.lineTo(-48,-23);ctx.moveTo(31,-15);ctx.lineTo(48,-23);ctx.stroke();ctx.restore();}
+function q1DroneScreen(t=performance.now()){return{x:Math.max(34,Math.min(innerWidth-34,playerScreenX()-innerWidth*.115+Math.sin(t*.004)*16)),y:innerHeight*.66+Math.sin(t*.006)*9};}
+function q1DroneTracer(target,elite=false){if(!state||!target)return;const a=q1DroneScreen(),b=enemyScreen(target),life=elite?.18:.24;state.tracers.push({x1:a.x,y1:a.y,x2:b.x,y2:b.y,t:0,life,max:life,travel:elite?.10:.14,color:elite?'#ffe177':'#7dfff4',width:elite?5.6:4.2,kind:elite?'bossDrone':'drone',seed:Math.random()*99});}
+function drawDrone(t){ if(!state||state.drone<=0)return;const {x,y}=q1DroneScreen(t);ctx.save();ctx.translate(x,y);ctx.fillStyle='#d8fffb';ctx.strokeStyle='#157a81';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-25,-13,50,26,9);ctx.fill();ctx.stroke();ctx.fillStyle='#4ed8d2';ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(178,255,250,.7)';ctx.beginPath();ctx.moveTo(-31,-15);ctx.lineTo(-48,-23);ctx.moveTo(31,-15);ctx.lineTo(48,-23);ctx.stroke();ctx.restore();}
 
 
 
@@ -1304,9 +1315,10 @@ function sourceXFor(type){
 /* L1 consolidated: legacy spawnEnemy implementation removed */
 
 function fireBossShot(e,targetOffset=0,damage=1.2,color=e.shotColor,speed=145,size=8){
-  const s=enemyScreen(e),targetPlayerX=clamp(state.playerX+targetOffset,-1,1),tx=playerScreenX(targetPlayerX),ty=innerHeight*.78;
-  const dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy)||1;
-  state.enemyShots.push({x:s.x,y:s.y,vx:dx/l*speed,vy:dy/l*speed,t:0,life:Math.max(.55,l/speed),r:size,damage,color,targetPlayerX,bossKind:e.bossKind});
+  if(!state||!e||e.dead)return;
+  const src=enemyScreen(e),targetPlayerX=clamp(state.playerX+targetOffset,-1,1),tx=playerScreenX(targetPlayerX),ty=innerHeight*.78;
+  const dx=tx-src.x,dy=ty-src.y,l=Math.hypot(dx,dy)||1,travelSpeed=Math.max(170,speed*1.16);
+  state.enemyShots.push({kind:'boss',boss:true,x:src.x,y:src.y,px:src.x,py:src.y,vx:dx/l*travelSpeed,vy:dy/l*travelSpeed,t:0,life:Math.max(.50,l/travelSpeed),r:size,damage,color,targetPlayerX,bossKind:e.bossKind,sourceX:src.x,nearMiss:false});
 }
 fireEnemyShot = function(e){ if(e?.boss) fireBossShot(e); };
 
@@ -1326,17 +1338,7 @@ function bossAttack(e,phase,d){
     const n=phase===1?3:phase===2?5:7; for(let i=0;i<n;i++){const o=(i-(n-1)/2)*(phase===3?.15:.19);fireBossShot(e,o,1.0+.16*phase,e.shotColor,150+phase*10,phase===3?9:8);} e.attackTimer=(1.48-.18*phase)*rate;
   }
 }
-function updateBoss(e,dt,d){
-  const phase=bossPhase(e); e.lastBossPhase=e.lastBossPhase||1;
-  if(phase!==e.lastBossPhase){e.lastBossPhase=phase;sfx.boss();toast(phase===3?'🔥 BOSS CUỒNG NỘ!':`⚠ ${e.name} · PHASE ${phase}`,1.25);}
-  e.phase+=dt*(1.4+phase*.35); e.flash=Math.max(0,e.flash-dt*6); e.guard=Math.max(0,(e.guard||0)-dt);
-  const amp=[.12,.18,.14,.10,.22,.16][e.bossKind]; e.baseX=.5+Math.sin(e.phase*(.32+e.bossKind*.025))*amp; e.x=e.baseX; e.depth=.67+Math.sin(e.phase*.38)*.018;
-  if(state.bossIntro>0)return;
-  e.summon-=dt;
-  const summonEvery=(4.4-.25*phase)/d.summons;
-  if(e.summon<=0){e.summon=summonEvery;const maxSummon=state.difficulty==='easy'?1:state.difficulty==='hard'?Math.min(3,phase+1):Math.min(2,phase);for(let i=0;i<maxSummon;i++)spawnEnemy(state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],false);}
-  e.attackTimer-=dt;if(e.attackTimer<=0)bossAttack(e,phase,d);
-}
+/* Q1 consolidated: early legacy updateBoss removed; canonical Boss update is defined with the D1/H15 combat rules below. */
 
 /* L1 consolidated: legacy update implementation removed */
 
@@ -1667,12 +1669,9 @@ startGame=function(stage=0){
 const goHomeA1Base=goHome;
 goHome=function(){goHomeA1Base();a1RenderStageMenu();};
 
-function a1ConfirmHome(){
-  if(!state){goHome();return;}
-  if(confirm('Về Menu chính? Tiến trình màn hiện tại sẽ mất.'))goHome();
-}
-const quickHome=$('#homeQuickBtn');if(quickHome)quickHome.onclick=a1ConfirmHome;
-if($('#homeBtn'))$('#homeBtn').onclick=a1ConfirmHome;
+function a1ConfirmHome(){ goHome(); }
+const quickHome=$('#homeQuickBtn');if(quickHome)quickHome.onclick=goHome;
+if($('#homeBtn'))$('#homeBtn').onclick=goHome;
 if($('#stageHomeBtn'))$('#stageHomeBtn').onclick=goHome;
 if($('#pauseRetryBtn'))$('#pauseRetryBtn').onclick=()=>{if(!state)return;const idx=state.stageIndex;if(confirm('Chơi lại màn này từ đầu?'))startGame(idx);};
 
@@ -2091,28 +2090,22 @@ function d1BossSummon(e,wave){
   toast(`👹 BOSS TRIỆU HỒI · ĐỢT ${wave+1}/3`,1.35);
   for(let i=0;i<count;i++){
     const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],n=spawnEnemy(typ,false);
-    if(n){n.bossSummoned=true;n.countsForClean=false;n.depth=.96+Math.random()*.025;n.baseX=clamp(.16+Math.random()*.68,.08,.92);n.x=n.baseX;}
+    if(n){n.bossSummoned=true;n.countsForClean=false;n.depth=.96+Math.random()*.025;n.baseX=clamp(.16+Math.random()*.68,.08,.92);n.x=n.baseX;n.h17Ranged=!!n.h17Ranged&&Math.random()<.45;n.h17ShotCooldown=Math.max(n.h17ShotCooldown||0,5.2+Math.random()*2.8);}
   }
 }
 function d1BossVisualPhase(e){const r=Math.max(0,e.hp/e.maxHp);return r>.75?1:r>.50?2:r>.25?3:4;}
-updateBoss=function(e,dt,d){
+function updateBoss(e,dt,d){
   const ratio=Math.max(0,e.hp/e.maxHp),attackPhase=ratio>.67?1:ratio>.34?2:3,visualPhase=d1BossVisualPhase(e);
   if(visualPhase!==e.d1VisualPhase){e.d1VisualPhase=visualPhase;if(visualPhase>1){sfx.boss();toast(visualPhase===4?'☣ BOSS BIẾN DẠNG TỐI ĐA!':`⚠ BOSS BIẾN DẠNG · CẤP ${visualPhase}`,1.0);}}
   e.phase+=dt*(1.12+visualPhase*.22);e.flash=Math.max(0,e.flash-dt*6);e.guard=Math.max(0,(e.guard||0)-dt);
-  const amp=.11+state.stageIndex*.008;e.baseX=.5+Math.sin(e.phase*(.28+state.stageIndex*.008))*amp;e.x=e.baseX;e.depth=.68+Math.sin(e.phase*.31)*.014;
+  const amp=.11+state.stageIndex*.008;e.baseX=.5+Math.sin(e.phase*(.28+state.stageIndex*.008))*amp;e.x=e.baseX;e.depth=.79+Math.sin(e.phase*.31)*.012;
   if(state.bossIntro>0)return;
   const thresholds=[.75,.50,.25];for(let i=0;i<3;i++)if(!e.d1SummonDone[i]&&ratio<=thresholds[i])d1BossSummon(e,i);
   e.attackTimer-=dt;if(e.attackTimer<=0)bossAttack(e,attackPhase,d);
-};
+  if(e.h15SummonPauseUntil&&performance.now()<e.h15SummonPauseUntil)e.attackTimer=Math.max(e.attackTimer,.12);
+}
 
-// Perspective projection: small in the distance, steadily larger toward the player.
-enemyScreen=function(e){
-  const h=innerHeight,horizon=h*.405;
-  if(e.boss){const y=horizon+h*.195+Math.sin(e.phase*.5)*3,scale=.86+.035*Math.sin(e.phase*.6);const v=gameplayViewport();return{x:v.center+(e.x-.5)*v.width*.74,y,scale,r:e.rad*scale*1.03};}
-  const prog=Math.pow(clamp(1-e.depth,0,1),1.34),y=horizon+prog*h*.535+(e.base.fly?Math.sin(e.phase*2)*13-30:0)+(e.base.wall?(e.side<0?-18:7):0);
-  const spread=.20+.80*prog,v=gameplayViewport(),x=v.center+(e.x-.5)*v.width*spread*1.42,scale=.20+prog*1.02;
-  return{x,y,scale,r:e.rad*scale};
-};
+// Q1 consolidated: D1 perspective projection merged into canonical enemyScreen.
 
 // D1 main update loop.
 /* L1 consolidated: legacy update implementation removed */
@@ -2661,12 +2654,8 @@ const h1GoHomeBase=goHome;goHome=function(){h1PendingStage=null;hide($('#mission
 // --- H1 Boss: twice as durable as v3.3 (therefore 6× the pre-hardening baseline), visually farther yet larger. ---
 
 /* L1 consolidated: legacy spawnEnemy implementation removed */
-const h1EnemyScreenBase=enemyScreen;
-enemyScreen=function(e){
-  if(!e?.boss)return h1EnemyScreenBase(e);const h=innerHeight,horizon=h*.405,v=gameplayViewport(),phase=e.phase||0,scale=1.10+.045*Math.sin(phase*.58);return{x:v.center+(e.x-.5)*v.width*.66,y:horizon+h*.115+Math.sin(phase*.47)*2.5,scale,r:e.rad*scale*1.13};
-};
-const h1UpdateBossBase=updateBoss;
-updateBoss=function(e,dt,d){h1UpdateBossBase(e,dt,d);if(!e||e.dead||state?.bossIntro>0)return;const ratio=Math.max(0,e.hp/e.maxHp),phase=ratio>.75?1:ratio>.50?2:ratio>.25?3:4;const cap=Math.max(.48,1.12-phase*.12);if(Number.isFinite(e.attackTimer))e.attackTimer=Math.min(e.attackTimer,cap);};
+/* Q1 consolidated: H1 boss enemyScreen wrapper merged into canonical enemyScreen. */
+/* Q1 consolidated: obsolete H1 rapid Boss clamp removed. */
 
 // --- H1 natural NPC pressure: at least 2× speed and 2× spawn frequency versus v3.3, while preserving archetype differences. ---
 /* L1 consolidated: legacy d1SpeedTarget implementation removed */
@@ -2748,13 +2737,7 @@ bossAttack=function(e,phase,d){
   setTimeout(()=>h15FirePattern(e,phase,diff,serial),warning*1000);
   e.attackTimer=warning+h15BossRest(diff,phase);
 };
-// Replace H1's rapid clamp with the D1/G1 Boss logic so the longer attack rest is respected.
-updateBoss=function(e,dt,d){
-  h1UpdateBossBase(e,dt,d);
-  if(!e||e.dead||state?.bossIntro>0)return;
-  // Keep Boss fire predictable after each summon wave.
-  if(e.h15SummonPauseUntil&&performance.now()<e.h15SummonPauseUntil)e.attackTimer=Math.max(e.attackTimer,.12);
-};
+// Q1 consolidated: H15 Boss summon-pause rule merged into canonical updateBoss.
 const h15SummonBase=d1BossSummon;
 d1BossSummon=function(e,wave){
   e.h15AttackSerial=(e.h15AttackSerial||0)+1; // cancel any telegraphed shot that has not left yet
@@ -2799,7 +2782,7 @@ spawnRewardNpc=function(){const before=state?.rewardNpcs?.length||0,r=h15SpawnRe
 const H15_LB_KEY='bstqLeaderboardV1',H15_LB_ENDPOINT=(window.BSTQ_LEADERBOARD_ENDPOINT||'').trim();let h15PendingRecord=null;
 function h15LoadLocalScores(){try{const a=JSON.parse(localStorage.getItem(H15_LB_KEY)||'[]');return Array.isArray(a)?a:[]}catch{return[]}}
 function h15StoreLocalScore(rec){const a=h15LoadLocalScores();a.push(rec);a.sort((x,y)=>y.score-x.score||x.bossSeconds-y.bossSeconds);localStorage.setItem(H15_LB_KEY,JSON.stringify(a.slice(0,120)));}
-function h15SafeName(v){return String(v||'').replace(/[<>\/]/g,'').trim().slice(0,16)||'Bác sĩ ẩn danh';}
+function h15SafeName(v){return String(v||'').replace(/[<>\\/]/g,'').trim().slice(0,16)||'Bác sĩ ẩn danh';}
 function h15CurrentFilters(){return{difficulty:$('#leaderboardDifficulty')?.value||'normal',stage:$('#leaderboardStage')?.value||'all'};}
 async function h15FetchScores(){
   const f=h15CurrentFilters();if(H15_LB_ENDPOINT){try{const u=new URL(H15_LB_ENDPOINT,location.href);u.searchParams.set('difficulty',f.difficulty);if(f.stage!=='all')u.searchParams.set('stage',f.stage);const r=await fetch(u,{cache:'no-store'});if(r.ok){const j=await r.json();if(Array.isArray(j.entries))return{mode:'online',entries:j.entries};}}catch{}}
@@ -2902,9 +2885,9 @@ function h17ShooterChance(type){
 }
 
 /* L1 consolidated: legacy spawnEnemy implementation removed */
-function h17MaxNpcShots(){const mobile=h17IsMobileGameplay(),diff=state?.difficulty||'normal';return diff==='hard'?(mobile?3:3):(mobile?2:3);}
-function h17NpcShotDamage(){const diff=state?.difficulty||'normal';return diff==='easy'?.07:diff==='hard'?.12:.09;}
-function h17NpcWarnSeconds(){const diff=state?.difficulty||'normal';return diff==='easy'?.60:diff==='hard'?.44:.52;}
+function h17MaxNpcShots(){const diff=state?.difficulty||'normal';return diff==='easy'?1:diff==='hard'?3:2;}
+function h17NpcShotDamage(){const diff=state?.difficulty||'normal';return diff==='easy'?.05:diff==='hard'?.09:.07;}
+function h17NpcWarnSeconds(){const diff=state?.difficulty||'normal';return diff==='easy'?.72:diff==='hard'?.52:.62;}
 function h17LaunchNpcShot(e){
   if(!state||!e||e.dead||e.boss||state.transition>0)return;const s=enemyScreen(e),tx=playerScreenX(),ty=innerHeight*.76,dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy)||1;
   const speed=150+(state.difficulty==='hard'?16:state.difficulty==='easy'?-8:0),life=Math.max(.62,l/speed);
@@ -2915,11 +2898,11 @@ function h17UpdateNpcCounterfire(dt){
   if(!state||state.mode!=='playing'||state.transition>0)return;state.h17DamageIFrame=Math.max(0,(state.h17DamageIFrame||0)-dt);
   const shots=state.h17NpcShots||(state.h17NpcShots=[]),cap=h17MaxNpcShots();
   if(!state.bossIntro){
-    const candidates=state.enemies.filter(e=>!e.dead&&!e.boss&&!e.bossSummoned&&e.h17Ranged&&e.depth<.76&&e.depth>.10).sort((a,b)=>a.depth-b.depth);
+    const candidates=state.enemies.filter(e=>!e.dead&&!e.boss&&e.h17Ranged&&e.depth<.76&&e.depth>.10).sort((a,b)=>a.depth-b.depth);
     let pending=candidates.filter(e=>e.h17ShotWarn>0||e.h17ShotQueued).length+shots.filter(s=>!s.dead).length;
     for(const e of candidates){
       e.h17ThreatPulse=Math.max(0,(e.h17ThreatPulse||0)-dt);e.h17ShotCooldown=(e.h17ShotCooldown||0)-dt;
-      if(e.h17ShotWarn>0){e.h17ShotWarn-=dt;if(e.h17ShotWarn<=0&&e.h17ShotQueued){e.h17ShotQueued=false;h17LaunchNpcShot(e);e.h17ShotCooldown=3.1+Math.random()*2.4;pending++;}continue;}
+      if(e.h17ShotWarn>0){e.h17ShotWarn-=dt;if(e.h17ShotWarn<=0&&e.h17ShotQueued){e.h17ShotQueued=false;h17LaunchNpcShot(e);e.h17ShotCooldown=4.6+Math.random()*3.0;pending++;}continue;}
       if(e.h17ShotCooldown<=0&&pending<cap){e.h17ShotWarn=h17NpcWarnSeconds();e.h17ShotQueued=true;e.h17ShotCooldown=99;pending++;}
     }
   }
@@ -2927,7 +2910,9 @@ function h17UpdateNpcCounterfire(dt){
     if(sh.dead)continue;sh.t+=dt;sh.px=sh.x;sh.py=sh.y;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;
     if(sh.t>=sh.life){
       const hitRadius=Math.max(28,Math.min(52,innerWidth*.032));
-      if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius){state.h17IncomingHit=true;state.h17IncomingFromX=sh.sourceX;damagePlayer(sh.damage);state.h17IncomingHit=false;}
+      const missDx=Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX));
+      if(missDx<hitRadius){state.h17IncomingHit=true;state.h17IncomingFromX=sh.sourceX;damagePlayer(sh.damage);state.h17IncomingHit=false;}
+      else if(missDx<hitRadius*2.15){state.score+=10;if((state.q1NearMissToast||0)<=0){toast('✨ NÉ ĐẸP +10',.55);sfx.dodgeSuccess();state.q1NearMissToast=1.05;}}
       else state.score+=3;sh.dead=true;
     }
   }
@@ -3066,9 +3051,7 @@ function j1IsRealMobile(){
 h17IsMobileGameplay=j1IsRealMobile;
 h16IsMobileControl=j1IsRealMobile;
 
-// Keep far NPCs visibly readable without destroying depth perspective.
-const j1EnemyScreenBase=enemyScreen;
-enemyScreen=function(e){const s=j1EnemyScreenBase(e);if(e&&!e.boss&&s&&Number.isFinite(s.r)){const minR=j1IsRealMobile()?11:9;s.r=Math.max(s.r,minR);}return s;};
+// Q1 consolidated: J1 minimum NPC radius merged into canonical enemyScreen.
 
 // AUTO should never erase NPCs before they become visually readable. This was the main cause of "NPC not visible" on mobile:
 // v3.7 could target a freshly spawned NPC at depth ~.99 and kill it while it was only a few pixels wide.
@@ -3119,7 +3102,7 @@ const j1GoHomeBase=goHome;goHome=function(){const r=j1GoHomeBase();j1RefreshFire
 /* L1 consolidated: stale J1 version refresh removed */j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 
-/* === v4.0.0 L1 · CONSOLIDATED CORE · HIGH-SPEED NPC · WEAPON EVOLUTION · GPP ULTIMATE === */
+/* === v4.1.0 Q1 · L1 CORE + TARGET PRIORITY + DRONE TRACERS + REAL PROJECTILES + COUNTERFIRE === */
 const L1_DIFF={
   easy:{speed:.90,density:.68,capLo:3,capHi:4},
   normal:{speed:1,density:1,capLo:4,capHi:5},
@@ -3156,13 +3139,13 @@ function activateLogoUltimate(source='gpp'){
 function createGameState(stageIndex=0){
   stageIndex=clamp(stageIndex,0,A1_STAGE_COUNT-1);const cfg=STAGES[stageIndex],difficulty=window.__difficulty||'normal',d=DIFF[difficulty],baseTarget=(D1_EXPECTED_KILLS[difficulty]||D1_EXPECTED_KILLS.normal)[stageIndex]||36;
   h18PendingShare=null;h18PreviewOnly=false;h15PendingRecord=null;$('#leaderboardCurrentResult')?.classList.add('hidden');
-  return {mode:'playing',stageIndex,cfg,difficulty,health:10,maxHealth:10,score:stageIndex===0?0:(state?.score||0),enemies:[],particles:[],tracers:[],hitMarkers:[],enemyShots:[],powerups:[],rewardNpcs:[],spawnLeft:0,bossSpawned:false,bossDefeated:false,spawnTimer:.16,contamination:100,kills:0,shots:0,hits:0,combo:0,comboTimer:0,weapon:0,lastFire:0,bombs:3,beam:100,shield:0,drone:0,adrenaline:0,vaccine:0,sterile:0,gppBoost:0,bossDrone:0,stageElapsed:0,transition:0,zoom:0,shake:0,toastTimer:0,nextPanel:false,playerX:0,playerVX:0,moveLeft:false,moveRight:false,mobileMoveAxis:0,lastMoveDir:1,dashCooldown:0,dashTimer:0,dashDir:0,dodgeTilt:0,recoil:0,muzzleFlash:0,dodgeMessage:0,rewardNpcTimer:difficulty==='easy'?3:difficulty==='hard'?4.2:3.6,rewardNpcCount:0,rewardNpcMax:d.rewardMax||4,_rewardSerial:0,_supportHudKey:'',environmentClean:0,bossCleanse:0,cleanSparkle:0,stageIntro:1.9,d1BossAt:G1_BOSS_TIME,d1NaturalSpawns:0,d1MinorKills:0,d1BossStartedAt:0,_minorCleanTarget:baseTarget*3,pickupFx:[],rewardBanner:null,_supportJustAdded:null,_supportJustUntil:0,f1Upgrades:{damage:0,fireRate:0,survival:0,drone:0,supply:0},bossRewardFx:null,bossRewardPending:null,bossRewardShown:false,f1WeaponEffect:null,f1WeaponEffectUntil:0,f1AnnihilatorFx:0,f1CleanChimeMark:0,f1SparkleChime:false,f1BossKilledAt:0,f1BossKillDuration:0,g1LastValidSpawnAt:0,g1StallWatch:0,g1SpawnRepairs:0,h15LastSupplyAt:0,h15SupplyGuarantee:difficulty==='easy'?14:difficulty==='hard'?20:17,h16FireMode:j1IsRealMobile()?'auto':h16PreferredFireMode,h16ManualLock:null,h16AutoTarget:null,h16LockFxUntil:0,h16LockSerial:0,h16AutoBombAt:0,h17NpcShots:[],h17DamageIFrame:0,h17PlayerHitFx:null,h17LastAutoShotAt:0,l1LogoUltimate:0,l1GameTime:0,l1WeaponLevel:stageIndex+1};
+  return {mode:'playing',stageIndex,cfg,difficulty,health:10,maxHealth:10,score:stageIndex===0?0:(state?.score||0),enemies:[],particles:[],tracers:[],hitMarkers:[],enemyShots:[],powerups:[],rewardNpcs:[],spawnLeft:0,bossSpawned:false,bossDefeated:false,spawnTimer:.16,contamination:100,kills:0,shots:0,hits:0,combo:0,comboTimer:0,weapon:0,lastFire:0,bombs:3,beam:100,shield:0,drone:0,adrenaline:0,vaccine:0,sterile:0,gppBoost:0,bossDrone:0,stageElapsed:0,transition:0,zoom:0,shake:0,toastTimer:0,nextPanel:false,playerX:0,playerVX:0,moveLeft:false,moveRight:false,mobileMoveAxis:0,lastMoveDir:1,dashCooldown:0,dashTimer:0,dashDir:0,dodgeTilt:0,recoil:0,muzzleFlash:0,dodgeMessage:0,rewardNpcTimer:difficulty==='easy'?3:difficulty==='hard'?4.2:3.6,rewardNpcCount:0,rewardNpcMax:d.rewardMax||4,_rewardSerial:0,_supportHudKey:'',environmentClean:0,bossCleanse:0,cleanSparkle:0,stageIntro:1.9,d1BossAt:G1_BOSS_TIME,d1NaturalSpawns:0,d1MinorKills:0,d1BossStartedAt:0,_minorCleanTarget:baseTarget*3,pickupFx:[],rewardBanner:null,_supportJustAdded:null,_supportJustUntil:0,f1Upgrades:{damage:0,fireRate:0,survival:0,drone:0,supply:0},bossRewardFx:null,bossRewardPending:null,bossRewardShown:false,f1WeaponEffect:null,f1WeaponEffectUntil:0,f1AnnihilatorFx:0,f1CleanChimeMark:0,f1SparkleChime:false,f1BossKilledAt:0,f1BossKillDuration:0,g1LastValidSpawnAt:0,g1StallWatch:0,g1SpawnRepairs:0,h15LastSupplyAt:0,h15SupplyGuarantee:difficulty==='easy'?14:difficulty==='hard'?20:17,h16FireMode:j1IsRealMobile()?'auto':h16PreferredFireMode,h16ManualLock:null,h16AutoTarget:null,h16LockFxUntil:0,h16LockSerial:0,h16AutoBombAt:0,h17NpcShots:[],h17DamageIFrame:0,h17PlayerHitFx:null,h17LastAutoShotAt:0,l1LogoUltimate:0,l1GameTime:0,l1WeaponLevel:stageIndex+1,q1BossHitIFrame:0,q1NearMissToast:0};
 }
 function newState(stageIndex=0){return createGameState(stageIndex);}
 function spawnEnemy(type,boss=false){
   if(!state)return null;const base=ENEMY[type]||ENEMY.basic,d=DIFF[state.difficulty],style=BOSS_STYLE[state.stageIndex]||BOSS_STYLE[BOSS_STYLE.length-1],x=boss?.5:sourceXFor(type),side=x<.5?-1:1;
   const hp=boss?state.cfg.bossHp*d.bossHp*G2_BOSS_HP_MULT*H1_BOSS_EXTRA_MULT:l1NpcHp(type);
-  const e={id:Math.random(),type,boss,name:boss?state.cfg.boss:null,bossKind:boss?state.cfg.bossKind:null,x,baseX:x,depth:boss?.69:.955+Math.random()*.035,hp,maxHp:hp,speedBase:base.speed*(.90+Math.random()*.16),speed:base.speed,rad:boss?style.rad:base.rad,color:boss?style.color:base.color,accent:boss?style.accent:null,shotColor:boss?style.shot:null,phase:Math.random()*6.28,wobble:Math.random()*1.8+1,attackTimer:boss?1.15:999,summon:999,flash:0,dead:false,side,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:base?.g1Motion||type,g1Lane:x,g1TargetX:x,g1Decision:.55+Math.random()*1.3,g1Pause:Math.random()*.5,g1Burst:0,g1GhostX:x,h17Ranged:false,h17ShotCooldown:2.4+Math.random()*2.2,h17ShotWarn:0,h17ShotQueued:false,h17ThreatPulse:0};
+  const e={id:Math.random(),type,boss,name:boss?state.cfg.boss:null,bossKind:boss?state.cfg.bossKind:null,x,baseX:x,depth:boss?.79:.955+Math.random()*.035,hp,maxHp:hp,speedBase:base.speed*(.90+Math.random()*.16),speed:base.speed,rad:boss?style.rad:base.rad,color:boss?style.color:base.color,accent:boss?style.accent:null,shotColor:boss?style.shot:null,phase:Math.random()*6.28,wobble:Math.random()*1.8+1,attackTimer:boss?1.15:999,summon:999,flash:0,dead:false,side,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:base?.g1Motion||type,g1Lane:x,g1TargetX:x,g1Decision:.55+Math.random()*1.3,g1Pause:Math.random()*.5,g1Burst:0,g1GhostX:x,h17Ranged:false,h17ShotCooldown:2.4+Math.random()*2.2,h17ShotWarn:0,h17ShotQueued:false,h17ThreatPulse:0};
   if(!boss){const scale=state.difficulty==='easy'?.62:state.difficulty==='hard'?1:.82;e.h17Ranged=!e.bossSummoned&&Math.random()<h17ShooterChance(type)*scale;}
   state.enemies.push(e);if(boss){e.g2BossScaled=true;e.h1BossScaled=true;e.g1DarkIntro=2.2;state.bossIntro=2.05;state.d1BossStartedAt=state.stageElapsed;state.enemyShots.length=0;show(UI.bossBar);UI.bossName.textContent=state.cfg.boss;sfx.boss();toast('⚠ GIÂY 180 · BOSS XUẤT HIỆN!',2);}return e;
 }
@@ -3173,7 +3156,15 @@ function collectPowerupAt(x,y){if(!state)return false;const p=state.powerups.fil
 function collectPowerups(x,y){return collectPowerupAt(x,y);}
 function drawPowerups(){if(!state)return;for(const p of state.powerups){if(p.dead)continue;const m=D1_REWARD_META[p.kind]||D1_REWARD_META.drone,isGpp=p.kind==='gpp',r=isGpp?31:26,pulse=1+Math.sin(p.t*4.2)*.055;ctx.save();ctx.translate(p.x,p.y);ctx.scale(pulse,pulse);ctx.shadowColor=m.color;ctx.shadowBlur=isGpp?18:10;ctx.fillStyle='rgba(4,42,48,.92)';ctx.strokeStyle=m.color;ctx.lineWidth=isGpp?3:2;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(isGpp&&logoIcon.complete){ctx.save();ctx.beginPath();ctx.arc(0,0,r*.76,0,Math.PI*2);ctx.clip();ctx.drawImage(logoIcon,-r*.76,-r*.76,r*1.52,r*1.52);ctx.restore();}else{ctx.font='24px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='white';ctx.fillText(m.icon,0,1);}const left=Math.max(0,p.l1AutoRemaining??3),waiting=left<=0&&!l1CanAutoUse(p.kind);ctx.font='1000 8px system-ui';ctx.fillStyle=waiting?'#fff0a0':'#fff';ctx.textAlign='center';ctx.fillText(waiting?'ĐỢI':`${Math.max(1,Math.ceil(left))}`,0,-42);ctx.restore();}}
 function l1TargetAt(x,y){if(!state)return null;const hits=[];for(const n of state.rewardNpcs||[]){if(n.dead)continue;const s=rewardNpcScreen(n),dist=Math.hypot(x-s.x,y-s.y),r=Math.max(j1IsRealMobile()?44:36,s.r*(j1IsRealMobile()?1.85:1.6));if(dist<=r)hits.push({kind:'reward',entity:n,screen:s,dist,norm:dist/r,z:2000});}for(const e of state.enemies||[]){if(e.dead)continue;const s=enemyScreen(e),dist=Math.hypot(x-s.x,y-s.y),r=Math.max(e.boss?(j1IsRealMobile()?66:58):(j1IsRealMobile()?44:36),s.r*(e.boss?1.42:(j1IsRealMobile()?1.78:1.55)));if(dist<=r)hits.push({kind:'enemy',entity:e,screen:s,dist,norm:dist/r,z:(1-e.depth)*1000});}hits.sort((a,b)=>b.z-a.z||a.norm-b.norm||a.dist-b.dist);return hits[0]||null;}
-function h16ChooseAutoTarget(){if(!state)return null;const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;let sticky=h16ResolveTarget(state.h16AutoTarget);if(sticky?.kind==='enemy'&&!sticky.entity.boss&&!j1NpcEngageable(sticky.entity))sticky=null;if(sticky)return sticky;const visible=(state.enemies||[]).filter(e=>!e.dead&&!e.boss&&j1NpcEngageable(e)).sort((a,b)=>h17ThreatScore(b)-h17ThreatScore(a));if(visible[0]){state.h16AutoTarget=h16TargetRef('enemy',visible[0]);return h16ResolveTarget(state.h16AutoTarget);}const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}state.h16AutoTarget=null;return null;}
+function q1NearestNpc(){if(!state)return null;const v=gameplayViewport(),cx=v.center;return(state.enemies||[]).filter(e=>!e.dead&&!e.boss&&j1NpcEngageable(e)).map(e=>({e,s:enemyScreen(e)})).sort((a,b)=>a.e.depth-b.e.depth||Math.abs(a.s.x-cx)-Math.abs(b.s.x-cx))[0]?.e||null;}
+function h16ChooseAutoTarget(){
+  if(!state)return null;
+  const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
+  const npc=q1NearestNpc();if(npc){state.h16AutoTarget=h16TargetRef('enemy',npc);return h16ResolveTarget(state.h16AutoTarget);}
+  const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
+  const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
+  state.h16AutoTarget=null;return null;
+}
 function l1PredictScreen(target){const s=target.kind==='reward'?rewardNpcScreen(target.entity):enemyScreen(target.entity);if(target.kind!=='enemy'||target.entity.boss)return s;const e=target.entity,lead=.10,prog=Math.max(.001,1-e.depth),dx=((e.x-(e._l1PrevX??e.x))/Math.max(.001,state?._l1LastDt||.016))*lead*gameplayViewport().width*(.22+.78*prog);return {...s,x:clamp(s.x+dx,gameplayViewport().left+4,gameplayViewport().left+gameplayViewport().width-4)};}
 function h16AutoFireTick(){if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto'||state.bossIntro>0)return;const t=h16ChooseAutoTarget();if(!t)return;const s=l1PredictScreen(t);pointer.x=s.x;pointer.y=s.y;const w=WEAPONS[state.weapon],now=performance.now();if(w.kind==='bomb'&&now-(state.h16AutoBombAt||0)<1450)return;const before=state.lastFire;state.h16AutoShot=true;try{shoot(s.x,s.y)}finally{state.h16AutoShot=false;}if(state.lastFire!==before){state.h17LastAutoShotAt=now;weaponSingleFlashUntil=now+420;if(w.kind==='bomb')state.h16AutoBombAt=now;}}
 function h16SetFireMode(mode,{persist=true,announce=true}={}){if(j1IsRealMobile())mode='auto';mode=mode==='manual'?'manual':'auto';h16PreferredFireMode=mode;if(persist&&!j1IsRealMobile())try{localStorage.setItem(H16_FIRE_MODE_KEY,mode)}catch{}if(state){state.h16FireMode=mode;state.h16ManualLock=null;state.h16AutoTarget=null;pointer.down=false;}h16UpdateFireModeUI();if(announce&&state?.mode==='playing')toast(mode==='auto'?'⚡ AUTO FIRE · CLICK/CHẠM ĐỂ KHÓA':'🎯 BẮN THỦ CÔNG · CHUỘT NGẮM/BẮN',1.0);}
@@ -3202,23 +3193,24 @@ function updateGame(dt){if(!state||state.mode!=='playing')return;const d=DIFF[st
   if(!state.bossSpawned&&state.stageElapsed<G1_BOSS_TIME){const active=state.enemies.filter(e=>!e.dead&&!e.boss).length,cap=d1ActiveCap();state.spawnTimer-=dt;if(active===0)state.spawnTimer=Math.min(state.spawnTimer,.05);else if(active<Math.ceil(cap*.45))state.spawnTimer=Math.min(state.spawnTimer,.14);if(state.spawnTimer<=0&&active<cap){const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],e=spawnEnemy(typ,false);if(e)e.countsForClean=true;state.d1NaturalSpawns++;state.spawnTimer=d1SpawnInterval();}}
   if(!state.bossSpawned&&state.stageElapsed>=G1_BOSS_TIME-.001){state.environmentClean=50;state.contamination=50;state.bossSpawned=true;state.spawnLeft=0;spawnEnemy(state.cfg.mix[0],true);}
   const slow=state.sterile>0?.58:1;for(const e of state.enemies){if(e.dead)continue;if(e.boss){updateBoss(e,dt,d);continue;}e._l1PrevX=e.x;g1Behavior(e,dt,d1SpeedTarget()*d1Pressure()*l1TypeSpeed(e.type),slow);if(e.depth<=.055){const sc=enemyScreen(e),hitRadius=Math.max(36,Math.min(78,sc.r*.68+innerWidth*.016));if(Math.abs(playerScreenX()-sc.x)<hitRadius)damagePlayer(e.base.attack*d.damage);else{state.score+=35;sfx.dodgeSuccess();}e.dead=true;burstAt(sc.x,sc.y,e.color,7);}}
-  state.enemies=state.enemies.filter(e=>!e.dead);for(const sh of state.enemyShots){sh.t+=dt;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r+=16*dt;if(sh.t>=sh.life){const hitRadius=Math.max(40,Math.min(76,innerWidth*.048));if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius)damagePlayer(sh.damage*d.damage);else state.score+=20;sh.dead=true;}}state.enemyShots=state.enemyShots.filter(s=>!s.dead);for(const n of state.rewardNpcs){if(n.dead)continue;n.t+=dt;n.life-=dt;n.x+=n.vx*dt;if(n.life<=0||n.x<-.10||n.x>1.10)n.dead=true;}state.rewardNpcs=state.rewardNpcs.filter(n=>!n.dead);for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max);}state.particles=state.particles.filter(p=>p.life>0);for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);
+  state.enemies=state.enemies.filter(e=>!e.dead);state.q1BossHitIFrame=Math.max(0,(state.q1BossHitIFrame||0)-dt);state.q1NearMissToast=Math.max(0,(state.q1NearMissToast||0)-dt);for(const sh of state.enemyShots){if(sh.dead)continue;sh.t+=dt;sh.px=sh.x;sh.py=sh.y;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r=Math.min((sh.r||7)+6*dt,18);const py=innerHeight*.78,hitRadius=Math.max(34,Math.min(68,innerWidth*.043)),crossed=sh.py<py&&sh.y>=py;if(crossed||sh.t>=sh.life){const dx=Math.abs(playerScreenX()-sh.x);if(dx<=hitRadius+(sh.r||0)){if((state.q1BossHitIFrame||0)<=0){damagePlayer(sh.damage*d.damage);state.q1BossHitIFrame=.28;}}else if(dx<=hitRadius*2.15){state.score+=10;if((state.q1NearMissToast||0)<=0){toast('✨ NÉ ĐẸP +10',.55);sfx.dodgeSuccess();state.q1NearMissToast=1.05;}}else state.score+=3;sh.dead=true;}}state.enemyShots=state.enemyShots.filter(s=>!s.dead&&s.t<s.life+.25);for(const n of state.rewardNpcs){if(n.dead)continue;n.t+=dt;n.life-=dt;n.x+=n.vx*dt;if(n.life<=0||n.x<-.10||n.x>1.10)n.dead=true;}state.rewardNpcs=state.rewardNpcs.filter(n=>!n.dead);for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max);}state.particles=state.particles.filter(p=>p.life>0);for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);
   let autoUsed=false;for(const p of state.powerups){if(p.dead)continue;p.t+=dt;p.y+=Math.sin(p.t*3)*.12;p.life-=dt;if(p.l1AutoRemaining==null)p.l1AutoRemaining=3;else p.l1AutoRemaining=Math.max(0,p.l1AutoRemaining-dt);if(!autoUsed&&p.l1AutoRemaining<=0&&l1CanAutoUse(p.kind)){autoUsed=activatePowerup(p,{auto:true});if(autoUsed)toast(`⚡ TỰ KÍCH HOẠT · ${(D1_REWARD_META[p.kind]?.name||p.kind).toUpperCase()}`,1);}else if(p.l1AutoRemaining<=0)p.l1Waiting=true;if(p.life<=0&&!p.l1Waiting)p.dead=true;}state.powerups=state.powerups.filter(p=>!p.dead);
-  if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.40;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target)hitEnemy(target,.72,false,true);}}if(state.bossDrone>0){state._bossDroneTimer=(state._bossDroneTimer||0)-dt;if(state._bossDroneTimer<=0){state._bossDroneTimer=.22;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target)hitEnemy(target,1.25,false,true,false);}}if(state.f1AnnihilatorFx>0)state.f1AnnihilatorFx=Math.max(0,state.f1AnnihilatorFx-dt*1.8);if(!state.bossSpawned){const tt=clamp(state.stageElapsed/G1_BOSS_TIME,0,1),killRatio=clamp((state.cleanMinorKills||0)/Math.max(1,state._minorCleanTarget),0,1);state.environmentClean=clamp(36*tt+Math.min(13.5*tt,49.5*killRatio),0,49.5);state.contamination=100-state.environmentClean;}if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)){state.bossDefeated=true;beginStageClear();}
+  if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.40;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){q1DroneTracer(target,false);hitEnemy(target,.72,false,true);}}}if(state.bossDrone>0){state._bossDroneTimer=(state._bossDroneTimer||0)-dt;if(state._bossDroneTimer<=0){state._bossDroneTimer=.22;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){q1DroneTracer(target,true);hitEnemy(target,1.25,false,true,false);}}}if(state.f1AnnihilatorFx>0)state.f1AnnihilatorFx=Math.max(0,state.f1AnnihilatorFx-dt*1.8);if(!state.bossSpawned){const tt=clamp(state.stageElapsed/G1_BOSS_TIME,0,1),killRatio=clamp((state.cleanMinorKills||0)/Math.max(1,state._minorCleanTarget),0,1);state.environmentClean=clamp(36*tt+Math.min(13.5*tt,49.5*killRatio),0,49.5);state.contamination=100-state.environmentClean;}if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)){state.bossDefeated=true;beginStageClear();}
   if(!state.bossSpawned&&!state.rewardNpcs.some(n=>!n.dead)&&state.rewardNpcCount<state.rewardNpcMax&&(state.stageElapsed-(state.h15LastSupplyAt||0))>=(state.h15SupplyGuarantee||18)){spawnRewardNpc();state.rewardNpcTimer=Math.max(state.rewardNpcTimer||0,4.5);}h17UpdateNpcCounterfire(dt);if(h16CurrentFireMode()==='auto')h16AutoFireTick();else if(pointer.down&&performance.now()-weaponPressStarted>120)shoot(pointer.x,pointer.y);h16UpdateFireModeUI();updateHUD();}
 function update(dt){return updateGame(dt);}
-function renderGame(t){v270PrepareWeaponPose(t);drawBackground(t);if(!state)return;const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs||[])drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();drawB1StageIntro();drawD1PickupFeedback(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);h15DrawBossTelegraph(t);h16DrawTargetLock(t);h17DrawNpcCounterfire(t);h17DrawPlayerHitFx(t);}
+function q1DrawDangerIndicator(){if(!state||state.mode!=='playing')return;const incoming=[...(state.enemyShots||[]).map(s=>({...s,q1Boss:true})),...(state.h17NpcShots||[]).map(s=>({...s,q1Boss:false}))].filter(s=>!s.dead&&s.life>0&&s.life-s.t<.85);if(!incoming.length)return;const v=gameplayViewport(),cx=playerScreenX(),left=incoming.some(s=>s.x<cx),right=incoming.some(s=>s.x>=cx),boss=incoming.some(s=>s.q1Boss);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=boss?'#ff6d79':'#d995ff';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=10;ctx.globalAlpha=.55+.30*Math.sin(performance.now()*.02);const y=innerHeight*.56;if(left){ctx.beginPath();ctx.moveTo(v.left+8,y);ctx.lineTo(v.left+24,y-13);ctx.lineTo(v.left+24,y+13);ctx.closePath();ctx.fill();}if(right){const x=v.left+v.width-8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-16,y-13);ctx.lineTo(x-16,y+13);ctx.closePath();ctx.fill();}ctx.restore();}
+function renderGame(t){v270PrepareWeaponPose(t);drawBackground(t);if(!state)return;const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs||[])drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();drawB1StageIntro();drawD1PickupFeedback(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);h15DrawBossTelegraph(t);h16DrawTargetLock(t);h17DrawNpcCounterfire(t);q1DrawDangerIndicator();h17DrawPlayerHitFx(t);}
 function render(t){return renderGame(t);}
-function g2IsNewer(v,cur='4.0.0'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
+function g2IsNewer(v,cur='4.1.0'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
 function f1UseReward(kind,fromCombo=false){if(!state||state.mode!=='playing'||state.transition>0)return false;const inv=f1Inventory();if((inv[kind]||0)<=0){toast('Vật phẩm Boss chưa sẵn sàng',.7);return false;}if(kind==='survival'){if(state.health>=state.maxHealth-.01){toast('❤️ SINH TỒN ĐÃ ĐẦY',.8);return false;}state.health=Math.min(state.maxHealth,state.health+5);g2SetWeaponScreenFx('survival',1800);}else if(kind==='eliteDrone'){state.bossDrone=Math.max(state.bossDrone||0,20);state._bossDroneTimer=.03;g2SetWeaponScreenFx('eliteDrone',20000);}else if(kind==='annihilator'){const targets=state.enemies.filter(e=>!e.dead&&!e.boss);if(!targets.length)return false;for(const e of targets){if(Math.random()<.5)hitEnemy(e,e.hp+1,false,true);}state.f1AnnihilatorFx=1;g2SetWeaponScreenFx('annihilator',1600);}else if(kind==='bossGpp')activateLogoUltimate('bossGpp');inv[kind]--;f1SaveInventory(inv);updateHUD();return true;}
-function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.0.0 L1';if(b)b.textContent='v4.0.0 L1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.0.0 L1';}
+function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.1.0 Q1';if(b)b.textContent='v4.1.0 Q1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.1.0 Q1';}
 async function l1EnterLandscape(){if(!j1IsRealMobile())return true;try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch{}try{await screen.orientation?.lock?.('landscape');}catch{}document.documentElement.classList.add('l1-gameplay-landscape');return innerWidth>=innerHeight;}
 function l1LeaveLandscape(){document.documentElement.classList.remove('l1-gameplay-landscape');try{screen.orientation?.unlock?.();}catch{}}
 let l1PausedForOrientation=false;function l1UpdateOrientationGate(){const gate=$('#l1OrientationGate');if(!gate)return;const need=!!state&&state.mode!=='menu'&&j1IsRealMobile()&&innerHeight>innerWidth;gate.classList.toggle('hidden',!need);if(need&&state?.mode==='playing'){l1PausedForOrientation=true;pauseGame();}else if(!need&&l1PausedForOrientation&&state?.mode==='paused'){l1PausedForOrientation=false;resumeGame();}if(!state||state.mode==='menu')l1PausedForOrientation=false;}
 window.addEventListener('resize',l1UpdateOrientationGate,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(l1UpdateOrientationGate,100),{passive:true});
 canvas.addEventListener('pointerdown',e=>{if(!state||state.mode!=='playing')return;e.preventDefault();const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;ensureAudio();if(collectPowerupAt(p.x,p.y)){state.lastFire=performance.now();return;}if(h16CurrentFireMode()==='auto'){pointer.down=false;const target=l1TargetAt(p.x,p.y);h16LockTarget(target);return;}pointer.down=true;weaponPressStarted=performance.now();weaponSingleFlashUntil=weaponPressStarted+190;shoot(p.x,p.y);},{capture:true});
 const l1EngageBtn=$('#engageBtn');if(l1EngageBtn){const old=l1EngageBtn.onclick;l1EngageBtn.onclick=async e=>{await l1EnterLandscape();old?.call(l1EngageBtn,e);setTimeout(l1UpdateOrientationGate,80);};}
-const l1HomeHooks=['homeBtn','gameOverHomeBtn','victoryHomeBtn','stageHomeBtn'];for(const id of l1HomeHooks){const b=$('#'+id);if(!b)continue;const old=b.onclick;b.onclick=e=>{l1LeaveLandscape();old?.call(b,e);};}
+const l1HomeHooks=['homeBtn','homeQuickBtn','gameOverHomeBtn','victoryHomeBtn','stageHomeBtn'];for(const id of l1HomeHooks){const b=$('#'+id);if(!b)continue;b.onclick=e=>{e?.preventDefault?.();l1LeaveLandscape();goHome();};}
 const L1_DIFFICULTY_COPY={easy:['🛡 DỄ · MẬT ĐỘ THẤP','NPC ít hơn rõ rệt · tốc độ giảm nhẹ 10% · hỏa lực vũ khí giữ nguyên'],normal:['⚠ TRUNG BÌNH · CÂN BẰNG','Mật độ chuẩn L1 · tốc độ chuẩn · hỏa lực giống mọi cấp'],hard:['☣ KHÓ · MẬT ĐỘ CAO','NPC nhiều hơn rõ rệt · tốc độ tăng khoảng 12% · hỏa lực vũ khí giữ nguyên']};for(const b of $$('.difficulty'))b.addEventListener('click',()=>{const box=$('#difficultyDetail'),m=L1_DIFFICULTY_COPY[b.dataset.difficulty];if(box&&m)box.innerHTML=`<b>${m[0]}</b><span>${m[1]}</span>`;});
 l1RefreshVersion();h16UpdateFireModeUI();
 

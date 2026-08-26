@@ -552,12 +552,12 @@
 }
 
 
-/* === L1 CONSOLIDATED UI · COMMON === */
+/* === Q1 CONSOLIDATED UI · COMMON === */
 .weapon-panel{position:absolute;z-index:23;border-radius:11px;padding:8px;display:flex;pointer-events:auto;border:1px solid rgba(48,219,214,.38);background:linear-gradient(180deg,rgba(2,22,28,.94),rgba(3,35,41,.90));box-shadow:0 12px 30px rgba(0,0,0,.25)}
 .event-toast{position:absolute;z-index:25;left:50%;top:126px;bottom:auto;transform:translateX(-50%);max-width:min(540px,56vw);padding:7px 12px;border-radius:999px;background:rgba(4,48,53,.90);border:1px solid rgba(177,255,248,.30);font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:toastIn .2s ease-out}
 .l1-orientation-gate{position:fixed;inset:0;z-index:9999;background:#031d22ef;display:grid;place-items:center;padding:24px;text-align:center}.l1-orientation-gate.hidden{display:none}.l1-orientation-gate>div{max-width:360px;padding:22px;border:1px solid rgba(126,255,242,.4);border-radius:18px;background:rgba(4,45,51,.96)}.l1-orientation-gate b{display:block;font-size:20px;color:#fff4a7}.l1-orientation-gate span{display:block;margin-top:8px;font-size:12px;color:#c9efeb}
 
-/* === L1 CONSOLIDATED UI · DESKTOP GAMEPLAY === */
+/* === Q1 CONSOLIDATED UI · DESKTOP GAMEPLAY === */
 @media (min-width:1180px){
   .status-rail{left:8px!important;top:8px!important;bottom:50px!important;width:176px!important}
   .weapon-panel{right:8px;left:auto;top:8px;bottom:50px;width:176px;height:auto;transform:none;flex-direction:column;align-items:stretch;gap:6px;overflow:hidden}
@@ -567,10 +567,16 @@
 /* Main menu may remain portrait; only live mobile gameplay is landscape-gated. */
 @media (max-width:900px) and (orientation:portrait){.menu-overlay{align-items:flex-start;overflow:auto}.menu-card{width:min(94vw,560px);max-height:none;margin:10px auto}.h1-campaign-map{min-height:250px}.l1-gameplay-landscape #hud{visibility:hidden}}
 
-/* === L1 CONSOLIDATED UI · MOBILE LANDSCAPE GAMEPLAY === */
+/* === Q1 CONSOLIDATED UI · MOBILE LANDSCAPE GAMEPLAY === */
 @media (max-width:1179px) and (orientation:landscape){
   .weapon-panel{left:auto;right:max(6px,env(safe-area-inset-right));top:58px;bottom:58px;transform:none;width:62px;height:auto;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:5px;gap:5px}
   .weapon-panel .weapon-info{display:flex!important;min-width:0!important;flex-direction:column!important;gap:2px!important;text-align:center!important}.weapon-panel .weapon-info>span{font-size:22px!important}.weapon-panel .weapon-info div{display:block!important}.weapon-panel .weapon-info b{display:block!important;font-size:6px!important;line-height:1.1!important}.weapon-panel .weapon-info small{display:block!important;font-size:5.4px!important;line-height:1.1!important}.weapon-panel .weapon-buttons{display:grid!important;grid-template-columns:1fr!important;gap:4px!important}.weapon-panel .weapon-buttons button{width:100%!important;height:36px!important;min-width:0!important}
   .event-toast{top:91px;max-width:64vw;padding:4px 8px;font-size:7px}
   .h17-game-fire-mode{display:none!important}.mobile-support-strip{right:72px!important;left:auto!important}
 }
+
+
+/* === Q1 · RIGHT RAIL AUTHOR FOOTER === */
+.q1-right-author-footer{margin-top:auto;padding-top:6px;border-top:1px solid rgba(112,231,223,.16);display:grid;gap:2px;color:#9fcac8;font-size:6.2px;line-height:1.25;letter-spacing:.02em;text-align:left;white-space:normal;pointer-events:none}
+.q1-right-author-footer strong{color:#dff7f4;font-size:6.5px}.q1-right-author-footer span{color:#87b8b5}
+@media (max-width:1179px){.q1-right-author-footer{display:none!important}}
