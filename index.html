@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.2.0 W1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.3.0 E1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -23,7 +23,7 @@
           <div class="d1-brand-row">
             <div class="brand-lockup d1-brand-lockup"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" class="brand-logo-full" /></div>
             <div class="d1-title-block">
-              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v4.2.0 W1</b></p>
+              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v4.3.0 E1</b></p>
               <h1>BÁC SĨ<br/>TRUY QUÉT</h1>
               <p class="lead">3 phút sinh tồn tăng áp lực · Boss xuất hiện đúng giây 180</p>
             </div>
@@ -85,7 +85,7 @@
             <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
             <div><b>8</b><span>KHU VỰC</span></div>
           </div>
-          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v4.2.0 W1</div>
+          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v4.3.0 E1</div>
           <div class="author-line d1-author-line">
             <strong>Tác giả: Ngô Quang Trường</strong>
             <span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span>
@@ -221,6 +221,11 @@
       </div>
     </section>
 
+
+    <section id="e1WeaponUpgradeNotice" class="e1-weapon-upgrade-notice hidden" aria-live="polite" aria-label="Thông báo nâng cấp vũ khí">
+      <div class="e1-upgrade-core"><span id="e1WeaponUpgradeLevel">LV2</span><div><small id="e1WeaponUpgradeTitle">NÂNG CẤP VŨ KHÍ</small><b id="e1WeaponUpgradeDesc">TỐC BẮN +</b></div></div>
+    </section>
+
     <section id="bossRewardPanel" class="overlay f1-boss-reward-overlay hidden" aria-label="Phần thưởng Boss">
       <div class="f1-boss-reward-stage">
         <div id="bossRewardDrops" class="f1-boss-reward-drops"></div>
@@ -331,9 +336,9 @@
       <aside id="bossRewardRail" class="boss-reward-rail" aria-label="Vật phẩm thưởng Boss">
         <div class="boss-reward-title"><span>PHẦN THƯỞNG BOSS</span><small>DÙNG Q · W · E · R</small></div>
         <div class="boss-reward-slots">
-          <button class="boss-reward-slot" data-boss-reward="survival" data-hotkey="Q" aria-label="Hộp sinh tồn"><kbd>Q</kbd><span>❤️</span><b>HỘP +5</b><em id="bossRewardCount-survival">×0</em></button>
-          <button class="boss-reward-slot" data-boss-reward="eliteDrone" data-hotkey="W" aria-label="Drone đặc biệt"><kbd>W</kbd><span>🛸</span><b>DRONE 20s</b><em id="bossRewardCount-eliteDrone">×0</em></button>
-          <button class="boss-reward-slot" data-boss-reward="annihilator" data-hotkey="E" aria-label="Bơm hủy diệt"><kbd>E</kbd><span>💥</span><b>HỦY DIỆT</b><em id="bossRewardCount-annihilator">×0</em></button>
+          <button class="boss-reward-slot" data-boss-reward="survival" data-hotkey="Q" aria-label="Bộ tiếp sức"><kbd>Q</kbd><span class="e1-reward-svg e1-medkit" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="8" y="17" width="48" height="37" rx="9"/><path d="M23 17v-5h18v5M27 27h10v7h7v10h-7v7H27v-7h-7V34h7z"/></svg></span><b>TIẾP SỨC +5</b><em id="bossRewardCount-survival">×0</em></button>
+          <button class="boss-reward-slot" data-boss-reward="eliteDrone" data-hotkey="W" aria-label="Drone đặc biệt"><kbd>W</kbd><span class="e1-reward-svg e1-drone" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="18" y="24" width="28" height="18" rx="7"/><circle cx="32" cy="33" r="4"/><path d="M18 27L9 20M46 27l9-7M16 20H6M58 20H48M18 40l-8 7M46 40l8 7"/></svg></span><b>DRONE 20s</b><em id="bossRewardCount-eliteDrone">×0</em></button>
+          <button class="boss-reward-slot" data-boss-reward="annihilator" data-hotkey="E" aria-label="Xung khử nhiễm"><kbd>E</kbd><span class="e1-reward-svg e1-pulse" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="8"/><circle cx="32" cy="32" r="18"/><path d="M32 3v10M32 51v10M3 32h10M51 32h10M11 11l7 7M46 46l7 7M53 11l-7 7M18 46l-7 7"/></svg></span><b>XUNG KHỬ NHIỄM</b><em id="bossRewardCount-annihilator">×0</em></button>
           <button class="boss-reward-slot boss-reward-gpp" data-boss-reward="bossGpp" data-hotkey="R" aria-label="Logo TRƯỜNG GPP tổng hợp"><kbd>R</kbd><span class="boss-reward-logo-wrap"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" /></span><b>GPP TỔNG HỢP</b><em id="bossRewardCount-bossGpp">×0</em></button>
         </div>
       </aside>
