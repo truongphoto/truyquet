@@ -1,7 +1,7 @@
 {
   "name": "BÁC SĨ TRUY QUÉT · E1",
   "short_name": "BÁC SĨ E1",
-  "description": "Bác Sĩ Truy Quét v4.3.3 E1 · đạn NPC/Drone hiển thị rõ · Boss Reward vector y khoa · nâng cấp vũ khí chắc chắn sau mỗi Boss · kế thừa W1/Q1/L1. · đạn NPC né được tiếp tục bay ra khỏi màn hình · Drone 20s bắn đúng từ vị trí Drone · NPC hit có damage/impact FX rõ. · mobile NPC counterfire starts earlier and uses high-contrast tracer.",
+  "description": "Bác Sĩ Truy Quét v4.3.4 E1 · mobile counterfire chậm và dịu hơn · thanh SINH TỒN mobile chuyên nghiệp · kế thừa toàn bộ E1 v4.3.3.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
@@ -28,5 +28,5 @@
       "purpose": "maskable"
     }
   ],
-  "version": "4.3.3"
+  "version": "4.3.4"
 }
