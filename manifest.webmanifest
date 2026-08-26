@@ -1,7 +1,7 @@
 {
   "name": "BÁC SĨ TRUY QUÉT · E1",
   "short_name": "BÁC SĨ E1",
-  "description": "Bác Sĩ Truy Quét v4.3.1 E1 · đạn NPC/Drone hiển thị rõ · Boss Reward vector y khoa · nâng cấp vũ khí chắc chắn sau mỗi Boss · kế thừa W1/Q1/L1. · đạn NPC né được tiếp tục bay ra khỏi màn hình.",
+  "description": "Bác Sĩ Truy Quét v4.3.2 E1 · đạn NPC/Drone hiển thị rõ · Boss Reward vector y khoa · nâng cấp vũ khí chắc chắn sau mỗi Boss · kế thừa W1/Q1/L1. · đạn NPC né được tiếp tục bay ra khỏi màn hình · Drone 20s bắn đúng từ vị trí Drone · NPC hit có damage/impact FX rõ.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
@@ -28,5 +28,5 @@
       "purpose": "maskable"
     }
   ],
-  "version": "4.3.1"
+  "version": "4.3.2"
 }

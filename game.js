@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-const L1_VERSION='4.3.1';
+const L1_VERSION='4.3.2';
 const L1_BUILD='E1';
 
 const $ = (s) => document.querySelector(s);
@@ -173,11 +173,10 @@ function fireEnemyShot(e){
 function damagePlayer(amount){
   if(!state||state.mode!=='playing')return;
   const npcShot=!!state.h17IncomingHit;
-  if(npcShot&&(state.h17DamageIFrame||0)>0)return;
   let dmg=Math.max(0,Number(amount)||0),shielded=state.shield>0;if(shielded)dmg*=.35;
   const before=state.health;state.health=Math.max(0,state.health-dmg);
   if(state.health<before){
-    if(npcShot){state.h17DamageIFrame=.34;state.shake=Math.max(state.shake||0,.07);state.h17PlayerHitFx={start:performance.now(),dur:390,fromX:state.h17IncomingFromX||gameplayViewport().center,shielded};tone(shielded?690:210,.045,'triangle',.010,shielded?110:-55,0,.03);try{navigator.vibrate?.(10)}catch{}}
+    if(npcShot){state.h17DamageIFrame=.10;state.shake=Math.max(state.shake||0,.18);state.h17PlayerHitFx={start:performance.now(),dur:520,fromX:state.h17IncomingFromX||gameplayViewport().center,shielded,impactX:playerScreenX(),impactY:e1PlayerImpactY()};UI.damage?.classList.add('hit');setTimeout(()=>UI.damage?.classList.remove('hit'),135);burstAt(playerScreenX(),e1PlayerImpactY(),shielded?'#8cf5ff':'#ff6077',12);tone(shielded?690:185,.07,'sawtooth',.018,shielded?90:-75,0,.05);try{navigator.vibrate?.(18)}catch{}}
     else{state.shake=.16;UI.damage.classList.add('hit');setTimeout(()=>UI.damage.classList.remove('hit'),110);sfx.hurt();}
   }
   if(state.health<=0){state.mode='over';show(UI.over);w1PrepareEndLeaderboard('gameover');}
@@ -308,7 +307,8 @@ function drawEnemyShots(){ for(const s of state.enemyShots){ctx.save();const g=c
 function drawParticles(){ for(const p of state.particles){ctx.globalAlpha=p.a;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1; }
 /* L1 consolidated: legacy drawPowerups implementation removed */
 function q1DroneScreen(t=performance.now()){return{x:Math.max(34,Math.min(innerWidth-34,playerScreenX()-innerWidth*.115+Math.sin(t*.004)*16)),y:innerHeight*.66+Math.sin(t*.006)*9};}
-function q1DroneTracer(target,elite=false){if(!state||!target)return;const a=q1DroneScreen(),b=enemyScreen(target),life=elite?.48:.40,travel=elite?.34:.28;state.tracers.push({x1:a.x,y1:a.y,x2:b.x,y2:b.y,t:0,life,max:life,travel,color:elite?'#ffd86b':'#78fff4',width:elite?5.4:4.2,kind:elite?'eliteDrone':'drone',seed:Math.random()*99,droneLinked:true});}
+function e1DroneShotOrigin(elite=false,t=performance.now()){if(elite&&typeof g2EliteDronePose==='function'){const p=g2EliteDronePose(t),r=Math.max(12,Math.min(20,innerWidth*.012));return{x:p.x+Math.cos(p.bank)*r*.92,y:p.y+Math.sin(p.bank)*r*.92};}return q1DroneScreen(t);}
+function q1DroneTracer(target,elite=false){if(!state||!target)return;const now=performance.now(),a=e1DroneShotOrigin(elite,now),b=enemyScreen(target),life=elite?.50:.42,travel=elite?.36:.30;state.tracers.push({x1:a.x,y1:a.y,x2:b.x,y2:b.y,t:0,life,max:life,travel,color:elite?'#ffd86b':'#78fff4',width:elite?5.8:4.4,kind:elite?'eliteDrone':'drone',seed:Math.random()*99,droneLinked:true,originX:a.x,originY:a.y});}
 function drawDrone(t){ if(!state||state.drone<=0)return;const {x,y}=q1DroneScreen(t);ctx.save();ctx.translate(x,y);ctx.fillStyle='#d8fffb';ctx.strokeStyle='#157a81';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-25,-13,50,26,9);ctx.fill();ctx.stroke();ctx.fillStyle='#4ed8d2';ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(178,255,250,.7)';ctx.beginPath();ctx.moveTo(-31,-15);ctx.lineTo(-48,-23);ctx.moveTo(31,-15);ctx.lineTo(48,-23);ctx.stroke();ctx.restore();}
 
 
@@ -1877,9 +1877,10 @@ h16IsMobileControl=h17IsMobileGameplay;
 function h17MaxNpcShots(){const diff=state?.difficulty||'normal';return diff==='easy'?1:diff==='hard'?3:2;}
 function h17NpcShotDamage(){return .5;}
 function h17NpcWarnSeconds(){const diff=state?.difficulty||'normal';return diff==='easy'?.72:diff==='hard'?.54:.62;}
+function e1PlayerImpactY(){return innerHeight*.82;}
 function h17LaunchNpcShot(e){
   if(!state||!e||e.dead||e.boss||state.transition>0)return false;
-  const s=enemyScreen(e),aimX=Number.isFinite(e.h17AimPlayerX)?e.h17AimPlayerX:state.playerX,tx=playerScreenX(aimX),ty=innerHeight*.76,dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy)||1;
+  const s=enemyScreen(e),aimX=Number.isFinite(e.h17AimPlayerX)?e.h17AimPlayerX:state.playerX,tx=playerScreenX(aimX),ty=e1PlayerImpactY(),dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy)||1;
   const speed=state.difficulty==='hard'?255:state.difficulty==='easy'?220:238,life=Math.max(.72,l/speed);
   state.h17NpcShots.push({x:s.x,y:s.y,px:s.x,py:s.y,vx:dx/l*speed,vy:dy/l*speed,t:0,life,r:4.6,damage:.5,targetPlayerX:aimX,targetX:tx,targetY:ty,color:'#ff5a72',dead:false,sourceX:s.x,sourceY:s.y});
   e.h17AimPlayerX=null;e.h17ThreatPulse=.50;return true;
@@ -1898,17 +1899,20 @@ function h17UpdateNpcCounterfire(dt){
   }
   for(const sh of shots){
     if(sh.dead)continue;sh.t+=dt;sh.px=sh.x;sh.py=sh.y;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;
-    // Resolve hit/dodge exactly once when the projectile reaches the snapshotted player line.
-    // A missed projectile keeps travelling beyond the player and is only cleaned after it exits the gameplay viewport.
-    if(!sh.resolved&&sh.t>=sh.life){
-      sh.resolved=true;sh.resolvedAt=sh.t;
-      const hitRadius=Math.max(28,Math.min(52,innerWidth*.032)),missDx=Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX));
-      if(missDx<hitRadius){
-        sh.hit=true;state.h17IncomingHit=true;state.h17IncomingFromX=sh.sourceX;damagePlayer(sh.damage);state.h17IncomingHit=false;sh.dead=true;
-      }else{
-        sh.missed=true;
-        if(missDx<hitRadius*2.15){state.score+=10;if((state.q1NearMissToast||0)<=0){toast('✨ NÉ ĐẸP +10',.55);sfx.dodgeSuccess();state.q1NearMissToast=1.05;}}
-        else state.score+=3;
+    // Resolve against the player's REAL current position when the projectile crosses the visible player/weapon plane.
+    // Hit: consume immediately + 0.5 damage + impact FX. Miss: continue flying out of the viewport.
+    if(!sh.resolved){
+      const py=e1PlayerImpactY(),crossed=(sh.py<py&&sh.y>=py)||(sh.py>py&&sh.y<=py),reached=crossed||sh.t>=sh.life;
+      if(reached){
+        let impactX=sh.x;if(crossed&&Math.abs(sh.y-sh.py)>.001){const q=clamp((py-sh.py)/(sh.y-sh.py),0,1);impactX=sh.px+(sh.x-sh.px)*q;}
+        sh.resolved=true;sh.resolvedAt=sh.t;const hitRadius=Math.max(32,Math.min(58,innerWidth*.036)),missDx=Math.abs(playerScreenX()-impactX);
+        if(missDx<=hitRadius+(sh.r||0)){
+          sh.x=impactX;sh.y=py;sh.hit=true;state.h17IncomingHit=true;state.h17IncomingFromX=sh.sourceX;damagePlayer(h17NpcShotDamage());state.h17IncomingHit=false;sh.dead=true;
+        }else{
+          sh.missed=true;
+          if(missDx<hitRadius*2.15){state.score+=10;if((state.q1NearMissToast||0)<=0){toast('✨ NÉ ĐẸP +10',.55);sfx.dodgeSuccess();state.q1NearMissToast=1.05;}}
+          else state.score+=3;
+        }
       }
     }
     if(sh.missed&&!sh.dead){
@@ -1940,12 +1944,12 @@ function h17ThreatScore(e){
 
 function h17DrawNpcCounterfire(t){
   if(!state)return;ctx.save();ctx.beginPath();const v=gameplayViewport();ctx.rect(v.left,0,v.width,innerHeight);ctx.clip();
-  for(const e of state.enemies){if(e.dead||e.boss||!e.h17Ranged)continue;const s=enemyScreen(e);if(e.h17ShotWarn>0){const q=1-clamp(e.h17ShotWarn/h17NpcWarnSeconds(),0,1),pulse=.55+.45*Math.sin(t*.025),aim=Number.isFinite(e.h17AimPlayerX)?e.h17AimPlayerX:state.playerX,tx=playerScreenX(aim),ty=innerHeight*.76;ctx.globalCompositeOperation='screen';ctx.globalAlpha=.24+.32*q;ctx.strokeStyle='rgba(255,93,116,.82)';ctx.setLineDash([6,8]);ctx.lineDashOffset=-t*.025;ctx.lineWidth=1.25;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(tx,ty);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=.38+.50*q;ctx.strokeStyle='#ff6078';ctx.lineWidth=1.8+1.35*q;ctx.shadowColor='#ff4d68';ctx.shadowBlur=13;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1.10+.18*q),0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=`rgba(255,224,228,${.70+.28*pulse})`;ctx.font=`900 ${Math.max(7,Math.min(12,s.r*.17))}px system-ui`;ctx.textAlign='center';ctx.fillText('⚠ PHẢN KÍCH',s.x,s.y-s.r*1.24);}}
+  for(const e of state.enemies){if(e.dead||e.boss||!e.h17Ranged)continue;const s=enemyScreen(e);if(e.h17ShotWarn>0){const q=1-clamp(e.h17ShotWarn/h17NpcWarnSeconds(),0,1),pulse=.55+.45*Math.sin(t*.025),aim=Number.isFinite(e.h17AimPlayerX)?e.h17AimPlayerX:state.playerX,tx=playerScreenX(aim),ty=e1PlayerImpactY();ctx.globalCompositeOperation='screen';ctx.globalAlpha=.24+.32*q;ctx.strokeStyle='rgba(255,93,116,.82)';ctx.setLineDash([6,8]);ctx.lineDashOffset=-t*.025;ctx.lineWidth=1.25;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(tx,ty);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=.38+.50*q;ctx.strokeStyle='#ff6078';ctx.lineWidth=1.8+1.35*q;ctx.shadowColor='#ff4d68';ctx.shadowBlur=13;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1.10+.18*q),0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=`rgba(255,224,228,${.70+.28*pulse})`;ctx.font=`900 ${Math.max(7,Math.min(12,s.r*.17))}px system-ui`;ctx.textAlign='center';ctx.fillText('⚠ PHẢN KÍCH',s.x,s.y-s.r*1.24);}}
   for(const sh of state.h17NpcShots||[]){const post=sh.missed?Math.max(0,sh.t-sh.life):0,a=sh.missed?clamp(1-post/2.1,0,1):clamp(1-sh.t/sh.life,0,1),dx=sh.x-(sh.sourceX??sh.px),dy=sh.y-(sh.sourceY??sh.py),len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,trail=Math.min(sh.missed?118:92,len),tx=sh.x-ux*trail,ty=sh.y-uy*trail;ctx.globalCompositeOperation='screen';ctx.globalAlpha=.36+.50*a;ctx.strokeStyle='rgba(255,69,94,.36)';ctx.lineWidth=9;ctx.shadowColor='#ff405d';ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(sh.x,sh.y);ctx.stroke();ctx.globalAlpha=.94;ctx.strokeStyle='#ff6077';ctx.lineWidth=4.2;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(sh.x,sh.y);ctx.stroke();ctx.strokeStyle='#fff3f5';ctx.lineWidth=1.5;ctx.stroke();const r=Math.max(5.2,sh.r||4.6),gg=ctx.createRadialGradient(sh.x,sh.y,0,sh.x,sh.y,r*3.0);gg.addColorStop(0,'#fff');gg.addColorStop(.28,'#ffb0ba');gg.addColorStop(.58,'rgba(255,71,96,.82)');gg.addColorStop(1,'rgba(255,60,90,0)');ctx.fillStyle=gg;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(sh.x,sh.y,r*3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(sh.x,sh.y,r*.62,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
   ctx.restore();
 }
 function h17DrawPlayerHitFx(t){
-  const f=state?.h17PlayerHitFx;if(!f)return;const q=clamp((t-f.start)/f.dur,0,1);if(q>=1){state.h17PlayerHitFx=null;return;}const v=gameplayViewport(),cx=playerScreenX(),cy=innerHeight*.70,side=f.fromX<cx?-1:1,col=f.shielded?'#8cf5ff':'#ff8fa3';ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=(1-q)*.55;ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.shadowColor=col;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(cx,cy,32+q*34,side<0?Math.PI*.55:-Math.PI*.45,side<0?Math.PI*1.45:Math.PI*.45);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<5;i++){const yy=innerHeight*(.30+i*.095),x=side<0?v.left+5:v.left+v.width-5;ctx.globalAlpha=(1-q)*(.17+i*.025);ctx.fillStyle=col;ctx.fillRect(side<0?x:x-4,yy,4,22);}ctx.restore();
+  const f=state?.h17PlayerHitFx;if(!f)return;const q=clamp((t-f.start)/f.dur,0,1);if(q>=1){state.h17PlayerHitFx=null;return;}const v=gameplayViewport(),cx=playerScreenX(),cy=f.impactY||e1PlayerImpactY(),side=f.fromX<cx?-1:1,col=f.shielded?'#8cf5ff':'#ff8fa3';ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=(1-q)*.55;ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.shadowColor=col;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(cx,cy,32+q*34,side<0?Math.PI*.55:-Math.PI*.45,side<0?Math.PI*1.45:Math.PI*.45);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<5;i++){const yy=innerHeight*(.30+i*.095),x=side<0?v.left+5:v.left+v.width-5;ctx.globalAlpha=(1-q)*(.17+i*.025);ctx.fillStyle=col;ctx.fillRect(side<0?x:x-4,yy,4,22);}ctx.restore();
 }
 
 /* L1 consolidated: legacy h16DrawTargetLock implementation removed */
@@ -2095,7 +2099,7 @@ const j1GoHomeBase=goHome;goHome=function(){const r=j1GoHomeBase();j1RefreshFire
 /* L1 consolidated: stale J1 version refresh removed */j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 
-/* === v4.3.1 E1 · END-OF-RUN LEADERBOARD + ALWAYS-ON NPC PRESSURE + INTERACTIVE MAP PREVIEW === */
+/* === v4.3.2 E1 · DRONE ORIGIN + NPC IMPACT FEEDBACK FIX === */
 const L1_DIFF={
   easy:{speed:.90,density:.68,capLo:3,capHi:4},
   normal:{speed:1,density:1,capLo:4,capHi:5},
@@ -2194,9 +2198,9 @@ function update(dt){return updateGame(dt);}
 function q1DrawDangerIndicator(){if(!state||state.mode!=='playing')return;const incoming=[...(state.enemyShots||[]).map(s=>({...s,q1Boss:true})),...(state.h17NpcShots||[]).map(s=>({...s,q1Boss:false}))].filter(s=>!s.dead&&!s.resolved&&s.life>0&&s.life-s.t<.85);if(!incoming.length)return;const v=gameplayViewport(),cx=playerScreenX(),left=incoming.some(s=>s.x<cx),right=incoming.some(s=>s.x>=cx),boss=incoming.some(s=>s.q1Boss);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=boss?'#ff4f68':'#ff7387';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=10;ctx.globalAlpha=.55+.30*Math.sin(performance.now()*.02);const y=innerHeight*.56;if(left){ctx.beginPath();ctx.moveTo(v.left+8,y);ctx.lineTo(v.left+24,y-13);ctx.lineTo(v.left+24,y+13);ctx.closePath();ctx.fill();}if(right){const x=v.left+v.width-8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-16,y-13);ctx.lineTo(x-16,y+13);ctx.closePath();ctx.fill();}ctx.restore();}
 function renderGame(t){v270PrepareWeaponPose(t);drawBackground(t);if(!state)return;const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs||[])drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();drawB1StageIntro();drawD1PickupFeedback(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);h15DrawBossTelegraph(t);h16DrawTargetLock(t);h17DrawNpcCounterfire(t);q1DrawDangerIndicator();h17DrawPlayerHitFx(t);}
 function render(t){return renderGame(t);}
-function g2IsNewer(v,cur='4.3.1'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
+function g2IsNewer(v,cur='4.3.2'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
 function f1UseReward(kind,fromCombo=false){if(!state||state.mode!=='playing'||state.transition>0)return false;const inv=f1Inventory();if((inv[kind]||0)<=0){toast('Vật phẩm Boss chưa sẵn sàng',.7);return false;}if(kind==='survival'){if(state.health>=state.maxHealth-.01){toast('❤️ SINH TỒN ĐÃ ĐẦY',.8);return false;}state.health=Math.min(state.maxHealth,state.health+5);g2SetWeaponScreenFx('survival',1800);}else if(kind==='eliteDrone'){state.bossDrone=Math.max(state.bossDrone||0,20);state._bossDroneTimer=.03;g2SetWeaponScreenFx('eliteDrone',20000);}else if(kind==='annihilator'){const targets=state.enemies.filter(e=>!e.dead&&!e.boss);if(!targets.length)return false;for(const e of targets){if(Math.random()<.5)hitEnemy(e,e.hp+1,false,true);}state.f1AnnihilatorFx=1;g2SetWeaponScreenFx('annihilator',1600);}else if(kind==='bossGpp')activateLogoUltimate('bossGpp');inv[kind]--;f1SaveInventory(inv);updateHUD();return true;}
-function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.3.1 E1';if(b)b.textContent='v4.3.1 E1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.3.1 E1';}
+function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.3.2 E1';if(b)b.textContent='v4.3.2 E1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.3.2 E1';}
 async function l1EnterLandscape(){if(!j1IsRealMobile())return true;try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch{}try{await screen.orientation?.lock?.('landscape');}catch{}document.documentElement.classList.add('l1-gameplay-landscape');return innerWidth>=innerHeight;}
 function l1LeaveLandscape(){document.documentElement.classList.remove('l1-gameplay-landscape');try{screen.orientation?.unlock?.();}catch{}}
 let l1PausedForOrientation=false;function l1UpdateOrientationGate(){const gate=$('#l1OrientationGate');if(!gate)return;const need=!!state&&state.mode!=='menu'&&j1IsRealMobile()&&innerHeight>innerWidth;gate.classList.toggle('hidden',!need);if(need&&state?.mode==='playing'){l1PausedForOrientation=true;pauseGame();}else if(!need&&l1PausedForOrientation&&state?.mode==='paused'){l1PausedForOrientation=false;resumeGame();}if(!state||state.mode==='menu')l1PausedForOrientation=false;}
