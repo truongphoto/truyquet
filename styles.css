@@ -579,7 +579,7 @@
 .q1-right-author-footer{margin-top:auto;padding-top:6px;border-top:1px solid rgba(112,231,223,.16);display:grid;gap:2px;color:#9fcac8;font-size:6.2px;line-height:1.25;letter-spacing:.02em;text-align:left;white-space:normal;pointer-events:none}
 .q1-right-author-footer strong{color:#dff7f4;font-size:6.5px}.q1-right-author-footer span{color:#87b8b5}
 @media (max-width:1179px){.q1-right-author-footer{display:none!important}}
-\n\n/* === v4.3.0 E1 · projectile visibility / medical Boss rewards / deterministic weapon upgrade === */
+\n\n/* === v4.3.1 E1 · projectile visibility / medical Boss rewards / deterministic weapon upgrade === */
 .e1-reward-svg{width:25px;height:25px;display:grid;place-items:center;justify-self:center;align-self:center;color:#fff}
 .e1-reward-svg svg{width:100%;height:100%;overflow:visible}.e1-reward-svg svg *{fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.e1-medkit{color:#7dffae;filter:drop-shadow(0 0 6px rgba(114,243,162,.42))}.e1-medkit svg rect{fill:rgba(36,124,77,.26)}.e1-drone{color:#d0a5ff;filter:drop-shadow(0 0 7px rgba(193,140,255,.46))}.e1-drone svg rect{fill:rgba(101,61,139,.25)}.e1-pulse{color:#ffac6b;filter:drop-shadow(0 0 7px rgba(255,155,88,.50))}.e1-pulse svg circle:first-child{fill:rgba(255,151,80,.28)}
 .f1-boss-drop-icon .e1-reward-svg{width:54px;height:54px}.f1-boss-drop-icon>.boss-reward-logo-wrap{width:54px;height:54px;border-radius:14px}.boss-reward-slot>.e1-reward-svg{font-size:0}
