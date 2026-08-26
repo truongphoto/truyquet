@@ -1,8 +1,8 @@
 (() => {
 'use strict';
 
-const L1_VERSION='4.1.0';
-const L1_BUILD='Q1';
+const L1_VERSION='4.2.0';
+const L1_BUILD='W1';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -171,16 +171,32 @@ function fireEnemyShot(e){
 }
 
 function damagePlayer(amount){
-  if(!state||state.mode!=='playing')return; if(state.shield>0)amount*=.35; state.health=Math.max(0,state.health-amount); state.shake=.16; UI.damage.classList.add('hit'); setTimeout(()=>UI.damage.classList.remove('hit'),110); sfx.hurt();
-  if(state.health<=0){state.mode='over';show(UI.over);}
+  if(!state||state.mode!=='playing')return;
+  const npcShot=!!state.h17IncomingHit;
+  if(npcShot&&(state.h17DamageIFrame||0)>0)return;
+  let dmg=Math.max(0,Number(amount)||0),shielded=state.shield>0;if(shielded)dmg*=.35;
+  const before=state.health;state.health=Math.max(0,state.health-dmg);
+  if(state.health<before){
+    if(npcShot){state.h17DamageIFrame=.34;state.shake=Math.max(state.shake||0,.07);state.h17PlayerHitFx={start:performance.now(),dur:390,fromX:state.h17IncomingFromX||gameplayViewport().center,shielded};tone(shielded?690:210,.045,'triangle',.010,shielded?110:-55,0,.03);try{navigator.vibrate?.(10)}catch{}}
+    else{state.shake=.16;UI.damage.classList.add('hit');setTimeout(()=>UI.damage.classList.remove('hit'),110);sfx.hurt();}
+  }
+  if(state.health<=0){state.mode='over';show(UI.over);w1PrepareEndLeaderboard('gameover');}
 }
 
 function beginStageClear(){ if(state.transition>0)return; state.transition=.001; state.mode='playing'; sfx.clear(); toast('✅ KHU VỰC ĐÃ KHỬ NHIỄM',2); }
 
 function stageCompletePanel(){
-  state.mode='stage'; hide(UI.bossBar); const acc=state.shots?Math.round(state.hits/state.shots*100):100; const rank=rankFor(acc,state.health,state.stageElapsed);
-  $('#stageResultTitle').textContent=state.cfg.name; $('#stageScore').textContent=state.score.toLocaleString('vi-VN'); $('#stageAccuracy').textContent=acc+'%'; $('#stageHealth').textContent=`${Math.ceil(state.health)}/10`; $('#stageRank').textContent=rank;
-  if(state.cfg.final){ hide(UI.stage); $('#victoryText').textContent=`Tổng điểm ${state.score.toLocaleString('vi-VN')} · Chính xác ${acc}% · Xếp hạng ${rank}`; show(UI.victory); }
+  if(!state)return;
+  const completed=state.stageIndex;
+  if(completed<A1_STAGE_COUNT-1){a1SaveUnlocked(Math.max(a1Unlocked(),completed+2));a1NewlyUnlocked=completed+1;a1SelectedStage=completed+1;}
+  else{a1SaveUnlocked(A1_STAGE_COUNT);a1SelectedStage=A1_STAGE_COUNT-1;}
+  state.mode='stage';hide(UI.bossBar);
+  const acc=state.shots?Math.round(state.hits/state.shots*100):100,rank=rankFor(acc,state.health,state.stageElapsed);
+  $('#stageResultTitle').textContent=state.cfg.name;$('#stageScore').textContent=state.score.toLocaleString('vi-VN');$('#stageAccuracy').textContent=acc+'%';$('#stageHealth').textContent=`${Math.ceil(state.health)}/10`;$('#stageRank').textContent=rank;
+  
+  const next=$('#nextStageBtn');if(next){next.classList.toggle('hidden',completed>=A1_STAGE_COUNT-1);next.textContent=completed<A1_STAGE_COUNT-1?'TIẾN VÀO KHU TIẾP THEO ›':'HOÀN TẤT';}
+  a1RenderStageMenu();
+  if(state.cfg.final){hide(UI.stage);$('#victoryText').textContent=`Tổng điểm ${state.score.toLocaleString('vi-VN')} · Chính xác ${acc}% · Xếp hạng ${rank}`;show(UI.victory);w1PrepareEndLeaderboard('victory');}
   else show(UI.stage);
 }
 function rankFor(acc,hp,time){ const v=acc*.55+hp*4+(time<80?12:time<110?7:2); return v>=85?'S+':v>=72?'S':v>=56?'A':'B'; }
@@ -331,7 +347,7 @@ function drawDrone(t){ if(!state||state.drone<=0)return;const {x,y}=q1DroneScree
 
 
 /* === v2.0.0 CONCEPT UI + BRAND LOCK OVERRIDES === */
-// 6 stages have distinct identities; minor enemies never shoot. Only bosses use ranged attacks.
+// Historical stage identity block. W1 later enables staggered NPC counterfire under a global projectile cap.
 STAGES.splice(0, STAGES.length,
   {name:'KHOA PHỤ SẢN', env:'maternity', quota:16, spawn:.92, boss:'VIRUS MẸ', bossHp:32, bossKind:0, mix:['basic','flagella','breather','wall'], tint:'rgba(44,154,158,.025)'},
   {name:'PHÒNG XÉT NGHIỆM', env:'lab', quota:21, spawn:.79, boss:'VI KHUẨN CHÚA', bossHp:42, bossKind:1, mix:['breather','spore','shield','flagella'], tint:'rgba(43,191,212,.035)'},
@@ -726,16 +742,7 @@ if($('#homeBtn'))$('#homeBtn').onclick=goHome;
 if($('#stageHomeBtn'))$('#stageHomeBtn').onclick=goHome;
 if($('#pauseRetryBtn'))$('#pauseRetryBtn').onclick=()=>{if(!state)return;const idx=state.stageIndex;if(confirm('Chơi lại màn này từ đầu?'))startGame(idx);};
 
-const stageCompletePanelA1Base=stageCompletePanel;
-stageCompletePanel=function(){
-  if(!state)return;
-  const completed=state.stageIndex;
-  if(completed<A1_STAGE_COUNT-1){a1SaveUnlocked(Math.max(a1Unlocked(),completed+2));a1NewlyUnlocked=completed+1;a1SelectedStage=completed+1;}
-  else{a1SaveUnlocked(A1_STAGE_COUNT);a1SelectedStage=A1_STAGE_COUNT-1;}
-  stageCompletePanelA1Base();
-  const next=$('#nextStageBtn');
-  if(next){next.classList.toggle('hidden',completed>=A1_STAGE_COUNT-1);next.textContent=completed<A1_STAGE_COUNT-1?`MỞ MÀN ${completed+2} · TIẾP TỤC ›`:'HOÀN TẤT';}
-};
+/* W1 consolidated: A1 stageComplete wrapper merged into canonical stageCompletePanel. */
 $('#nextStageBtn').onclick=()=>{if(!state)return;const next=Math.min(A1_STAGE_COUNT-1,state.stageIndex+1);startGame(next);};
 
 function a1FormatTime(sec){const n=Math.max(0,Math.floor(sec||0)),m=Math.floor(n/60),s=n%60;return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
@@ -1141,7 +1148,7 @@ function d1BossSummon(e,wave){
   toast(`👹 BOSS TRIỆU HỒI · ĐỢT ${wave+1}/3`,1.35);
   for(let i=0;i<count;i++){
     const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],n=spawnEnemy(typ,false);
-    if(n){n.bossSummoned=true;n.countsForClean=false;n.depth=.96+Math.random()*.025;n.baseX=clamp(.16+Math.random()*.68,.08,.92);n.x=n.baseX;n.h17Ranged=!!n.h17Ranged&&Math.random()<.45;n.h17ShotCooldown=Math.max(n.h17ShotCooldown||0,5.2+Math.random()*2.8);}
+    if(n){n.bossSummoned=true;n.countsForClean=false;n.depth=.96+Math.random()*.025;n.baseX=clamp(.16+Math.random()*.68,.08,.92);n.x=n.baseX;n.h17Ranged=true;n.h17ShotCooldown=Math.max(n.h17ShotCooldown||0,4.8+Math.random()*2.4);}
   }
 }
 function d1BossVisualPhase(e){const r=Math.max(0,e.hp/e.maxHp);return r>.75?1:r>.50?2:r>.25?3:4;}
@@ -1363,9 +1370,7 @@ for(const id of ['upgradeBtn','victoryUpgradeBtn']){const b=document.getElementB
 async function f1InstallGame(){ensureAudio();if(deferredInstall){deferredInstall.prompt();try{await deferredInstall.userChoice}catch{}deferredInstall=null;hide($('#installBtn'));return}const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);toast(isIOS?'📲 Safari: Chia sẻ → Thêm vào Màn hình chính':'📲 Nếu đã cài, hãy mở game từ biểu tượng ngoài màn hình',2.2)}
 const mainInstall=$('#installBtn');if(mainInstall)mainInstall.onclick=f1InstallGame;for(const id of ['stageInstallBtn','victoryInstallBtn']){const b=document.getElementById(id);if(b)b.onclick=f1InstallGame}
 
-// Result panel wording stays familiar after the separate Boss reward moment.
-const f1StageCompleteBase=stageCompletePanel;
-stageCompletePanel=function(){f1StageCompleteBase();a1RenderStageMenu();const next=$('#nextStageBtn');if(next&&!state.cfg.final)next.textContent='TIẾN VÀO KHU TIẾP THEO ›';};
+/* W1 consolidated: F1 stageComplete wrapper merged into canonical stageCompletePanel. */
 
 
 /* === v3.3.0 G1 FINAL · 180s campaign · diverse bacteria AI · anti-stall · mysterious Boss aura · correct PWA install/update === */
@@ -1677,14 +1682,15 @@ const H1_MAP_NAMES=['KHOA DƯỢC','KHOA CẤP CỨU','KHOA HÔ HẤP','KHOA NHI
 // --- Interactive hospital map replaces the old static hero image on the main menu. ---
 const h1MapHotspots=[...document.querySelectorAll('[data-map-stage]')];
 function h1MapStageState(i){const unlocked=a1Unlocked(),open=i<unlocked,completed=i<Math.max(0,unlocked-1);return{open,completed};}
+function h1HideMapPreview(){const p=$('#h1MapPreview');if(p)p.classList.add('hidden');}
 function h1RenderMapPreview(i=a1SelectedStage){
-  i=clamp(Number(i)||0,0,7);const st=h1MapStageState(i),img=$('#h1MapPreviewImg'),no=$('#h1MapPreviewNo'),name=$('#h1MapPreviewName'),story=$('#h1MapPreviewStory'),status=$('#h1MapPreviewState');
-  if(img){img.src=`assets/stage${i+1}-clean.jpg`;img.alt=H1_MAP_NAMES[i];}if(no)no.textContent=`MÀN ${i+1}`;if(name)name.textContent=H1_MAP_NAMES[i];if(story)story.textContent=H1_STORIES[i];if(status){status.textContent=st.completed?'✓ ĐÃ KHỬ NHIỄM':st.open?'● ĐÃ MỞ':'🔒 CHƯA MỞ KHÓA';status.style.color=st.completed?'#8dffc1':st.open?'#8dffe8':'#c0c7cb';}
+  i=clamp(Number(i)||0,0,7);const st=h1MapStageState(i),preview=$('#h1MapPreview'),img=$('#h1MapPreviewImg'),no=$('#h1MapPreviewNo'),name=$('#h1MapPreviewName'),story=$('#h1MapPreviewStory'),status=$('#h1MapPreviewState');
+  if(img){img.src=`assets/stage${i+1}-clean.jpg`;img.alt=H1_MAP_NAMES[i];}if(no)no.textContent=`MÀN ${i+1}`;if(name)name.textContent=H1_MAP_NAMES[i];if(story)story.textContent=H1_STORIES[i];if(status){status.textContent=st.completed?'✓ ĐÃ KHỬ NHIỄM':st.open?'● ĐÃ MỞ':'🔒 CHƯA MỞ KHÓA';status.style.color=st.completed?'#8dffc1':st.open?'#8dffe8':'#c0c7cb';}preview?.classList.remove('hidden');requestAnimationFrame(()=>h15PlaceMapPreview(i));
 }
 function h1RefreshMap(){
-  const unlocked=a1Unlocked();h1MapHotspots.forEach((b,i)=>{const open=i<unlocked,completed=i<Math.max(0,unlocked-1);b.classList.toggle('locked',!open);b.classList.toggle('completed',completed);b.classList.toggle('selected',open&&i===a1SelectedStage);b.setAttribute('aria-disabled',String(!open));});h1RenderMapPreview(a1SelectedStage);
+  const unlocked=a1Unlocked();h1MapHotspots.forEach((b,i)=>{const open=i<unlocked,completed=i<Math.max(0,unlocked-1);b.classList.toggle('locked',!open);b.classList.toggle('completed',completed);b.classList.toggle('selected',open&&i===a1SelectedStage);b.setAttribute('aria-disabled',String(!open));});h1HideMapPreview();
 }
-for(const b of h1MapHotspots){const i=Number(b.dataset.mapStage)||0;b.addEventListener('mouseenter',()=>h1RenderMapPreview(i));b.addEventListener('focus',()=>h1RenderMapPreview(i));b.addEventListener('mouseleave',()=>h1RenderMapPreview(a1SelectedStage));b.addEventListener('click',e=>{e.preventDefault();const st=h1MapStageState(i);if(!st.open){b.classList.remove('lock-pulse');void b.offsetWidth;b.classList.add('lock-pulse');setTimeout(()=>b.classList.remove('lock-pulse'),450);h1RenderMapPreview(i);return;}a1SelectedStage=i;a1NewlyUnlocked=-1;a1RenderStageMenu();});}
+for(const b of h1MapHotspots){const i=Number(b.dataset.mapStage)||0;b.addEventListener('mouseenter',()=>h1RenderMapPreview(i));b.addEventListener('focus',()=>h1RenderMapPreview(i));b.addEventListener('mouseleave',h1HideMapPreview);b.addEventListener('blur',h1HideMapPreview);b.addEventListener('click',e=>{e.preventDefault();const st=h1MapStageState(i);h1RenderMapPreview(i);if(!st.open){b.classList.remove('lock-pulse');void b.offsetWidth;b.classList.add('lock-pulse');setTimeout(()=>b.classList.remove('lock-pulse'),450);return;}a1SelectedStage=i;a1NewlyUnlocked=-1;a1RenderStageMenu();h1RenderMapPreview(i);});}
 const h1RenderStageMenuBase=a1RenderStageMenu;
 a1RenderStageMenu=function(){h1RenderStageMenuBase();h1RefreshMap();};
 
@@ -1816,8 +1822,7 @@ function h15PlaceMapPreview(i){
   left=clamp(left,8,Math.max(8,mw-pw-8));top=clamp(top,8,Math.max(8,mh-ph-8));
   h15Preview.style.left=`${left}px`;h15Preview.style.top=`${top}px`;h15Preview.style.right='auto';h15Preview.style.bottom='auto';h15Preview.dataset.side=side;
 }
-const h15MapPreviewBase=h1RenderMapPreview;
-h1RenderMapPreview=function(i=a1SelectedStage){h15MapPreviewBase(i);requestAnimationFrame(()=>h15PlaceMapPreview(clamp(Number(i)||0,0,7)));};
+/* W1 consolidated: H15 map-preview wrapper merged into h1RenderMapPreview. */
 window.addEventListener('resize',()=>requestAnimationFrame(()=>h15PlaceMapPreview(a1SelectedStage)),{passive:true});
 
 // --- More support without random droughts: higher cap plus a guaranteed SUPPLY window. ---
@@ -1842,10 +1847,9 @@ async function h15FetchScores(){
 function h15RenderLeaderRows(entries){const box=$('#leaderboardList');if(!box)return;box.replaceChildren();const list=[...entries].sort((a,b)=>Number(b.score)-Number(a.score)||Number(a.bossSeconds||999)-Number(b.bossSeconds||999)).slice(0,30);if(!list.length){const e=document.createElement('div');e.className='h15-leader-row';e.textContent='Chưa có thành tích ở mục này.';box.appendChild(e);return;}list.forEach((r,i)=>{const row=document.createElement('div');row.className='h15-leader-row'+(i<3?' top3':'');const pos=document.createElement('span');pos.className='pos';pos.textContent=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;const who=document.createElement('span');who.className='who';const b=document.createElement('b');b.textContent=h15SafeName(r.name);const sm=document.createElement('small');sm.textContent=`Màn ${Number(r.stage)+1} · ${h18DiffLabel(r.difficulty||'normal')}`;who.append(b,sm);const sc=document.createElement('span');sc.className='score';sc.textContent=Number(r.score||0).toLocaleString('vi-VN');const rk=document.createElement('span');rk.className='rank';rk.textContent=r.rank||'A';row.append(pos,who,sc,rk);box.appendChild(row);});}
 async function h15RefreshLeaderboard(){const mode=$('#leaderboardMode');if(mode)mode.textContent='ĐANG TẢI…';const r=await h15FetchScores();if(mode)mode.textContent=r.mode==='online'?'🌐 BẢNG XẾP HẠNG ONLINE · NHIỀU THIẾT BỊ':'💾 BẢNG XẾP HẠNG TRÊN THIẾT BỊ NÀY';h15RenderLeaderRows(r.entries);}
 function h15OpenLeaderboard(record=false){const p=$('#leaderboardPanel');if(!p)return;show(p);const pr=$('#leaderboardRecordPrompt');if(pr)pr.classList.toggle('hidden',!(record&&h15PendingRecord));h15RefreshLeaderboard();}
-$('#leaderboardBtn')?.addEventListener('click',()=>h15OpenLeaderboard(false));$('#leaderboardDifficulty')?.addEventListener('change',h15RefreshLeaderboard);$('#leaderboardStage')?.addEventListener('change',h15RefreshLeaderboard);$('#leaderboardRecordBtn')?.addEventListener('click',()=>h15OpenLeaderboard(true));$('#victoryLeaderboardRecordBtn')?.addEventListener('click',()=>h15OpenLeaderboard(true));
-$('#leaderboardSaveBtn')?.addEventListener('click',async()=>{if(!h15PendingRecord)return;const rec={...h15PendingRecord,name:h15SafeName($('#leaderboardName')?.value),createdAt:new Date().toISOString(),version:H15_VERSION};let online=false;if(H15_LB_ENDPOINT){try{const r=await fetch(H15_LB_ENDPOINT,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(rec)});online=r.ok;}catch{}}h15StoreLocalScore(rec);h15PendingRecord=null;$('#leaderboardRecordPrompt')?.classList.add('hidden');$('#leaderboardRecordBtn')?.classList.add('hidden');$('#victoryLeaderboardRecordBtn')?.classList.add('hidden');toast(online?'🏆 ĐÃ GHI TÊN LÊN BẢNG ONLINE!':'🏆 ĐÃ LƯU KỶ LỤC TRÊN MÁY!',1.5);h15RefreshLeaderboard();});
-function h15ConsiderRecord(){if(!state)return;const acc=state.shots?Math.round(state.hits/state.shots*100):100,rank=rankFor(acc,state.health,state.stageElapsed),bossSeconds=Math.max(0,state.stageElapsed-G1_BOSS_TIME),keyScores=h15LoadLocalScores().filter(r=>r.difficulty===state.difficulty&&Number(r.stage)===state.stageIndex),best=Math.max(-1,...keyScores.map(r=>Number(r.score)||0));if(state.score>best){h15PendingRecord={score:Math.round(state.score),stage:state.stageIndex,difficulty:state.difficulty,rank,accuracy:acc,bossSeconds:Math.round(bossSeconds*10)/10};const btn=state.cfg.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');btn?.classList.remove('hidden');toast('🏆 KỶ LỤC MỚI · CÓ THỂ GHI TÊN LÊN BẢNG XẾP HẠNG',1.8);}else{$('#leaderboardRecordBtn')?.classList.add('hidden');$('#victoryLeaderboardRecordBtn')?.classList.add('hidden');}}
-const h15StageCompleteBase=stageCompletePanel;stageCompletePanel=function(){h15StageCompleteBase();h15ConsiderRecord();};
+$('#leaderboardBtn')?.addEventListener('click',()=>h15OpenLeaderboard(false));$('#leaderboardDifficulty')?.addEventListener('change',h15RefreshLeaderboard);$('#leaderboardStage')?.addEventListener('change',h15RefreshLeaderboard);$('#victoryLeaderboardRecordBtn')?.addEventListener('click',w1OpenEndLeaderboard);$('#gameOverLeaderboardRecordBtn')?.addEventListener('click',w1OpenEndLeaderboard);
+/* W1: ordinary stage-complete record detector removed; join CTA is end-of-run only. */
+/* W1 consolidated: H15 stageComplete wrapper removed; leaderboard CTA is end-of-run only. */
 
 // Final render layer for the Boss telegraph.
 /* L1 consolidated: legacy render implementation removed */
@@ -1931,19 +1935,17 @@ h16IsMobileControl=h17IsMobileGameplay;
 
 /* L1 consolidated: legacy d1SpeedTarget implementation removed */
 
-function h17ShooterChance(type){
-  return ({spitter:.95,flyer:.62,elite:.70,support:.58,nucleus:.40,flagella:.28,shield:.18,basic:.08,zigzag:.12,sprinter:.14,dodger:.12,arc:.10}[type]||0);
-}
+/* W1: every ordinary NPC can participate in staggered counterfire; global cap prevents bullet spam. */
 
 /* L1 consolidated: legacy spawnEnemy implementation removed */
 function h17MaxNpcShots(){const diff=state?.difficulty||'normal';return diff==='easy'?1:diff==='hard'?3:2;}
-function h17NpcShotDamage(){const diff=state?.difficulty||'normal';return diff==='easy'?.05:diff==='hard'?.09:.07;}
-function h17NpcWarnSeconds(){const diff=state?.difficulty||'normal';return diff==='easy'?.72:diff==='hard'?.52:.62;}
+function h17NpcShotDamage(){return .5;}
+function h17NpcWarnSeconds(){const diff=state?.difficulty||'normal';return diff==='easy'?.72:diff==='hard'?.54:.62;}
 function h17LaunchNpcShot(e){
-  if(!state||!e||e.dead||e.boss||state.transition>0)return;const s=enemyScreen(e),tx=playerScreenX(),ty=innerHeight*.76,dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy)||1;
-  const speed=150+(state.difficulty==='hard'?16:state.difficulty==='easy'?-8:0),life=Math.max(.62,l/speed);
-  state.h17NpcShots.push({x:s.x,y:s.y,px:s.x,py:s.y,vx:dx/l*speed,vy:dy/l*speed,t:0,life,r:2.2,damage:h17NpcShotDamage(),targetPlayerX:state.playerX,color:'#dc83ff',dead:false,sourceX:s.x});
-  e.h17ThreatPulse=.38;
+  if(!state||!e||e.dead||e.boss||state.transition>0)return;const s=enemyScreen(e),aimX=Number.isFinite(e.h17AimPlayerX)?e.h17AimPlayerX:state.playerX,tx=playerScreenX(aimX),ty=innerHeight*.76,dx=tx-s.x,dy=ty-s.y,l=Math.hypot(dx,dy)||1;
+  const speed=170+(state.difficulty==='hard'?18:state.difficulty==='easy'?-8:0),life=Math.max(.58,l/speed);
+  state.h17NpcShots.push({x:s.x,y:s.y,px:s.x,py:s.y,vx:dx/l*speed,vy:dy/l*speed,t:0,life,r:3.2,damage:h17NpcShotDamage(),targetPlayerX:aimX,color:'#ff6f82',dead:false,sourceX:s.x,sourceY:s.y});
+  e.h17AimPlayerX=null;e.h17ThreatPulse=.42;
 }
 function h17UpdateNpcCounterfire(dt){
   if(!state||state.mode!=='playing'||state.transition>0)return;state.h17DamageIFrame=Math.max(0,(state.h17DamageIFrame||0)-dt);
@@ -1952,9 +1954,9 @@ function h17UpdateNpcCounterfire(dt){
     const candidates=state.enemies.filter(e=>!e.dead&&!e.boss&&e.h17Ranged&&e.depth<.76&&e.depth>.10).sort((a,b)=>a.depth-b.depth);
     let pending=candidates.filter(e=>e.h17ShotWarn>0||e.h17ShotQueued).length+shots.filter(s=>!s.dead).length;
     for(const e of candidates){
-      e.h17ThreatPulse=Math.max(0,(e.h17ThreatPulse||0)-dt);e.h17ShotCooldown=(e.h17ShotCooldown||0)-dt;
-      if(e.h17ShotWarn>0){e.h17ShotWarn-=dt;if(e.h17ShotWarn<=0&&e.h17ShotQueued){e.h17ShotQueued=false;h17LaunchNpcShot(e);e.h17ShotCooldown=4.6+Math.random()*3.0;pending++;}continue;}
-      if(e.h17ShotCooldown<=0&&pending<cap){e.h17ShotWarn=h17NpcWarnSeconds();e.h17ShotQueued=true;e.h17ShotCooldown=99;pending++;}
+      e.h17ThreatPulse=Math.max(0,(e.h17ThreatPulse||0)-dt);const idleBoost=(state.w1PlayerIdle||0)>=1.15?1.45:1;e.h17ShotCooldown=(e.h17ShotCooldown||0)-dt*idleBoost;
+      if(e.h17ShotWarn>0){e.h17ShotWarn-=dt;if(e.h17ShotWarn<=0&&e.h17ShotQueued){e.h17ShotQueued=false;h17LaunchNpcShot(e);e.h17ShotCooldown=3.6+Math.random()*2.2;pending++;}continue;}
+      if(e.h17ShotCooldown<=0&&pending<cap){e.h17ShotWarn=h17NpcWarnSeconds();e.h17ShotQueued=true;e.h17AimPlayerX=state.playerX;e.h17ShotCooldown=99;pending++;}
     }
   }
   for(const sh of shots){
@@ -1970,16 +1972,7 @@ function h17UpdateNpcCounterfire(dt){
   state.h17NpcShots=shots.filter(s=>!s.dead&&s.t<s.life+.2);
 }
 
-// Tiny counterfire has a short damage grace window so overlapping low-damage bullets never melt the player.
-const h17DamagePlayerBase=damagePlayer;
-damagePlayer=function(amount){
-  if(!state)return;if(state.h17IncomingHit){
-    if((state.h17DamageIFrame||0)>0)return;let dmg=Math.max(0,Number(amount)||0),shielded=state.shield>0;if(shielded)dmg*=.35;
-    const before=state.health;state.health=Math.max(0,state.health-dmg);if(state.health<before){state.h17DamageIFrame=.34;state.shake=Math.max(state.shake||0,.055);state.h17PlayerHitFx={start:performance.now(),dur:360,fromX:state.h17IncomingFromX||gameplayViewport().center,shielded};tone(shielded?690:210,.045,'triangle',.010,shielded?110:-55,0,.03);try{navigator.vibrate?.(10)}catch{}}
-    if(state.health<=0){state.mode='over';show(UI.over);}return;
-  }
-  return h17DamagePlayerBase(amount);
-};
+/* W1 consolidated: H17 damagePlayer wrapper merged into canonical damagePlayer. */
 
 // Mobile AUTO target hierarchy: manual tap lock > current sticky target > ranged threat > closest dangerous NPC > Boss > SUPPLY.
 function h17ThreatScore(e){
@@ -1999,8 +1992,8 @@ function h17ThreatScore(e){
 
 function h17DrawNpcCounterfire(t){
   if(!state)return;ctx.save();ctx.beginPath();const v=gameplayViewport();ctx.rect(v.left,0,v.width,innerHeight);ctx.clip();
-  for(const e of state.enemies){if(e.dead||e.boss||!e.h17Ranged)continue;const s=enemyScreen(e);if(e.h17ShotWarn>0){const q=1-clamp(e.h17ShotWarn/h17NpcWarnSeconds(),0,1),pulse=.55+.45*Math.sin(t*.025);ctx.globalCompositeOperation='screen';ctx.globalAlpha=.25+.35*q;ctx.strokeStyle='#ff9fe8';ctx.lineWidth=1.3+q;ctx.shadowColor='#ff6ed7';ctx.shadowBlur=9;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1.10+.18*q),0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=`rgba(255,220,245,${.55+.3*pulse})`;ctx.font=`900 ${Math.max(7,Math.min(12,s.r*.17))}px system-ui`;ctx.textAlign='center';ctx.fillText('⚠ PHẢN KÍCH',s.x,s.y-s.r*1.24);}}
-  for(const sh of state.h17NpcShots||[]){const a=clamp(1-sh.t/sh.life,0,1);ctx.globalCompositeOperation='screen';ctx.globalAlpha=.80*a+.16;ctx.strokeStyle='#e59bff';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(sh.px,sh.py);ctx.lineTo(sh.x,sh.y);ctx.stroke();ctx.fillStyle='#fff0ff';ctx.shadowColor='#ce65ff';ctx.shadowBlur=7;ctx.beginPath();ctx.arc(sh.x,sh.y,Math.max(1.5,sh.r),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+  for(const e of state.enemies){if(e.dead||e.boss||!e.h17Ranged)continue;const s=enemyScreen(e);if(e.h17ShotWarn>0){const q=1-clamp(e.h17ShotWarn/h17NpcWarnSeconds(),0,1),pulse=.55+.45*Math.sin(t*.025);ctx.globalCompositeOperation='screen';ctx.globalAlpha=.30+.42*q;ctx.strokeStyle='#ff7387';ctx.lineWidth=1.5+1.15*q;ctx.shadowColor='#ff536d';ctx.shadowBlur=11;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(1.10+.18*q),0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=`rgba(255,206,212,${.62+.3*pulse})`;ctx.font=`900 ${Math.max(7,Math.min(12,s.r*.17))}px system-ui`;ctx.textAlign='center';ctx.fillText('⚠ PHẢN KÍCH',s.x,s.y-s.r*1.24);}}
+  for(const sh of state.h17NpcShots||[]){const a=clamp(1-sh.t/sh.life,0,1);ctx.globalCompositeOperation='screen';ctx.shadowColor='#ff536d';ctx.shadowBlur=10;ctx.globalAlpha=.28+.34*a;ctx.strokeStyle='#ff6077';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(sh.sourceX??sh.px,sh.sourceY??sh.py);ctx.lineTo(sh.x,sh.y);ctx.stroke();ctx.globalAlpha=.82*a+.18;ctx.strokeStyle='#ffd7dc';ctx.lineWidth=1.35;ctx.beginPath();ctx.moveTo(sh.px,sh.py);ctx.lineTo(sh.x,sh.y);ctx.stroke();ctx.fillStyle='#fff6f7';ctx.shadowBlur=12;ctx.beginPath();ctx.arc(sh.x,sh.y,Math.max(2.4,sh.r),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
   ctx.restore();
 }
 function h17DrawPlayerHitFx(t){
@@ -2064,18 +2057,19 @@ h15RenderLeaderRows=function(entries){
   let list=all.slice(0,30);if(preview&&pidx>=30){list=all.slice(0,29);list.push(preview);}box.replaceChildren();if(!list.length){const e=document.createElement('div');e.className='h15-leader-row';e.textContent='Chưa có thành tích ở mục này.';box.appendChild(e);return;}
   for(const r of list){const actual=all.indexOf(r),row=document.createElement('div');row.className='h15-leader-row'+(actual<3?' top3':'')+(r.__preview?' h18-you-preview':'');const pos=document.createElement('span');pos.className='pos';pos.textContent=actual===0?'🥇':actual===1?'🥈':actual===2?'🥉':`#${actual+1}`;const who=document.createElement('span');who.className='who';const b=document.createElement('b');b.textContent=r.__preview?'BẠN · CHƯA CÔNG KHAI':h15SafeName(r.name);if(r.__preview){const tag=document.createElement('i');tag.className='h18-preview-tag';tag.textContent='XEM TRƯỚC';b.appendChild(tag);}const sm=document.createElement('small');sm.textContent=`Màn ${Number(r.stage)+1} · ${h18DiffLabel(r.difficulty||'normal')}`;who.append(b,sm);const sc=document.createElement('span');sc.className='score';sc.textContent=Number(r.score||0).toLocaleString('vi-VN');const rk=document.createElement('span');rk.className='rank';rk.textContent=r.rank||'A';row.append(pos,who,sc,rk);box.appendChild(row);}
 };
-function h18PrepareEndLeaderboard(){
-  const rec=h18ScoreRecord();if(!rec)return;h18PendingShare=rec;h18PreviewOnly=false;h15PendingRecord={...rec};const d=$('#leaderboardDifficulty'),s=$('#leaderboardStage');if(d)d.value=rec.difficulty;if(s)s.value=String(rec.stage);const resultBtn=state?.cfg?.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');if(resultBtn){resultBtn.textContent='🏆 XEM BXH / KHOE THÀNH TÍCH';resultBtn.classList.remove('hidden');}const hint=$('#leaderboardShareHint');if(hint)hint.textContent=H15_LB_ENDPOINT?'Điểm của bạn đang nằm thử đúng vị trí. Chỉ khi bấm KHOE THÀNH TÍCH mới gửi lên bảng online.':'Điểm của bạn đang nằm thử đúng vị trí. Chưa có máy chủ online: bấm KHOE sẽ lưu trên thiết bị này; CHỈ XEM sẽ không lưu.';show($('#leaderboardRecordPrompt'));h15OpenLeaderboard(true);
+function w1PrepareEndLeaderboard(reason='victory'){
+  if(!state||state.w1EndLeaderboardPrepared)return;const rec=h18ScoreRecord();if(!rec)return;state.w1EndLeaderboardPrepared=true;h18PendingShare=rec;h18PreviewOnly=false;h15PendingRecord={...rec};const d=$('#leaderboardDifficulty'),s=$('#leaderboardStage');if(d)d.value=rec.difficulty;if(s)s.value=String(rec.stage);const btn=reason==='gameover'?$('#gameOverLeaderboardRecordBtn'):$('#victoryLeaderboardRecordBtn');if(btn){btn.textContent='🏆 THAM GIA BẢNG XẾP HẠNG';btn.classList.remove('hidden');}const hint=$('#leaderboardShareHint');if(hint)hint.textContent=H15_LB_ENDPOINT?'Xem vị trí tạm tính của bạn. Chỉ khi chọn THAM GIA BẢNG XẾP HẠNG, kết quả mới được gửi lên bảng online.':'Xem vị trí tạm tính của bạn. Chưa có máy chủ online: THAM GIA BẢNG XẾP HẠNG sẽ lưu kết quả trên thiết bị này.';$('#leaderboardRecordPrompt')?.classList.add('hidden');
 }
-const h18StageCompleteBase=stageCompletePanel;
-stageCompletePanel=function(){h18StageCompleteBase();setTimeout(h18PrepareEndLeaderboard,120);};
+function w1OpenEndLeaderboard(){if(!h18PendingShare)return;show($('#leaderboardRecordPrompt'));h15OpenLeaderboard(true);}
+
+/* W1 consolidated: H18 stageComplete wrapper removed; final victory calls W1 leaderboard preparation directly. */
 
 $('#leaderboardShareBtn')?.addEventListener('click',async()=>{
   if(!h18PendingShare)return;const rec={...h18PendingShare,name:h15SafeName($('#leaderboardName')?.value),createdAt:new Date().toISOString(),version:H18_VERSION};delete rec.__preview;let online=false;
   if(H15_LB_ENDPOINT){try{const r=await fetch(H15_LB_ENDPOINT,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(rec)});online=r.ok;}catch{}}
-  h15StoreLocalScore(rec);h18PendingShare=null;h15PendingRecord=null;h18PreviewOnly=false;$('#leaderboardRecordPrompt')?.classList.add('hidden');const rb=state?.cfg?.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');if(rb){rb.textContent='🏆 XEM BẢNG XẾP HẠNG';rb.classList.remove('hidden');}toast(online?'🏆 ĐÃ KHOE THÀNH TÍCH TRÊN BẢNG ONLINE!':'🏆 ĐÃ LƯU THÀNH TÍCH TRÊN THIẾT BỊ!',1.45);h15RefreshLeaderboard();
+  h15StoreLocalScore(rec);h18PendingShare=null;h15PendingRecord=null;h18PreviewOnly=false;$('#leaderboardRecordPrompt')?.classList.add('hidden');for(const rb of [$('#victoryLeaderboardRecordBtn'),$('#gameOverLeaderboardRecordBtn')])if(rb&&!rb.classList.contains('hidden')){rb.textContent='🏆 XEM BẢNG XẾP HẠNG';}toast(online?'🏆 ĐÃ THAM GIA BẢNG XẾP HẠNG ONLINE!':'🏆 ĐÃ LƯU KẾT QUẢ TRÊN THIẾT BỊ!',1.45);h15RefreshLeaderboard();
 });
-$('#leaderboardSkipShareBtn')?.addEventListener('click',()=>{if(!h18PendingShare)return;h18PreviewOnly=true;h15PendingRecord=null;$('#leaderboardRecordPrompt')?.classList.add('hidden');const rb=state?.cfg?.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');if(rb){rb.textContent='🏆 XEM BẢNG XẾP HẠNG';rb.classList.remove('hidden');}toast('👀 CHỈ XEM · THÀNH TÍCH CHƯA ĐƯỢC CÔNG KHAI',1.1);h15RefreshLeaderboard();});
+$('#leaderboardSkipShareBtn')?.addEventListener('click',()=>{if(!h18PendingShare)return;h18PreviewOnly=true;h15PendingRecord=null;$('#leaderboardRecordPrompt')?.classList.add('hidden');for(const rb of [$('#victoryLeaderboardRecordBtn'),$('#gameOverLeaderboardRecordBtn')])if(rb&&!rb.classList.contains('hidden'))rb.textContent='🏆 XEM BẢNG XẾP HẠNG';toast('👀 CHỈ XEM · KẾT QUẢ CHƯA ĐƯỢC CÔNG KHAI',1.1);h15RefreshLeaderboard();});
 
 // A new round clears the previous unsaved preview; saved scores remain untouched.
 
@@ -2153,7 +2147,7 @@ const j1GoHomeBase=goHome;goHome=function(){const r=j1GoHomeBase();j1RefreshFire
 /* L1 consolidated: stale J1 version refresh removed */j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 
-/* === v4.1.0 Q1 · L1 CORE + TARGET PRIORITY + DRONE TRACERS + REAL PROJECTILES + COUNTERFIRE === */
+/* === v4.2.0 W1 · END-OF-RUN LEADERBOARD + ALWAYS-ON NPC PRESSURE + INTERACTIVE MAP PREVIEW === */
 const L1_DIFF={
   easy:{speed:.90,density:.68,capLo:3,capHi:4},
   normal:{speed:1,density:1,capLo:4,capHi:5},
@@ -2189,18 +2183,18 @@ function activateLogoUltimate(source='gpp'){
 }
 function createGameState(stageIndex=0){
   stageIndex=clamp(stageIndex,0,A1_STAGE_COUNT-1);const cfg=STAGES[stageIndex],difficulty=window.__difficulty||'normal',d=DIFF[difficulty],baseTarget=(D1_EXPECTED_KILLS[difficulty]||D1_EXPECTED_KILLS.normal)[stageIndex]||36;
-  h18PendingShare=null;h18PreviewOnly=false;h15PendingRecord=null;$('#leaderboardCurrentResult')?.classList.add('hidden');
-  return {mode:'playing',stageIndex,cfg,difficulty,health:10,maxHealth:10,score:stageIndex===0?0:(state?.score||0),enemies:[],particles:[],tracers:[],hitMarkers:[],enemyShots:[],powerups:[],rewardNpcs:[],spawnLeft:0,bossSpawned:false,bossDefeated:false,spawnTimer:.16,contamination:100,kills:0,shots:0,hits:0,combo:0,comboTimer:0,weapon:0,lastFire:0,bombs:3,beam:100,shield:0,drone:0,adrenaline:0,vaccine:0,sterile:0,gppBoost:0,bossDrone:0,stageElapsed:0,transition:0,zoom:0,shake:0,toastTimer:0,nextPanel:false,playerX:0,playerVX:0,moveLeft:false,moveRight:false,mobileMoveAxis:0,lastMoveDir:1,dashCooldown:0,dashTimer:0,dashDir:0,dodgeTilt:0,recoil:0,muzzleFlash:0,dodgeMessage:0,rewardNpcTimer:difficulty==='easy'?3:difficulty==='hard'?4.2:3.6,rewardNpcCount:0,rewardNpcMax:d.rewardMax||4,_rewardSerial:0,_supportHudKey:'',environmentClean:0,bossCleanse:0,cleanSparkle:0,stageIntro:1.9,d1BossAt:G1_BOSS_TIME,d1NaturalSpawns:0,d1MinorKills:0,d1BossStartedAt:0,_minorCleanTarget:baseTarget*3,pickupFx:[],rewardBanner:null,_supportJustAdded:null,_supportJustUntil:0,f1Upgrades:{damage:0,fireRate:0,survival:0,drone:0,supply:0},bossRewardFx:null,bossRewardPending:null,bossRewardShown:false,f1WeaponEffect:null,f1WeaponEffectUntil:0,f1AnnihilatorFx:0,f1CleanChimeMark:0,f1SparkleChime:false,f1BossKilledAt:0,f1BossKillDuration:0,g1LastValidSpawnAt:0,g1StallWatch:0,g1SpawnRepairs:0,h15LastSupplyAt:0,h15SupplyGuarantee:difficulty==='easy'?14:difficulty==='hard'?20:17,h16FireMode:j1IsRealMobile()?'auto':h16PreferredFireMode,h16ManualLock:null,h16AutoTarget:null,h16LockFxUntil:0,h16LockSerial:0,h16AutoBombAt:0,h17NpcShots:[],h17DamageIFrame:0,h17PlayerHitFx:null,h17LastAutoShotAt:0,l1LogoUltimate:0,l1GameTime:0,l1WeaponLevel:stageIndex+1,q1BossHitIFrame:0,q1NearMissToast:0};
+  h18PendingShare=null;h18PreviewOnly=false;h15PendingRecord=null;$('#leaderboardCurrentResult')?.classList.add('hidden');$('#gameOverLeaderboardRecordBtn')?.classList.add('hidden');$('#victoryLeaderboardRecordBtn')?.classList.add('hidden');
+  return {mode:'playing',stageIndex,cfg,difficulty,health:10,maxHealth:10,score:stageIndex===0?0:(state?.score||0),enemies:[],particles:[],tracers:[],hitMarkers:[],enemyShots:[],powerups:[],rewardNpcs:[],spawnLeft:0,bossSpawned:false,bossDefeated:false,spawnTimer:.16,contamination:100,kills:0,shots:0,hits:0,combo:0,comboTimer:0,weapon:0,lastFire:0,bombs:3,beam:100,shield:0,drone:0,adrenaline:0,vaccine:0,sterile:0,gppBoost:0,bossDrone:0,stageElapsed:0,transition:0,zoom:0,shake:0,toastTimer:0,nextPanel:false,playerX:0,playerVX:0,moveLeft:false,moveRight:false,mobileMoveAxis:0,lastMoveDir:1,dashCooldown:0,dashTimer:0,dashDir:0,dodgeTilt:0,recoil:0,muzzleFlash:0,dodgeMessage:0,rewardNpcTimer:difficulty==='easy'?3:difficulty==='hard'?4.2:3.6,rewardNpcCount:0,rewardNpcMax:d.rewardMax||4,_rewardSerial:0,_supportHudKey:'',environmentClean:0,bossCleanse:0,cleanSparkle:0,stageIntro:1.9,d1BossAt:G1_BOSS_TIME,d1NaturalSpawns:0,d1MinorKills:0,d1BossStartedAt:0,_minorCleanTarget:baseTarget*3,pickupFx:[],rewardBanner:null,_supportJustAdded:null,_supportJustUntil:0,f1Upgrades:{damage:0,fireRate:0,survival:0,drone:0,supply:0},bossRewardFx:null,bossRewardPending:null,bossRewardShown:false,f1WeaponEffect:null,f1WeaponEffectUntil:0,f1AnnihilatorFx:0,f1CleanChimeMark:0,f1SparkleChime:false,f1BossKilledAt:0,f1BossKillDuration:0,g1LastValidSpawnAt:0,g1StallWatch:0,g1SpawnRepairs:0,h15LastSupplyAt:0,h15SupplyGuarantee:difficulty==='easy'?14:difficulty==='hard'?20:17,h16FireMode:j1IsRealMobile()?'auto':h16PreferredFireMode,h16ManualLock:null,h16AutoTarget:null,h16LockFxUntil:0,h16LockSerial:0,h16AutoBombAt:0,h17NpcShots:[],h17DamageIFrame:0,h17PlayerHitFx:null,h17LastAutoShotAt:0,l1LogoUltimate:0,l1GameTime:0,l1WeaponLevel:stageIndex+1,q1BossHitIFrame:0,q1NearMissToast:0,w1PlayerIdle:0,w1PrevPlayerX:0,w1EndLeaderboardPrepared:false};
 }
 function newState(stageIndex=0){return createGameState(stageIndex);}
 function spawnEnemy(type,boss=false){
   if(!state)return null;const base=ENEMY[type]||ENEMY.basic,d=DIFF[state.difficulty],style=BOSS_STYLE[state.stageIndex]||BOSS_STYLE[BOSS_STYLE.length-1],x=boss?.5:sourceXFor(type),side=x<.5?-1:1;
   const hp=boss?state.cfg.bossHp*d.bossHp*G2_BOSS_HP_MULT*H1_BOSS_EXTRA_MULT:l1NpcHp(type);
-  const e={id:Math.random(),type,boss,name:boss?state.cfg.boss:null,bossKind:boss?state.cfg.bossKind:null,x,baseX:x,depth:boss?.79:.955+Math.random()*.035,hp,maxHp:hp,speedBase:base.speed*(.90+Math.random()*.16),speed:base.speed,rad:boss?style.rad:base.rad,color:boss?style.color:base.color,accent:boss?style.accent:null,shotColor:boss?style.shot:null,phase:Math.random()*6.28,wobble:Math.random()*1.8+1,attackTimer:boss?1.15:999,summon:999,flash:0,dead:false,side,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:base?.g1Motion||type,g1Lane:x,g1TargetX:x,g1Decision:.55+Math.random()*1.3,g1Pause:Math.random()*.5,g1Burst:0,g1GhostX:x,h17Ranged:false,h17ShotCooldown:2.4+Math.random()*2.2,h17ShotWarn:0,h17ShotQueued:false,h17ThreatPulse:0};
-  if(!boss){const scale=state.difficulty==='easy'?.62:state.difficulty==='hard'?1:.82;e.h17Ranged=!e.bossSummoned&&Math.random()<h17ShooterChance(type)*scale;}
+  const e={id:Math.random(),type,boss,name:boss?state.cfg.boss:null,bossKind:boss?state.cfg.bossKind:null,x,baseX:x,depth:boss?.79:.955+Math.random()*.035,hp,maxHp:hp,speedBase:base.speed*(.90+Math.random()*.16),speed:base.speed,rad:boss?style.rad:base.rad,color:boss?style.color:base.color,accent:boss?style.accent:null,shotColor:boss?style.shot:null,phase:Math.random()*6.28,wobble:Math.random()*1.8+1,attackTimer:boss?1.15:999,summon:999,flash:0,dead:false,side,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:base?.g1Motion||type,g1Lane:x,g1TargetX:x,g1Decision:.55+Math.random()*1.3,g1Pause:Math.random()*.5,g1Burst:0,g1GhostX:x,h17Ranged:!boss,h17ShotCooldown:2.8+Math.random()*2.0,h17ShotWarn:0,h17ShotQueued:false,h17ThreatPulse:0};
+  if(!boss)e.h17Ranged=true;
   state.enemies.push(e);if(boss){e.g2BossScaled=true;e.h1BossScaled=true;e.g1DarkIntro=2.2;state.bossIntro=2.05;state.d1BossStartedAt=state.stageElapsed;state.enemyShots.length=0;show(UI.bossBar);UI.bossName.textContent=state.cfg.boss;sfx.boss();toast('⚠ GIÂY 180 · BOSS XUẤT HIỆN!',2);}return e;
 }
-function spawnMini(px,py){if(!state)return null;const base=ENEMY.spore,x=clamp(.32+Math.random()*.36,.08,.92),hp=2.5;const e={id:Math.random(),type:'spore',boss:false,name:null,x,baseX:x,depth:.46+Math.random()*.09,hp,maxHp:hp,speedBase:base.speed*(.82+Math.random()*.16),speed:base.speed,rad:14,color:base.color,phase:Math.random()*6.28,wobble:1.8,attackTimer:999,summon:999,flash:0,dead:false,side:x<.5?-1:1,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:'mini',h17Ranged:false};state.enemies.push(e);return e;}
+function spawnMini(px,py){if(!state)return null;const base=ENEMY.spore,x=clamp(.32+Math.random()*.36,.08,.92),hp=2.5;const e={id:Math.random(),type:'spore',boss:false,name:null,x,baseX:x,depth:.46+Math.random()*.09,hp,maxHp:hp,speedBase:base.speed*(.82+Math.random()*.16),speed:base.speed,rad:14,color:base.color,phase:Math.random()*6.28,wobble:1.8,attackTimer:999,summon:999,flash:0,dead:false,side:x<.5?-1:1,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:'mini',h17Ranged:true,h17ShotCooldown:4.6+Math.random()*2.4,h17ShotWarn:0,h17ShotQueued:false,h17ThreatPulse:0};state.enemies.push(e);return e;}
 function dropSpecificPowerup(kind,x,y){if(!state)return;state.powerups.push({id:`p-${Date.now()}-${Math.random()}`,x,y,kind,t:0,life:20,dead:false,beam:1,l1AutoRemaining:3,l1Waiting:false});}
 function activatePowerup(p,{auto=false}={}){if(!state||!p||p.dead)return false;const kind=p.kind,max=state.maxHealth||10;if(auto&&!l1CanAutoUse(kind)){p.l1Waiting=true;return false;}p.dead=true;p.l1Waiting=false;if(kind==='heal')state.health=Math.min(max,state.health+2);else if(kind==='shield')state.shield=Math.max(state.shield||0,12);else if(kind==='drone')state.drone=Math.max(state.drone||0,10);else if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);else if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);else if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);else if(kind==='gpp')activateLogoUltimate('gpp');d1PickupFeedback(kind,p.x,p.y);g2SetWeaponScreenFx(kind,kind==='heal'?1800:2400);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2400;state._supportHudKey='';if(kind!=='gpp')sfx.power();updateHUD();return true;}
 function collectPowerupAt(x,y){if(!state)return false;const p=state.powerups.filter(o=>!o.dead).map(o=>({o,d:Math.hypot(x-o.x,y-o.y)})).filter(a=>a.d<48).sort((a,b)=>a.d-b.d)[0]?.o;return p?activatePowerup(p):false;}
@@ -2239,7 +2233,7 @@ function shoot(x,y){if(!state||state.mode!=='playing'||state.transition>0)return
 function updateHUD(){if(!state)return;const hp=`${Math.max(0,state.health).toFixed(state.health%1?1:0)}/${state.maxHealth||10}`,hpPct=clamp(state.health/(state.maxHealth||10)*100,0,100),clean=Math.round(state.environmentClean||0),minor=state.enemies.filter(e=>!e.dead&&!e.boss).length,time=state.bossSpawned?'BOSS':d1FormatClock(d1Countdown());UI.healthText.textContent=hp;UI.healthFill.style.width=hpPct+'%';UI.cleanText.textContent=`KHỬ NHIỄM ${clean}%`;UI.cleanFill.style.width=clean+'%';UI.score.textContent=state.score.toLocaleString('vi-VN');UI.enemy.textContent=`Virus: ${minor}`;UI.stageName.textContent=`MÀN ${state.stageIndex+1} · ${state.cfg.name}`;if(UI.diffBadge)UI.diffBadge.textContent=`${DIFF[state.difficulty].label} · ${state.difficulty==='easy'?'MẬT ĐỘ THẤP':state.difficulty==='hard'?'MẬT ĐỘ CAO':'CÂN BẰNG'}`;if($('#leftHealthText'))$('#leftHealthText').textContent=hp;if($('#leftHealthFill'))$('#leftHealthFill').style.width=hpPct+'%';if($('#leftStageNo'))$('#leftStageNo').textContent=`MÀN ${state.stageIndex+1}`;if($('#leftStageName'))$('#leftStageName').textContent=state.cfg.name;if($('#rightScoreText'))$('#rightScoreText').textContent=state.score.toLocaleString('vi-VN');if($('#rightTimeText'))$('#rightTimeText').textContent=time;if($('#timeTextMobile'))$('#timeTextMobile').textContent=time;if($('#rightEnemyText'))$('#rightEnemyText').textContent=minor;if($('#rightComboText'))$('#rightComboText').textContent=`×${state.combo||0}`;const w=WEAPONS[state.weapon],wp=l1WeaponProfile();UI.weaponIcon.textContent=w.icon;UI.weaponName.textContent=`${w.name} · ${wp.label}`;UI.weaponStatus.textContent=(state.l1LogoUltimate>0?'★ ULTIMATE · ':`LV${l1WeaponLevel()} · `)+`${wp.shots} TIA · ${Math.round(1/wp.cooldown*10)/10}× TỐC`;updateSupportUI();}
 function cleanupCombat(){if(!state)return;const p=state.h1LastBossScreen||{x:gameplayViewport().center,y:innerHeight*.50,r:90};state.h1BossDeathFx={start:performance.now(),dur:760,x:p.x,y:p.y,r:p.r};state.enemyShots.length=0;state.h17NpcShots.length=0;state.tracers.length=0;state.hitMarkers.length=0;state.particles.length=0;state.powerups.length=0;state.rewardNpcs.length=0;for(const e of state.enemies||[]){e.h15AttackSerial=(e.h15AttackSerial||0)+1;e.h17ShotWarn=0;e.h17ShotQueued=false;}state.enemies.length=0;state.h17PlayerHitFx=null;state.h17DamageIFrame=0;state.muzzleFlash=0;state.recoil=0;state.shake=0;pointer.down=false;}
 function h1CombatCleanup(){return cleanupCombat();}
-function updateGame(dt){if(!state||state.mode!=='playing')return;const d=DIFF[state.difficulty];state._l1LastDt=dt;state.l1GameTime+=dt;if(state.transition>0){state.transition+=dt;const cleanP=clamp(state.transition/F1_CLEAN_SECONDS,0,1);state.environmentClean=50+50*d1Smooth(cleanP);state.contamination=100-state.environmentClean;state.zoom=Math.min(1,state.transition/F1_CLEAN_SECONDS);state.cleanSparkle=state.transition>F1_CLEAN_SECONDS?clamp((state.transition-F1_CLEAN_SECONDS)/F1_SPARKLE_SECONDS,0,1):0;if(state.transition>=F1_CLEAN_SECONDS+F1_SPARKLE_SECONDS&&!state.nextPanel){state.nextPanel=true;state.environmentClean=100;state.contamination=0;state.cleanSparkle=1;f1ShowBossRewards();}updateHUD();return;}state.stageElapsed+=dt;if(state.stageIntro>0)state.stageIntro=Math.max(0,state.stageIntro-dt);state.zoom=Math.min(.10,state.stageElapsed*.00072);if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.bossIntro>0)state.bossIntro=Math.max(0,state.bossIntro-dt);state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);const axis=movementAxis();if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;const speedBoost=state.adrenaline>0?1.24:1;if(state.dashTimer>0)state.playerVX=state.dashDir*2.42*speedBoost;else{const accel=6.3*speedBoost,maxSpeed=1.05*speedBoost,friction=8;if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;else state.playerVX*=Math.max(0,1-friction*dt);state.playerVX=clamp(state.playerVX,-maxSpeed,maxSpeed);}state.playerX=clamp(state.playerX+state.playerVX*dt,-1,1);if(Math.abs(state.playerX)>=1&&Math.sign(state.playerVX)===Math.sign(state.playerX))state.playerVX=0;if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast);}if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo();}}for(const f of ['shield','drone','adrenaline','vaccine','sterile','gppBoost','bossDrone','l1LogoUltimate'])if(state[f]>0)state[f]=Math.max(0,state[f]-dt);state.beam=Math.min(100,state.beam+18*dt);
+function updateGame(dt){if(!state||state.mode!=='playing')return;const d=DIFF[state.difficulty];state._l1LastDt=dt;state.l1GameTime+=dt;if(state.transition>0){state.transition+=dt;const cleanP=clamp(state.transition/F1_CLEAN_SECONDS,0,1);state.environmentClean=50+50*d1Smooth(cleanP);state.contamination=100-state.environmentClean;state.zoom=Math.min(1,state.transition/F1_CLEAN_SECONDS);state.cleanSparkle=state.transition>F1_CLEAN_SECONDS?clamp((state.transition-F1_CLEAN_SECONDS)/F1_SPARKLE_SECONDS,0,1):0;if(state.transition>=F1_CLEAN_SECONDS+F1_SPARKLE_SECONDS&&!state.nextPanel){state.nextPanel=true;state.environmentClean=100;state.contamination=0;state.cleanSparkle=1;f1ShowBossRewards();}updateHUD();return;}state.stageElapsed+=dt;if(state.stageIntro>0)state.stageIntro=Math.max(0,state.stageIntro-dt);state.zoom=Math.min(.10,state.stageElapsed*.00072);if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.bossIntro>0)state.bossIntro=Math.max(0,state.bossIntro-dt);state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);const axis=movementAxis();if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;const speedBoost=state.adrenaline>0?1.24:1;if(state.dashTimer>0)state.playerVX=state.dashDir*2.42*speedBoost;else{const accel=6.3*speedBoost,maxSpeed=1.05*speedBoost,friction=8;if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;else state.playerVX*=Math.max(0,1-friction*dt);state.playerVX=clamp(state.playerVX,-maxSpeed,maxSpeed);}state.playerX=clamp(state.playerX+state.playerVX*dt,-1,1);if(Math.abs(state.playerX)>=1&&Math.sign(state.playerVX)===Math.sign(state.playerX))state.playerVX=0;const w1MoveDelta=Math.abs(state.playerX-(state.w1PrevPlayerX??state.playerX));state.w1PlayerIdle=w1MoveDelta>.0015?0:(state.w1PlayerIdle||0)+dt;state.w1PrevPlayerX=state.playerX;if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast);}if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo();}}for(const f of ['shield','drone','adrenaline','vaccine','sterile','gppBoost','bossDrone','l1LogoUltimate'])if(state[f]>0)state[f]=Math.max(0,state[f]-dt);state.beam=Math.min(100,state.beam+18*dt);
   if(!state.bossSpawned&&state.rewardNpcCount<state.rewardNpcMax){state.rewardNpcTimer-=dt;if(state.rewardNpcTimer<=0&&!state.rewardNpcs.some(n=>!n.dead)){spawnRewardNpc();state.rewardNpcTimer=(d.rewardEvery||9)*(.88+Math.random()*.28);}}
   if(!state.bossSpawned&&state.stageElapsed<G1_BOSS_TIME){const active=state.enemies.filter(e=>!e.dead&&!e.boss).length,cap=d1ActiveCap();state.spawnTimer-=dt;if(active===0)state.spawnTimer=Math.min(state.spawnTimer,.05);else if(active<Math.ceil(cap*.45))state.spawnTimer=Math.min(state.spawnTimer,.14);if(state.spawnTimer<=0&&active<cap){const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],e=spawnEnemy(typ,false);if(e)e.countsForClean=true;state.d1NaturalSpawns++;state.spawnTimer=d1SpawnInterval();}}
   if(!state.bossSpawned&&state.stageElapsed>=G1_BOSS_TIME-.001){state.environmentClean=50;state.contamination=50;state.bossSpawned=true;state.spawnLeft=0;spawnEnemy(state.cfg.mix[0],true);}
@@ -2249,12 +2243,12 @@ function updateGame(dt){if(!state||state.mode!=='playing')return;const d=DIFF[st
   if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.40;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){q1DroneTracer(target,false);hitEnemy(target,.72,false,true);}}}if(state.bossDrone>0){state._bossDroneTimer=(state._bossDroneTimer||0)-dt;if(state._bossDroneTimer<=0){state._bossDroneTimer=.22;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){q1DroneTracer(target,true);hitEnemy(target,1.25,false,true,false);}}}if(state.f1AnnihilatorFx>0)state.f1AnnihilatorFx=Math.max(0,state.f1AnnihilatorFx-dt*1.8);if(!state.bossSpawned){const tt=clamp(state.stageElapsed/G1_BOSS_TIME,0,1),killRatio=clamp((state.cleanMinorKills||0)/Math.max(1,state._minorCleanTarget),0,1);state.environmentClean=clamp(36*tt+Math.min(13.5*tt,49.5*killRatio),0,49.5);state.contamination=100-state.environmentClean;}if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)){state.bossDefeated=true;beginStageClear();}
   if(!state.bossSpawned&&!state.rewardNpcs.some(n=>!n.dead)&&state.rewardNpcCount<state.rewardNpcMax&&(state.stageElapsed-(state.h15LastSupplyAt||0))>=(state.h15SupplyGuarantee||18)){spawnRewardNpc();state.rewardNpcTimer=Math.max(state.rewardNpcTimer||0,4.5);}h17UpdateNpcCounterfire(dt);if(h16CurrentFireMode()==='auto')h16AutoFireTick();else if(pointer.down&&performance.now()-weaponPressStarted>120)shoot(pointer.x,pointer.y);h16UpdateFireModeUI();updateHUD();}
 function update(dt){return updateGame(dt);}
-function q1DrawDangerIndicator(){if(!state||state.mode!=='playing')return;const incoming=[...(state.enemyShots||[]).map(s=>({...s,q1Boss:true})),...(state.h17NpcShots||[]).map(s=>({...s,q1Boss:false}))].filter(s=>!s.dead&&s.life>0&&s.life-s.t<.85);if(!incoming.length)return;const v=gameplayViewport(),cx=playerScreenX(),left=incoming.some(s=>s.x<cx),right=incoming.some(s=>s.x>=cx),boss=incoming.some(s=>s.q1Boss);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=boss?'#ff6d79':'#d995ff';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=10;ctx.globalAlpha=.55+.30*Math.sin(performance.now()*.02);const y=innerHeight*.56;if(left){ctx.beginPath();ctx.moveTo(v.left+8,y);ctx.lineTo(v.left+24,y-13);ctx.lineTo(v.left+24,y+13);ctx.closePath();ctx.fill();}if(right){const x=v.left+v.width-8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-16,y-13);ctx.lineTo(x-16,y+13);ctx.closePath();ctx.fill();}ctx.restore();}
+function q1DrawDangerIndicator(){if(!state||state.mode!=='playing')return;const incoming=[...(state.enemyShots||[]).map(s=>({...s,q1Boss:true})),...(state.h17NpcShots||[]).map(s=>({...s,q1Boss:false}))].filter(s=>!s.dead&&s.life>0&&s.life-s.t<.85);if(!incoming.length)return;const v=gameplayViewport(),cx=playerScreenX(),left=incoming.some(s=>s.x<cx),right=incoming.some(s=>s.x>=cx),boss=incoming.some(s=>s.q1Boss);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=boss?'#ff4f68':'#ff7387';ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=10;ctx.globalAlpha=.55+.30*Math.sin(performance.now()*.02);const y=innerHeight*.56;if(left){ctx.beginPath();ctx.moveTo(v.left+8,y);ctx.lineTo(v.left+24,y-13);ctx.lineTo(v.left+24,y+13);ctx.closePath();ctx.fill();}if(right){const x=v.left+v.width-8;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-16,y-13);ctx.lineTo(x-16,y+13);ctx.closePath();ctx.fill();}ctx.restore();}
 function renderGame(t){v270PrepareWeaponPose(t);drawBackground(t);if(!state)return;const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs||[])drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();drawB1StageIntro();drawD1PickupFeedback(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);h15DrawBossTelegraph(t);h16DrawTargetLock(t);h17DrawNpcCounterfire(t);q1DrawDangerIndicator();h17DrawPlayerHitFx(t);}
 function render(t){return renderGame(t);}
-function g2IsNewer(v,cur='4.1.0'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
+function g2IsNewer(v,cur='4.2.0'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
 function f1UseReward(kind,fromCombo=false){if(!state||state.mode!=='playing'||state.transition>0)return false;const inv=f1Inventory();if((inv[kind]||0)<=0){toast('Vật phẩm Boss chưa sẵn sàng',.7);return false;}if(kind==='survival'){if(state.health>=state.maxHealth-.01){toast('❤️ SINH TỒN ĐÃ ĐẦY',.8);return false;}state.health=Math.min(state.maxHealth,state.health+5);g2SetWeaponScreenFx('survival',1800);}else if(kind==='eliteDrone'){state.bossDrone=Math.max(state.bossDrone||0,20);state._bossDroneTimer=.03;g2SetWeaponScreenFx('eliteDrone',20000);}else if(kind==='annihilator'){const targets=state.enemies.filter(e=>!e.dead&&!e.boss);if(!targets.length)return false;for(const e of targets){if(Math.random()<.5)hitEnemy(e,e.hp+1,false,true);}state.f1AnnihilatorFx=1;g2SetWeaponScreenFx('annihilator',1600);}else if(kind==='bossGpp')activateLogoUltimate('bossGpp');inv[kind]--;f1SaveInventory(inv);updateHUD();return true;}
-function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.1.0 Q1';if(b)b.textContent='v4.1.0 Q1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.1.0 Q1';}
+function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.2.0 W1';if(b)b.textContent='v4.2.0 W1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.2.0 W1';}
 async function l1EnterLandscape(){if(!j1IsRealMobile())return true;try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch{}try{await screen.orientation?.lock?.('landscape');}catch{}document.documentElement.classList.add('l1-gameplay-landscape');return innerWidth>=innerHeight;}
 function l1LeaveLandscape(){document.documentElement.classList.remove('l1-gameplay-landscape');try{screen.orientation?.unlock?.();}catch{}}
 let l1PausedForOrientation=false;function l1UpdateOrientationGate(){const gate=$('#l1OrientationGate');if(!gate)return;const need=!!state&&state.mode!=='menu'&&j1IsRealMobile()&&innerHeight>innerWidth;gate.classList.toggle('hidden',!need);if(need&&state?.mode==='playing'){l1PausedForOrientation=true;pauseGame();}else if(!need&&l1PausedForOrientation&&state?.mode==='paused'){l1PausedForOrientation=false;resumeGame();}if(!state||state.mode==='menu')l1PausedForOrientation=false;}

@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.1.0 Q1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.2.0 W1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -23,7 +23,7 @@
           <div class="d1-brand-row">
             <div class="brand-lockup d1-brand-lockup"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" class="brand-logo-full" /></div>
             <div class="d1-title-block">
-              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v4.1.0 Q1</b></p>
+              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v4.2.0 W1</b></p>
               <h1>BÁC SĨ<br/>TRUY QUÉT</h1>
               <p class="lead">3 phút sinh tồn tăng áp lực · Boss xuất hiện đúng giây 180</p>
             </div>
@@ -39,7 +39,7 @@
             <button class="h1-map-hotspot" data-map-stage="5" style="--map-x:24%;--map-y:22%" aria-label="Màn 6 Khoa Thần Kinh"><span>6</span></button>
             <button class="h1-map-hotspot" data-map-stage="6" style="--map-x:86%;--map-y:35%" aria-label="Màn 7 Khoa Xét Nghiệm"><span>7</span></button>
             <button class="h1-map-hotspot h1-final-hotspot" data-map-stage="7" style="--map-x:64%;--map-y:16%" aria-label="Màn 8 Cổng ra bệnh viện"><span>8</span></button>
-            <div id="h1MapPreview" class="h1-map-preview">
+            <div id="h1MapPreview" class="h1-map-preview hidden">
               <img id="h1MapPreviewImg" src="assets/stage1-clean.jpg" alt="Khoa Dược" />
               <div><small id="h1MapPreviewNo">MÀN 1</small><b id="h1MapPreviewName">KHOA DƯỢC</b><p id="h1MapPreviewStory">Nguồn thuốc của bệnh viện đã bị nhiễm khuẩn.</p><em id="h1MapPreviewState">ĐÃ MỞ</em></div>
             </div>
@@ -66,13 +66,13 @@
               <span class="diff-symbol">🛡</span><span class="diff-copy"><b>DỄ</b><strong>LÀM QUEN</strong><small>NPC ít hơn rõ rệt · tốc độ giảm nhẹ · hỏa lực giữ nguyên</small></span><em>01</em>
             </button>
             <button class="difficulty d1-difficulty normal-card selected" data-difficulty="normal">
-              <span class="diff-symbol">⚠</span><span class="diff-copy"><b>TRUNG BÌNH</b><strong>CÂN BẰNG</strong><small>Mật độ chuẩn Q1 · tốc độ chuẩn · hỏa lực giữ nguyên</small></span><em>02</em>
+              <span class="diff-symbol">⚠</span><span class="diff-copy"><b>TRUNG BÌNH</b><strong>CÂN BẰNG</strong><small>Mật độ chuẩn W1 · tốc độ chuẩn · hỏa lực giữ nguyên</small></span><em>02</em>
             </button>
             <button class="difficulty d1-difficulty hard-card" data-difficulty="hard">
               <span class="diff-symbol">☣</span><span class="diff-copy"><b>KHÓ</b><strong>THỬ THÁCH</strong><small>NPC dày hơn rõ rệt · tốc độ tăng nhẹ · hỏa lực giữ nguyên</small></span><em>03</em>
             </button>
           </div>
-          <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH · CÂN BẰNG</b><span>Mật độ chuẩn Q1 · tốc độ chuẩn · hỏa lực giống mọi cấp</span></div>
+          <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH · CÂN BẰNG</b><span>Mật độ chuẩn W1 · tốc độ chuẩn · hỏa lực giống mọi cấp</span></div>
           <div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
             <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
             <div class="h18-control-side-buttons">
@@ -85,7 +85,7 @@
             <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
             <div><b>8</b><span>KHU VỰC</span></div>
           </div>
-          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v4.1.0 Q1</div>
+          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v4.2.0 W1</div>
           <div class="author-line d1-author-line">
             <strong>Tác giả: Ngô Quang Trường</strong>
             <span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span>
@@ -172,9 +172,9 @@
         <div id="leaderboardMode" class="h15-leaderboard-mode">ĐANG TẢI…</div>
         <div id="leaderboardCurrentResult" class="h18-current-result hidden" aria-live="polite"></div>
         <div id="leaderboardRecordPrompt" class="h15-record-prompt h18-share-prompt hidden">
-          <strong>🏆 THÀNH TÍCH VỪA ĐẠT</strong><span id="leaderboardShareHint">Điểm của bạn đang được hiển thị thử trên bảng. Chỉ công khai khi bạn chọn KHOE THÀNH TÍCH.</span>
+          <strong>🏆 THÀNH TÍCH VỪA ĐẠT</strong><span id="leaderboardShareHint">Điểm của bạn đang được hiển thị thử trên bảng. Chỉ công khai khi bạn chọn THAM GIA BẢNG XẾP HẠNG.</span>
           <input id="leaderboardName" maxlength="16" autocomplete="nickname" placeholder="Tên của bạn (tùy chọn)" />
-          <div class="h18-share-actions"><button id="leaderboardShareBtn" class="primary-btn">🏆 KHOE THÀNH TÍCH</button><button id="leaderboardSkipShareBtn" class="secondary-btn">CHỈ XEM</button></div>
+          <div class="h18-share-actions"><button id="leaderboardShareBtn" class="primary-btn">🏆 THAM GIA BẢNG XẾP HẠNG</button><button id="leaderboardSkipShareBtn" class="secondary-btn">CHỈ XEM</button></div>
         </div>
         <div id="leaderboardList" class="h15-leaderboard-list"></div>
         <p class="h15-leaderboard-note">Khi chưa cấu hình máy chủ online, bảng xếp hạng chỉ lưu trên thiết bị này. Chế độ online sẽ tự bật khi có endpoint.</p>
@@ -213,7 +213,6 @@
           <div><span>Xếp hạng</span><strong id="stageRank">A</strong></div>
         </div>
         <button id="nextStageBtn" class="primary-btn">TIẾN VÀO KHU TIẾP THEO ›</button>
-        <button id="leaderboardRecordBtn" class="secondary-btn hidden">🏆 KỶ LỤC MỚI · GHI TÊN</button>
         <div class="f1-result-actions">
           <button id="upgradeBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
           <button id="stageInstallBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
@@ -234,6 +233,7 @@
         <h2>Thanh sinh tồn đã cạn</h2>
         <p>Virus đã áp đảo khu vực. Hãy đổi chiến thuật và thử lại.</p>
         <button id="retryBtn" class="primary-btn">↻ CHƠI LẠI KHU NÀY</button>
+        <button id="gameOverLeaderboardRecordBtn" class="secondary-btn hidden">🏆 THAM GIA BẢNG XẾP HẠNG</button>
         <button id="gameOverHomeBtn" class="secondary-btn">⌂ Màn hình chính</button>
       </div>
     </section>
@@ -244,7 +244,7 @@
         <h2>🏆 HOÀN TẤT TOÀN BỘ TRUY QUÉT</h2>
         <p id="victoryText">Bạn đã tiêu diệt nguồn bệnh cuối cùng.</p>
         <button id="victoryReplayBtn" class="primary-btn">↻ CHƠI LẠI</button>
-        <button id="victoryLeaderboardRecordBtn" class="secondary-btn hidden">🏆 KỶ LỤC MỚI · GHI TÊN</button>
+        <button id="victoryLeaderboardRecordBtn" class="secondary-btn hidden">🏆 THAM GIA BẢNG XẾP HẠNG</button>
         <div class="f1-result-actions">
           <button id="victoryUpgradeBtn" class="secondary-btn hidden">⬆ NÂNG CẤP PHIÊN BẢN</button>
           <button id="victoryInstallBtn" class="secondary-btn hidden">📲 CÀI TRÒ CHƠI</button>
@@ -253,7 +253,7 @@
       </div>
     </section>
 
-    <div id="l1OrientationGate" class="l1-orientation-gate hidden"><div><b>↻ XOAY ĐIỆN THOẠI NGANG</b><span>Gameplay Q1 chạy ở chế độ ngang để ngắm và khóa mục tiêu chính xác.</span></div></div>
+    <div id="l1OrientationGate" class="l1-orientation-gate hidden"><div><b>↻ XOAY ĐIỆN THOẠI NGANG</b><span>Gameplay W1 chạy ở chế độ ngang để ngắm và khóa mục tiêu chính xác.</span></div></div>
 
     <section id="hud" class="hud hidden" aria-live="polite">
       <aside class="status-rail desktop-only" aria-label="Trạng thái chiến đấu">

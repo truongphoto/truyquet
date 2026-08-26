@@ -1,7 +1,7 @@
 {
   "name": "Bác Sĩ Truy Quét · TRƯỜNG GPP",
   "short_name": "BS Truy Quét",
-  "description": "Bác Sĩ Truy Quét v4.1.0 Q1 · code hợp nhất · NPC tốc độ cao và mật độ theo độ khó · vũ khí tiến hóa 8 cấp · GPP ULTIMATE · target lock ưu tiên NPC gần nhất · Drone tracer · Boss/NPC phản công · mobile landscape gameplay.",
+  "description": "Bác Sĩ Truy Quét v4.2.0 W1 · BXH chỉ ở cuối ván · NPC phản công có vệt đạn rõ và sát thương 0,5 · sa hình chỉ hiện bảng cảnh khi tương tác khu vực · kế thừa Q1/L1.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
