@@ -1,6 +1,9 @@
 (() => {
 'use strict';
 
+const L1_VERSION='4.0.0';
+const L1_BUILD='L1';
+
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const canvas = $('#gameCanvas');
@@ -66,17 +69,7 @@ let audioEnabled = true;
 let audioCtx = null;
 let masterGain = null, reverbSend = null, convolver = null, wetGain = null;
 
-function newState(stageIndex=0){
-  const cfg = STAGES[stageIndex];
-  return {
-    mode:'playing', stageIndex, cfg, difficulty: window.__difficulty || 'normal', health:10, maxHealth:10, score: stageIndex===0?0:(state?.score||0),
-    enemies:[], particles:[], tracers:[], hitMarkers:[], enemyShots:[], powerups:[], spawnLeft:cfg.quota, bossSpawned:false, bossDefeated:false, spawnTimer:.4,
-    contamination:100, kills:0, shots:0, hits:0, combo:0, comboTimer:0, weapon:0, lastFire:0, bombs:3, beam:100,
-    shield:0, drone:0, stageElapsed:0, transition:0, zoom:0, shake:0, toastTimer:0, nextPanel:false,
-    playerX:0, playerVX:0, moveLeft:false, moveRight:false, mobileMoveAxis:0, lastMoveDir:1,
-    dashCooldown:0, dashTimer:0, dashDir:0, dodgeTilt:0, recoil:0, muzzleFlash:0, dodgeMessage:0,
-  };
-}
+/* L1 consolidated: legacy newState implementation removed */
 
 function resize(){
   const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -167,100 +160,9 @@ function movementAxis(){
   return Math.max(-1,Math.min(1,Math.abs(state.mobileMoveAxis)>.04?state.mobileMoveAxis:keyboard));
 }
 
-function spawnEnemy(type, boss=false){
-  const base = ENEMY[type] || ENEMY.basic; const d=DIFF[state.difficulty];
-  const hp = (boss ? state.cfg.bossHp : base.hp) * d.enemyHp;
-  const side = Math.random() < .5 ? -1 : 1;
-  const x = boss ? .5 : .18 + Math.random()*.64;
-  state.enemies.push({
-    id:Math.random(), type, boss, name: boss?state.cfg.boss:null, x, baseX:x, depth:boss ? .68 : .90+Math.random()*.08, hp, maxHp:hp,
-    speed:(boss?.028:base.speed)*d.enemySpeed*(.9+Math.random()*.18), rad:boss?76:base.rad, color:boss?'#d65b86':base.color,
-    phase:Math.random()*6.28, wobble:Math.random()*2+1, attackTimer:boss?1.4:999, summon:boss?3.2:999,
-    flash:0, dead:false, side, base,
-  });
-  if(boss){ show(UI.bossBar); UI.bossName.textContent=state.cfg.boss; sfx.boss(); toast('⚠ BOSS ĐỘT BIẾN XUẤT HIỆN!',2); }
-}
+/* L1 consolidated: legacy spawnEnemy implementation removed */
 
-function update(dt){
-  if(!state||state.mode!=='playing')return;
-  const d=DIFF[state.difficulty]; state.stageElapsed+=dt;
-  if(state.transition>0){ state.transition+=dt; state.zoom=Math.min(1,state.transition/2.2); if(state.transition>2.15 && !state.nextPanel){state.nextPanel=true; stageCompletePanel();} return; }
-  state.zoom = Math.min(.13, state.stageElapsed*.0025);
-  if(state.shake>0) state.shake=Math.max(0,state.shake-dt);
-  state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);
-  const axis=movementAxis();
-  if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;
-  if(state.dashTimer>0){
-    state.playerVX=state.dashDir*2.55;
-  }else{
-    const accel=6.8,maxSpeed=1.12,friction=8.2;
-    if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;
-    else state.playerVX*=Math.max(0,1-friction*dt);
-    state.playerVX=Math.max(-maxSpeed,Math.min(maxSpeed,state.playerVX));
-  }
-  state.playerX+=state.playerVX*dt;
-  if(state.playerX<=-1){state.playerX=-1;if(state.playerVX<0)state.playerVX=0;}
-  if(state.playerX>=1){state.playerX=1;if(state.playerVX>0)state.playerVX=0;}
-  if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast)}
-  if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo()}}
-  if(state.shield>0)state.shield-=dt; if(state.drone>0)state.drone-=dt; state.beam=Math.min(100,state.beam+18*dt);
-
-  if(state.spawnLeft>0){
-    state.spawnTimer-=dt;
-    if(state.spawnTimer<=0){
-      const t=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0]; spawnEnemy(t,false); state.spawnLeft--; state.spawnTimer=state.cfg.spawn*d.spawn*(.72+Math.random()*.55);
-    }
-  } else if(!state.bossSpawned && state.enemies.length===0){ state.bossSpawned=true; spawnEnemy(state.stageIndex>=4?'elite':'breather',true); }
-
-  for(const e of state.enemies){
-    if(e.dead)continue; e.phase+=dt*(1.7+(e.base.pulse||0)); e.flash=Math.max(0,e.flash-dt*6);
-    const sway=(e.base.sway||.7) * Math.sin(e.phase*e.wobble) * .012;
-    e.x=e.baseX+sway;
-    if(!e.boss){
-      e.depth-=e.speed*dt*(e.base.charge && e.depth<.45?1.75:1);
-    } else {
-      e.depth=.66+Math.sin(e.phase*.45)*.018;
-      e.summon-=dt;
-      if(e.summon<=0){ e.summon=3.3; for(let i=0;i<Math.min(3, 1 + Math.floor(state.stageIndex / 2));i++) spawnEnemy(state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],false); }
-    }
-    if(e.boss){ e.attackTimer-=dt; if(e.attackTimer<=0){ fireEnemyShot(e); e.attackTimer=1.15/d.enemySpeed; } }
-    if(!e.boss && e.depth<=.08){
-      const sc=enemyScreen(e),hitRadius=Math.max(46,Math.min(100,sc.r*.72+innerWidth*.022));
-      if(Math.abs(playerScreenX()-sc.x)<hitRadius)damagePlayer(e.base.attack*d.damage);
-      else {state.score+=35;sfx.dodgeSuccess();toast('↔ NÉ ĐƯỢC VIRUS!',.55);}
-      e.dead=true;burstAt(sc.x,sc.y,e.color,8);
-    }
-  }
-  state.enemies=state.enemies.filter(e=>!e.dead);
-
-  for(const sh of state.enemyShots){
-    sh.t+=dt;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r+=18*dt;
-    if(sh.t>=sh.life){
-      const hitRadius=Math.max(42,Math.min(82,innerWidth*.052));
-      if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius)damagePlayer(sh.damage*d.damage);
-      else {state.score+=20;sfx.dodgeSuccess();toast('↔ NÉ ĐÒN ĐỘC!',.55);}
-      sh.dead=true;
-    }
-  }
-  state.enemyShots=state.enemyShots.filter(s=>!s.dead);
-
-  for(const p of state.particles){ p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max); }
-  state.particles=state.particles.filter(p=>p.life>0);
-
-  for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;} state.tracers=state.tracers.filter(tr=>tr.life>0);
-  for(const hm of state.hitMarkers){hm.life-=dt;} state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);
-
-  for(const p of state.powerups){ p.t+=dt;p.y+=Math.sin(p.t*3)*.15; p.life-=dt;if(p.life<=0)p.dead=true; }
-  state.powerups=state.powerups.filter(p=>!p.dead);
-
-  if(state.drone>0 && state.enemies.length){
-    state._droneTimer=(state._droneTimer||0)-dt;
-    if(state._droneTimer<=0){state._droneTimer=.42;const target=state.enemies.find(e=>!e.dead);if(target){hitEnemy(target,.75,false,true);}}
-  }
-
-  if(state.bossSpawned && !state.bossDefeated && !state.enemies.some(e=>e.boss) && state.spawnLeft<=0){ state.bossDefeated=true; beginStageClear(); }
-  updateHUD();
-}
+/* L1 consolidated: legacy update implementation removed */
 
 function fireEnemyShot(e){
   const s=enemyScreen(e),targetPlayerX=state.playerX,tx=playerScreenX(targetPlayerX),ty=innerHeight*.78;
@@ -288,24 +190,7 @@ function enemyScreen(e){
   const spread=.28+.72*prog;const v=gameplayViewport();const x=v.center+(e.x-.5)*v.width*spread*1.52;const scale=.38+prog*1.25;return {x,y,scale,r:e.rad*scale*(e.boss?1.1:1)};
 }
 
-function aimHit(x,y,weapon){
-  const candidates=[];
-  for(const e of state.enemies){ const sc=enemyScreen(e); const dist=Math.hypot(x-sc.x,y-sc.y); if(dist<sc.r*1.15)candidates.push({e,s:sc,dist}); }
-  candidates.sort((a,b)=>a.dist-b.dist);
-  if(weapon.kind==='spray'){
-    let hit=false,target=null; for(const e of state.enemies){const sc=enemyScreen(e);const dist=Math.hypot(x-sc.x,y-sc.y);if(dist<145 && e.depth<.62){hitEnemy(e,weapon.damage*(1.15-e.depth*.35),true,false,false);hit=true;target=target||sc;}}
-    return {hit,x:target?.x||x,y:target?.y||y,crit:false};
-  }
-  if(weapon.kind==='bomb'){ explode(x,y,weapon.damage); return {hit:true,x,y,crit:false}; }
-  if(weapon.kind==='beam'){
-    if(candidates[0]){const c=candidates[0];const crit=c.dist<c.s.r*.30;hitEnemy(c.e,weapon.damage*(crit?1.35:1),true,false,crit);return {hit:true,x:c.s.x,y:c.s.y,crit};}return {hit:false,x,y,crit:false};
-  }
-  if(weapon.kind==='pierce'){
-    if(!candidates.length)return {hit:false,x,y,crit:false}; let hit=false,crit=false; for(const c of candidates.slice(0,2)){const cc=c.dist<c.s.r*.32||!!c.e.base.core;hitEnemy(c.e,weapon.damage*(cc?1.35:1),true,false,cc);hit=true;crit=crit||cc;} const c=candidates[0];return {hit,x:c.s.x,y:c.s.y,crit};
-  }
-  if(candidates[0]){ const c=candidates[0],crit=c.dist<c.s.r*.35; hitEnemy(c.e,weapon.damage*(crit?1.6:1),true,false,crit); if(crit)toast('🎯 CORE HIT!',.7); return {hit:true,x:c.s.x,y:c.s.y,crit}; }
-  return {hit:false,x,y,crit:false};
-}
+/* L1 consolidated: legacy aimHit implementation removed */
 
 function getMuzzlePoint(){
   const w=innerWidth,h=innerHeight,pv=gameplayViewport(),nx=Math.max(-1,Math.min(1,((pointer.x-pv.left)/pv.width-.5)*2));
@@ -319,28 +204,11 @@ function addTracer(kind,x,y){
   const q=specs[kind]||specs.shot;
   state.tracers.push({x1:m.x,y1:m.y,x2:x,y2:y,t:0,life:q[0],max:q[0],travel:q[1],color:q[2],width:q[3],kind,seed:Math.random()*99});
 }
-function shoot(x,y){
-  if(!state||state.mode!=='playing')return; const now=performance.now(); const w=WEAPONS[state.weapon]; if(now-state.lastFire<w.cooldown)return;
-  if(w.kind==='bomb' && state.bombs<=0){toast('Bom vitamin đã hết',.9);return;} if(w.kind==='beam' && state.beam<5){toast('Tia miễn dịch đang hồi',.8);return;}
-  state.lastFire=now; state.shots++; if(w.kind==='bomb')state.bombs--; if(w.kind==='beam')state.beam=Math.max(0,state.beam-4.5);
-  state.recoil=Math.min(1,state.recoil+(w.kind==='bomb'?.85:w.kind==='pierce'?.62:w.kind==='beam'?.20:w.kind==='spray'?.16:.36));state.muzzleFlash=1;sfx.weapon(w.kind,x);
-  const result=aimHit(x,y,w); if(result.hit)state.hits++; addTracer(w.kind,result.x,result.y); const m=getMuzzlePoint();muzzleBurst(m.x,m.y,w.kind);
-}
+/* L1 consolidated: legacy shoot implementation removed */
 
-function hitEnemy(e,damage,countHit=true,drone=false,crit=false){
-  if(e.dead)return; let dmg=damage; if(e.base.shield && e.hp>e.maxHp*.45)dmg*=.62; e.hp-=dmg; e.flash=1; const s=enemyScreen(e); burstAt(s.x,s.y,e.color,drone?3:(crit?9:5)); state.hitMarkers.push({x:s.x,y:s.y,life:crit?.28:.18,max:crit?.28:.18,crit}); sfx.hit(s.x); if(crit)sfx.crit(s.x);
-  if(e.boss){ UI.bossFill.style.width=Math.max(0,e.hp/e.maxHp*100)+'%'; UI.bossHp.textContent=Math.max(0,Math.ceil(e.hp/e.maxHp*100))+'%'; }
-  if(e.hp<=0){
-    e.dead=true; sfx.kill(s.x); state.kills++; state.score+=e.boss?2500:e.base.score; state.contamination=Math.max(0,state.contamination-(e.boss?20:80/state.cfg.quota)); state.combo++; state.comboTimer=1.8; setCombo(); burstAt(s.x,s.y,e.color,e.boss?32:12);
-    if(e.base.cluster&&!e.boss){ for(let i=0;i<2;i++) spawnMini(s.x,s.y); }
-    if(!e.boss && Math.random()<.09)spawnPowerup(s.x,s.y);
-    if(e.boss){ state.enemies.forEach(other=>{ if(other!==e && !other.boss) other.dead=true; }); hide(UI.bossBar); toast('💥 BOSS ĐÃ BỊ KHỬ NHIỄM!',1.8) }
-  }
-}
+/* L1 consolidated: legacy hitEnemy implementation removed */
 
-function spawnMini(px,py){
-  const e={id:Math.random(),type:'spore',boss:false,name:null,x:.35+Math.random()*.3,baseX:.35+Math.random()*.3,depth:.38+Math.random()*.1,hp:1.1,maxHp:1.1,speed:.15,rad:15,color:'#d9e889',phase:Math.random()*6.28,wobble:2,attackTimer:999,summon:999,flash:0,dead:false,side:1,base:ENEMY.spore}; state.enemies.push(e);
-}
+/* L1 consolidated: legacy spawnMini implementation removed */
 
 function explode(x,y,damage){
   for(const e of state.enemies){const s=enemyScreen(e);const dist=Math.hypot(x-s.x,y-s.y);if(dist<220)hitEnemy(e,damage*(1-dist/300),true);} burstAt(x,y,'#ffd66b',35); toast('🟠 BOM VITAMIN KHỬ NHIỄM!',1.1);
@@ -349,13 +217,9 @@ function muzzleBurst(x,y,kind){ const c=kind==='beam'?'#b7ffff':kind==='bomb'?'#
 function burstAt(x,y,color,count=8){ for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,sp=25+Math.random()*100;state.particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:.35+Math.random()*.45,max:.8,a:1,size:2+Math.random()*4,color});}}
 
 function spawnPowerup(x,y){ const kinds=['heal','shield','drone','heal','shield','drone','gpp']; const kind=kinds[(Math.random()*kinds.length)|0]; state.powerups.push({x,y,kind,t:0,life:6,dead:false}); }
-function collectPowerups(x,y){ for(const p of state.powerups){ if(Math.hypot(x-p.x,y-p.y)<40){p.dead=true;if(p.kind==='heal'){state.health=Math.min(10,state.health+2);toast('❤️ +2 sinh tồn',1.1);sfx.power()}if(p.kind==='shield'){state.shield=5;toast('🛡 Khiên khử nhiễm 5s',1.1);sfx.power()}if(p.kind==='drone'){state.drone=9;toast('🤖 Drone y tế hỗ trợ',1.1);sfx.power()}if(p.kind==='gpp'){state.health=Math.min(10,state.health+1);state.contamination=Math.max(0,state.contamination-6);for(const e of [...state.enemies])if(!e.boss)hitEnemy(e,1.45,false,true,false);toast('✨ TRƯỜNG GPP BOOST · QUÉT SẠCH!',1.5);sfx.gpp()}updateHUD();return true;}} return false; }
+/* L1 consolidated: legacy collectPowerups implementation removed */
 
-function updateHUD(){
-  if(!state)return; UI.healthText.textContent=`${Math.max(0,state.health).toFixed(state.health%1?1:0)}/10`; UI.healthFill.style.width=(state.health/state.maxHealth*100)+'%';
-  const clean=Math.round(Math.max(0,100-state.contamination)); UI.stageName.textContent=state.cfg.name; UI.cleanText.textContent=`KHỬ NHIỄM ${clean}%`; UI.cleanFill.style.width=clean+'%'; UI.score.textContent=state.score.toLocaleString('vi-VN'); UI.enemy.textContent=`Virus: ${state.enemies.length+state.spawnLeft}`;
-  const w=WEAPONS[state.weapon]; UI.weaponIcon.textContent=w.icon; UI.weaponName.textContent=w.name; UI.weaponStatus.textContent=w.kind==='bomb'?`${state.bombs} quả còn lại`:w.kind==='beam'?`Năng lượng ${Math.round(state.beam)}%`:state.shield>0?`🛡 Khiên ${state.shield.toFixed(1)}s`:w.status;
-}
+/* L1 consolidated: legacy updateHUD implementation removed */
 function updateWeaponUI(){ $$('#weaponButtons button').forEach((b,i)=>b.classList.toggle('active',i===state.weapon)); updateHUD(); }
 function selectWeapon(i){ if(!state)return; state.weapon=Math.max(0,Math.min(WEAPONS.length-1,i)); updateWeaponUI(); toast(`${WEAPONS[state.weapon].icon} ${WEAPONS[state.weapon].name}`,.75); }
 
@@ -457,7 +321,7 @@ function drawTracers(){
 function drawHitMarkers(){for(const hm of state.hitMarkers){const a=Math.max(0,hm.life/hm.max),r=hm.crit?18:12;ctx.save();ctx.translate(hm.x,hm.y);ctx.globalAlpha=a;ctx.strokeStyle=hm.crit?'#fff07a':'#eaffff';ctx.lineWidth=hm.crit?2.4:1.6;for(let i=0;i<4;i++){const ang=Math.PI/4+i*Math.PI/2;ctx.beginPath();ctx.moveTo(Math.cos(ang)*r*.45,Math.sin(ang)*r*.45);ctx.lineTo(Math.cos(ang)*r,Math.sin(ang)*r);ctx.stroke();}if(hm.crit){ctx.font='900 10px system-ui';ctx.fillStyle='#fff07a';ctx.textAlign='center';ctx.fillText('CORE',0,-20);}ctx.restore();}}
 function drawEnemyShots(){ for(const s of state.enemyShots){ctx.save();const g=ctx.createRadialGradient(s.x,s.y,1,s.x,s.y,s.r*2.2);g.addColorStop(0,'#ffffff');g.addColorStop(.2,s.color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(s.x,s.y,s.r*2.2,0,Math.PI*2);ctx.fill();ctx.restore();}}
 function drawParticles(){ for(const p of state.particles){ctx.globalAlpha=p.a;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1; }
-function drawPowerups(){ for(const p of state.powerups){ctx.save();ctx.translate(p.x,p.y);const sc=1+Math.sin(p.t*4)*.08;ctx.scale(sc,sc);ctx.fillStyle=p.kind==='gpp'?'rgba(255,255,255,.94)':'rgba(5,58,63,.78)';ctx.strokeStyle=p.kind==='gpp'?'rgba(255,214,107,.95)':'rgba(196,255,248,.75)';ctx.lineWidth=p.kind==='gpp'?3:2;ctx.beginPath();ctx.arc(0,0,p.kind==='gpp'?29:25,0,Math.PI*2);ctx.fill();ctx.stroke();if(p.kind==='gpp'&&logoIcon.complete){ctx.save();ctx.beginPath();ctx.arc(0,0,23,0,Math.PI*2);ctx.clip();ctx.drawImage(logoIcon,-23,-23,46,46);ctx.restore();}else{ctx.font='25px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='white';ctx.fillText(p.kind==='heal'?'❤️':p.kind==='shield'?'🛡':'🤖',0,1);}ctx.restore();}}
+/* L1 consolidated: legacy drawPowerups implementation removed */
 function drawDrone(t){ if(!state||state.drone<=0)return;const x=Math.max(34,Math.min(innerWidth-34,playerScreenX()-innerWidth*.115+Math.sin(t*.004)*16)),y=innerHeight*.66+Math.sin(t*.006)*9;ctx.save();ctx.translate(x,y);ctx.fillStyle='#d8fffb';ctx.strokeStyle='#157a81';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-25,-13,50,26,9);ctx.fill();ctx.stroke();ctx.fillStyle='#4ed8d2';ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(178,255,250,.7)';ctx.beginPath();ctx.moveTo(-31,-15);ctx.lineTo(-48,-23);ctx.moveTo(31,-15);ctx.lineTo(48,-23);ctx.stroke();ctx.restore();}
 
 
@@ -495,18 +359,7 @@ function sourceXFor(type){
   return clamp(sources[(Math.random()*sources.length)|0]+(Math.random()-.5)*.035,.07,.93);
 }
 
-spawnEnemy = function(type,boss=false){
-  const base=ENEMY[type]||ENEMY.basic,d=DIFF[state.difficulty],style=BOSS_STYLE[state.stageIndex];
-  const hp=(boss?state.cfg.bossHp*d.bossHp:base.hp*d.enemyHp);
-  const x=boss?.5:sourceXFor(type), side=x<.5?-1:1;
-  const e={id:Math.random(),type,boss,name:boss?state.cfg.boss:null,bossKind:boss?state.cfg.bossKind:null,x,baseX:x,depth:boss?.70:.92+Math.random()*.07,hp,maxHp:hp,
-    speed:(boss?.026:base.speed)*d.enemySpeed*(.91+Math.random()*.16),rad:boss?style.rad:base.rad,color:boss?style.color:base.color,
-    accent:boss?style.accent:null,shotColor:boss?style.shot:null,phase:Math.random()*6.28,wobble:Math.random()*1.8+1,attackTimer:boss?1.55:999,summon:boss?3.8:999,
-    flash:0,dead:false,side,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28};
-  state.enemies.push(e);
-  if(boss){state.bossIntro=2.05;state.enemyShots.length=0;show(UI.bossBar);UI.bossName.textContent=state.cfg.boss;sfx.boss();toast(`⚠ ${state.cfg.boss}`,2);}
-  return e;
-};
+/* L1 consolidated: legacy spawnEnemy implementation removed */
 
 function fireBossShot(e,targetOffset=0,damage=1.2,color=e.shotColor,speed=145,size=8){
   const s=enemyScreen(e),targetPlayerX=clamp(state.playerX+targetOffset,-1,1),tx=playerScreenX(targetPlayerX),ty=innerHeight*.78;
@@ -543,41 +396,11 @@ function updateBoss(e,dt,d){
   e.attackTimer-=dt;if(e.attackTimer<=0)bossAttack(e,phase,d);
 }
 
-update = function(dt){
-  if(!state||state.mode!=='playing')return;const d=DIFF[state.difficulty];state.stageElapsed+=dt;
-  if(!state.v13Init){state.v13Init=true;state.spawnLeft=Math.max(10,Math.round(state.cfg.quota*d.quota));state.contamination=100;}
-  if(state.transition>0){state.transition+=dt;state.zoom=Math.min(1,state.transition/2.2);if(state.transition>2.15&&!state.nextPanel){state.nextPanel=true;stageCompletePanel();}return;}
-  state.zoom=Math.min(.13,state.stageElapsed*.0025);if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.bossIntro>0)state.bossIntro=Math.max(0,state.bossIntro-dt);
-  state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);
-  const axis=movementAxis();if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;
-  if(state.dashTimer>0)state.playerVX=state.dashDir*2.55;else{const accel=6.8,maxSpeed=1.12,friction=8.2;if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;else state.playerVX*=Math.max(0,1-friction*dt);state.playerVX=clamp(state.playerVX,-maxSpeed,maxSpeed);}
-  state.playerX=clamp(state.playerX+state.playerVX*dt,-1,1);if(Math.abs(state.playerX)>=1&&Math.sign(state.playerVX)===Math.sign(state.playerX))state.playerVX=0;
-  if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast)}if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo()}}
-  if(state.shield>0)state.shield-=dt;if(state.drone>0)state.drone-=dt;state.beam=Math.min(100,state.beam+18*dt);
-  if(state.spawnLeft>0){state.spawnTimer-=dt;if(state.spawnTimer<=0){const t=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0];spawnEnemy(t,false);state.spawnLeft--;state.spawnTimer=state.cfg.spawn*d.spawn*(.74+Math.random()*.52);}}
-  else if(!state.bossSpawned&&state.enemies.length===0){state.bossSpawned=true;spawnEnemy(state.cfg.mix[0],true);}
-  for(const e of state.enemies){if(e.dead)continue;if(e.boss){updateBoss(e,dt,d);continue;}e.phase+=dt*(1.7+(e.base.pulse||0));e.flash=Math.max(0,e.flash-dt*6);
-    const swayFactor=e.type==='flagella'?1.8:e.type==='spitter'?2.2:e.base.sway||.7;const sway=swayFactor*Math.sin(e.phase*e.wobble)*.012;e.x=clamp(e.baseX+sway,.04,.96);
-    let motion=1;if(e.type==='breather')motion=.72+.42*(.5+.5*Math.sin(e.phase*1.7));if(e.base.charge&&e.depth<.46)motion=1.85;if(e.base.fly)motion*=1.06;e.depth-=e.speed*dt*motion;
-    if(e.depth<=.08){const sc=enemyScreen(e),hitRadius=Math.max(46,Math.min(100,sc.r*.72+innerWidth*.022));if(Math.abs(playerScreenX()-sc.x)<hitRadius)damagePlayer(e.base.attack*d.damage);else{state.score+=35;sfx.dodgeSuccess();toast('↔ NÉ ĐƯỢC VIRUS!',.55);}e.dead=true;burstAt(sc.x,sc.y,e.color,8);}
-  }
-  state.enemies=state.enemies.filter(e=>!e.dead);
-  // ONLY boss projectiles exist in v1.3.
-  for(const sh of state.enemyShots){sh.t+=dt;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r+=18*dt;if(sh.t>=sh.life){const hitRadius=Math.max(42,Math.min(82,innerWidth*.052));if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius)damagePlayer(sh.damage*d.damage);else{state.score+=20;sfx.dodgeSuccess();toast('↔ NÉ ĐÒN BOSS!',.5);}sh.dead=true;}}
-  state.enemyShots=state.enemyShots.filter(s=>!s.dead);
-  for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max);}state.particles=state.particles.filter(p=>p.life>0);
-  for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);
-  for(const p of state.powerups){p.t+=dt;p.y+=Math.sin(p.t*3)*.15;p.life-=dt;if(p.life<=0)p.dead=true;}state.powerups=state.powerups.filter(p=>!p.dead);
-  if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.42;const target=state.enemies.find(e=>!e.dead);if(target)hitEnemy(target,.75,false,true);}}
-  if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)&&state.spawnLeft<=0){state.bossDefeated=true;beginStageClear();}updateHUD();
-};
+/* L1 consolidated: legacy update implementation removed */
 
 // Boss armor is behavior based, not inflated HP.
 const oldHitEnemyV13=hitEnemy;
-hitEnemy = function(e,damage,countHit=true,drone=false,crit=false){
-  if(e?.boss&&e.bossKind===3&&e.guard>0&&!crit)damage*=.42; // resistant boss guard window
-  return oldHitEnemyV13(e,damage,countHit,drone,crit);
-};
+/* L1 consolidated: legacy hitEnemy implementation removed */
 
 const ENV={
   lab:{sky:'#d9f5f5',wall:'#c5e4e5',floor:'#a7c4c6',accent:'#32a9b7',dark:'#1d6670'},
@@ -639,10 +462,10 @@ function drawBoss(e,t){
 const drawEnemyV12=drawEnemy;
 drawEnemy = function(e,t){if(e.boss){drawBoss(e,t);return;}drawEnemyV12(e,t);};
 const updateHUDV12=updateHUD;
-updateHUD = function(){updateHUDV12();if(state&&UI.stageName)UI.stageName.textContent=`${state.cfg.name} · ${DIFF[state.difficulty].label}`;if(state&&UI.diffBadge)UI.diffBadge.textContent=`${DIFF[state.difficulty].label} · ${state.difficulty==='easy'?'THƯ GIÃN':state.difficulty==='hard'?'THỬ THÁCH':'CÂN BẰNG'}`;};
+/* L1 consolidated: legacy updateHUD implementation removed */
 function drawBossIntro(){if(!state?.bossIntro||state.bossIntro<=0)return;const a=Math.min(1,state.bossIntro/.45, (2.05-state.bossIntro)/.3);ctx.save();ctx.globalAlpha=clamp(a,0,1);ctx.fillStyle='rgba(3,20,24,.66)';ctx.fillRect(0,innerHeight*.39,innerWidth,innerHeight*.22);ctx.textAlign='center';ctx.fillStyle='#ffdd79';ctx.font=`900 ${Math.max(13,Math.min(22,innerWidth*.018))}px system-ui`;ctx.fillText('⚠ BOSS CUỐI MÀN',innerWidth/2,innerHeight*.455);ctx.fillStyle='white';ctx.font=`900 ${Math.max(24,Math.min(46,innerWidth*.042))}px system-ui`;ctx.fillText(state.cfg.boss,innerWidth/2,innerHeight*.525);ctx.fillStyle='#bcece7';ctx.font='800 12px system-ui';ctx.fillText('BẮN VÀO LÕI SÁNG · DI CHUYỂN NGANG ĐỂ NÉ ĐÒN',innerWidth/2,innerHeight*.57);ctx.restore();}
 
-function render(t){ drawBackground(t); if(state){ const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth); for(const e of sorted)drawEnemy(e,t); drawEnemyShots(); drawTracers(); drawPowerups(); drawParticles(); drawHitMarkers(); drawDrone(t); drawPlayerShadow(t); drawWeapon(t); drawCrosshair(); drawBossIntro(); if(state.transition>0){const a=Math.min(.55,state.transition/2.3*.55);ctx.fillStyle=`rgba(225,255,249,${a})`;ctx.fillRect(0,0,innerWidth,innerHeight);} } }
+/* L1 consolidated: legacy render implementation removed */
 
 function loop(now){ const dt=Math.min(.04,(now-last)/1000||.016);last=now;if(state?.mode==='playing')update(dt);render(now);raf=requestAnimationFrame(loop); }
 function drawAttract(){ drawBackground(performance.now()); }
@@ -650,7 +473,7 @@ bg.onload=drawAttract;
 
 function pointerPos(ev){ const r=canvas.getBoundingClientRect(); const t=ev.touches?.[0]||ev.changedTouches?.[0]||ev; return {x:(t.clientX-r.left),y:(t.clientY-r.top)}; }
 canvas.addEventListener('pointermove',e=>{pointer=Object.assign(pointer,pointerPos(e));if(pointer.down && state?.mode==='playing' && [2,4].includes(state.weapon)){shoot(pointer.x,pointer.y)}});
-canvas.addEventListener('pointerdown',e=>{e.preventDefault();const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;pointer.down=true;weaponPressStarted=performance.now();weaponSingleFlashUntil=weaponPressStarted+190;ensureAudio();if(collectPowerups(p.x,p.y))return;shoot(p.x,p.y)});
+/* L1 consolidated: legacy canvas pointerdown removed */
 addEventListener('pointerup',()=>{pointer.down=false;weaponSingleFlashUntil=performance.now()+500;});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 const lastTap={left:0,right:0};
@@ -711,14 +534,8 @@ const SUPPORT_ITEMS={
 };
 const SUPPORT_ORDER=['drone','shield','adrenaline','vaccine','sterile','gpp'];
 
-const newStateV210Base=newState;
-newState=function(stageIndex=0){
-  const s=newStateV210Base(stageIndex),d=DIFF[s.difficulty];
-  Object.assign(s,{rewardNpcs:[],rewardNpcTimer:5.5+Math.random()*2.5,rewardNpcCount:0,rewardNpcMax:d.rewardMax||3,
-    adrenaline:0,vaccine:0,sterile:0,gppBoost:0,cleanMinorKills:0,environmentClean:0,bossCleanse:0,cleanSparkle:0,
-    _supportHudKey:'',_rewardSerial:0});
-  return s;
-};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 function supportExtend(field,amount,cap){state[field]=Math.min(cap,Math.max(0,state[field]||0)+amount);}
 function chooseRewardKind(){
@@ -745,7 +562,7 @@ function spawnRewardNpc(){
   state.rewardNpcCount++;
   toast(kind==='gpp'?'✨ SUPPLY GPP HIẾM XUẤT HIỆN!':'🎁 SUPPLY TARGET!',.9);sfx.power();
 }
-function dropSpecificPowerup(kind,x,y){state.powerups.push({x,y,kind,t:0,life:7.5,dead:false,beam:1});}
+/* L1 consolidated: legacy dropSpecificPowerup implementation removed */
 function hitRewardNpc(n,damage){
   if(!n||n.dead)return;n.hp-=damage;const s=rewardNpcScreen(n);burstAt(s.x,s.y,n.kind==='gpp'?'#ffd866':'#70eee2',5);sfx.hit(s.x);
   if(n.hp<=0){n.dead=true;dropSpecificPowerup(n.kind,s.x,s.y+16);state.score+=n.kind==='gpp'?600:220;sfx.kill(s.x);toast(`🎁 ${n.kind==='gpp'?'TRƯỜNG GPP BOOST':'VẬT PHẨM'} ĐÃ RƠI`,.8);}
@@ -766,61 +583,18 @@ function drawRewardNpc(n,t){
 }
 
 // Aim system prioritizes the exact object under the crosshair, including distinct reward NPCs.
-aimHit=function(x,y,weapon){
-  const rewardCandidates=state.rewardNpcs.filter(n=>!n.dead).map(n=>{const s=rewardNpcScreen(n);return{n,s,dist:Math.hypot(x-s.x,y-s.y)}}).filter(c=>c.dist<c.s.r*1.35).sort((a,b)=>a.dist-b.dist);
-  const candidates=[];for(const e of state.enemies){const sc=enemyScreen(e),dist=Math.hypot(x-sc.x,y-sc.y);if(dist<sc.r*1.15)candidates.push({e,s:sc,dist});}candidates.sort((a,b)=>a.dist-b.dist);
-  if(weapon.kind==='spray'){
-    let hit=false,target=null;for(const c of rewardCandidates){if(c.dist<145){hitRewardNpc(c.n,weapon.damage*1.2);hit=true;target=target||c.s;}}
-    for(const e of state.enemies){const sc=enemyScreen(e),dist=Math.hypot(x-sc.x,y-sc.y);if(dist<145&&e.depth<.62){hitEnemy(e,weapon.damage*(1.15-e.depth*.35),true,false,false);hit=true;target=target||sc;}}
-    return{hit,x:target?.x||x,y:target?.y||y,crit:false};
-  }
-  if(weapon.kind==='bomb'){explode(x,y,weapon.damage);for(const c of state.rewardNpcs.filter(n=>!n.dead).map(n=>({n,s:rewardNpcScreen(n)}))){if(Math.hypot(x-c.s.x,y-c.s.y)<220)hitRewardNpc(c.n,weapon.damage*.7);}return{hit:true,x,y,crit:false};}
-  const reward=rewardCandidates[0],enemy=candidates[0];if(reward && (!enemy||reward.dist<=enemy.dist)){hitRewardNpc(reward.n,weapon.damage*(weapon.kind==='pierce'?1.25:1));return{hit:true,x:reward.s.x,y:reward.s.y,crit:false};}
-  if(weapon.kind==='beam'){if(enemy){const crit=enemy.dist<enemy.s.r*.30;hitEnemy(enemy.e,weapon.damage*(crit?1.35:1),true,false,crit);return{hit:true,x:enemy.s.x,y:enemy.s.y,crit};}return{hit:false,x,y,crit:false};}
-  if(weapon.kind==='pierce'){if(!candidates.length)return{hit:false,x,y,crit:false};let hit=false,crit=false;for(const c of candidates.slice(0,2)){const cc=c.dist<c.s.r*.32||!!c.e.base.core;hitEnemy(c.e,weapon.damage*(cc?1.35:1),true,false,cc);hit=true;crit=crit||cc;}return{hit,x:enemy.s.x,y:enemy.s.y,crit};}
-  if(enemy){const crit=enemy.dist<enemy.s.r*.35;hitEnemy(enemy.e,weapon.damage*(crit?1.6:1),true,false,crit);if(crit)toast('🎯 CORE HIT!',.7);return{hit:true,x:enemy.s.x,y:enemy.s.y,crit};}
-  return{hit:false,x,y,crit:false};
-};
+/* L1 consolidated: legacy aimHit implementation removed */
 
-const shootV210Base=shoot;
-shoot=function(x,y){
-  if(!state||state.mode!=='playing')return;const now=performance.now(),w=WEAPONS[state.weapon];let rate=1;if(state.adrenaline>0)rate*=.70;if(state.gppBoost>0)rate*=.86;
-  if(now-state.lastFire<w.cooldown*rate)return;
-  if(w.kind==='bomb'&&state.bombs<=0){toast('Bom vitamin đã hết',.9);return;}if(w.kind==='beam'&&state.beam<5){toast('Tia miễn dịch đang hồi',.8);return;}
-  state.lastFire=now;state.shots++;if(w.kind==='bomb')state.bombs--;if(w.kind==='beam')state.beam=Math.max(0,state.beam-4.5);
-  state.recoil=Math.min(1,state.recoil+(w.kind==='bomb'?.85:w.kind==='pierce'?.62:w.kind==='beam'?.20:w.kind==='spray'?.16:.36));state.muzzleFlash=1;sfx.weapon(w.kind,x);
-  const result=aimHit(x,y,w);if(result.hit)state.hits++;addTracer(w.kind,result.x,result.y);const m=getMuzzlePoint();muzzleBurst(m.x,m.y,w.kind);
-};
 
-const hitEnemyV210Base=hitEnemy;
-hitEnemy=function(e,damage,countHit=true,drone=false,crit=false){
-  if(!e||e.dead)return;let mult=1;if(state?.vaccine>0)mult*=1.38;if(state?.gppBoost>0)mult*=1.45;if(drone&&e.boss)mult*=.40;
-  const wasDead=e.dead,wasBoss=e.boss,counts=!!e.countsForClean,oldScore=state.score;
-  hitEnemyV210Base(e,damage*mult,countHit,drone,crit);
-  if(!wasDead&&e.dead){
-    if(counts&&!wasBoss){state.cleanMinorKills++;const total=Math.max(1,state._minorCleanTarget||state.cfg.quota);state.environmentClean=Math.min(50,state.cleanMinorKills/total*50);}
-    if(wasBoss){state.environmentClean=50;state.bossCleanse=0;state.cleanSparkle=0;}
-    // The legacy random-drop/80% clean logic is overridden: visual + HUD clean state is authoritative here.
-    state.contamination=100-state.environmentClean;
-    if(state.gppBoost>0&&state.score>oldScore){state.score+=Math.round((state.score-oldScore)*.50);}
-  }
-};
+/* L1 consolidated: legacy shoot implementation removed */
+
+
+/* L1 consolidated: legacy hitEnemy implementation removed */
 // All support items now come from distinct SUPPLY NPCs; ordinary viruses never randomly drop items.
 spawnPowerup=function(){};
 
 // Guaranteed item application. Timed effects extend but are capped to preserve balance.
-collectPowerups=function(x,y){
-  for(const p of state.powerups){if(p.dead||Math.hypot(x-p.x,y-p.y)>=42)continue;p.dead=true;
-    if(p.kind==='heal'){state.health=Math.min(10,state.health+2);toast('❤️ +2 SINH TỒN',1);sfx.power();}
-    else if(p.kind==='shield'){supportExtend('shield',6,10);toast('🛡 KHIÊN KHỬ NHIỄM · 6s',1);sfx.power();}
-    else if(p.kind==='drone'){supportExtend('drone',10,15);toast('🤖 DRONE Y TẾ · 10s',1);sfx.power();}
-    else if(p.kind==='adrenaline'){supportExtend('adrenaline',5,8);toast('💉 ADRENALINE · 5s',1);sfx.power();}
-    else if(p.kind==='vaccine'){supportExtend('vaccine',7,11);toast('🧬 VACCINE BOOST · 7s',1);sfx.power();}
-    else if(p.kind==='sterile'){supportExtend('sterile',6,10);toast('🧴 STERILE FIELD · 6s',1);sfx.power();}
-    else if(p.kind==='gpp'){supportExtend('gppBoost',8,12);state.health=Math.min(10,state.health+1);toast('✨ TRƯỜNG GPP BOOST · 8s',1.35);sfx.gpp();}
-    updateHUD();return true;
-  }return false;
-};
+/* L1 consolidated: legacy collectPowerups implementation removed */
 
 function supportActive(){return SUPPORT_ORDER.map(k=>({k,m:SUPPORT_ITEMS[k],left:state?.[SUPPORT_ITEMS[k].field]||0})).filter(x=>x.left>0);}
 function updateSupportUI(){
@@ -829,11 +603,8 @@ function updateSupportUI(){
   if(UI.mobileSupportStrip){UI.mobileSupportStrip.innerHTML=active.slice(0,4).map(({m,left})=>`<span class="mobile-support-chip${left<2?' expiring':''}">${m.icon} ${left.toFixed(0)}s</span>`).join('');}
 }
 
-const updateHUDV210Base=updateHUD;
-updateHUD=function(){
-  updateHUDV210Base();if(!state)return;const clean=Math.round(state.environmentClean||0);UI.cleanText.textContent=`KHỬ NHIỄM ${clean}%`;UI.cleanFill.style.width=clean+'%';
-  UI.enemy.textContent=`Virus: ${state.enemies.length+state.spawnLeft}`;updateSupportUI();
-};
+
+/* L1 consolidated: legacy updateHUD implementation removed */
 
 // Stable, deterministic pollution layer cache for good mobile performance.
 let infectionCache={stage:-1,w:0,h:0,canvas:null};
@@ -869,37 +640,16 @@ drawBackground=function(t){
 };
 
 // Power-ups have a clean vertical beam so the dropped item is readable over every supplied background.
-drawPowerups=function(){for(const p of state.powerups){ctx.save();ctx.translate(p.x,p.y);const sc=1+Math.sin(p.t*4)*.08;ctx.scale(sc,sc);const m=SUPPORT_ITEMS[p.kind],isGpp=p.kind==='gpp',col=isGpp?'#ffd866':m?.color||'#68eee0';ctx.globalAlpha=.22;const beam=ctx.createLinearGradient(0,-92,0,20);beam.addColorStop(0,'rgba(255,255,255,0)');beam.addColorStop(.55,col+'88');beam.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=beam;ctx.fillRect(-8,-92,16,112);ctx.globalAlpha=1;ctx.fillStyle=isGpp?'rgba(255,255,255,.95)':'rgba(5,58,63,.88)';ctx.strokeStyle=col;ctx.lineWidth=isGpp?3:2;ctx.shadowColor=col;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(0,0,isGpp?29:25,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(isGpp&&logoIcon.complete){ctx.save();ctx.beginPath();ctx.arc(0,0,23,0,Math.PI*2);ctx.clip();ctx.drawImage(logoIcon,-23,-23,46,46);ctx.restore();}else{ctx.font='24px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='white';ctx.fillText(p.kind==='heal'?'❤️':m?.icon||'🎁',0,1);}ctx.restore();}};
+/* L1 consolidated: legacy drawPowerups implementation removed */
 
 // Minor enemies remain melee/movement threats only. Bosses alone use enemyShots.
-update=function(dt){
-  if(!state||state.mode!=='playing')return;const d=DIFF[state.difficulty];state.stageElapsed+=dt;
-  if(!state.v13Init){state.v13Init=true;state.spawnLeft=Math.max(10,Math.round(state.cfg.quota*d.quota));state._minorCleanTarget=state.spawnLeft;state.contamination=100;state.environmentClean=0;state.rewardNpcMax=d.rewardMax||3;}
-  if(state.transition>0){state.transition+=dt;state.zoom=Math.min(1,state.transition/2.9);const p=clamp(state.transition/2.75,0,1);state.bossCleanse=p;state.environmentClean=50+50*(p*p*(3-2*p));state.contamination=100-state.environmentClean;state.cleanSparkle=Math.max(0,(p-.48)/.52);updateHUD();if(state.transition>3.15&&!state.nextPanel){state.nextPanel=true;stageCompletePanel();}return;}
-  state.zoom=Math.min(.13,state.stageElapsed*.0025);if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.bossIntro>0)state.bossIntro=Math.max(0,state.bossIntro-dt);
-  state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);
-  const axis=movementAxis();if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;const speedBoost=state.adrenaline>0?1.28:1;
-  if(state.dashTimer>0)state.playerVX=state.dashDir*2.55*speedBoost;else{const accel=6.8*speedBoost,maxSpeed=1.12*speedBoost,friction=8.2;if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;else state.playerVX*=Math.max(0,1-friction*dt);state.playerVX=clamp(state.playerVX,-maxSpeed,maxSpeed);}state.playerX=clamp(state.playerX+state.playerVX*dt,-1,1);if(Math.abs(state.playerX)>=1&&Math.sign(state.playerVX)===Math.sign(state.playerX))state.playerVX=0;
-  if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast)}if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo()}}
-  for(const f of ['shield','drone','adrenaline','vaccine','sterile','gppBoost'])if(state[f]>0)state[f]=Math.max(0,state[f]-dt);state.beam=Math.min(100,state.beam+18*dt);
-  if(!state.bossSpawned&&state.rewardNpcCount<state.rewardNpcMax){state.rewardNpcTimer-=dt;if(state.rewardNpcTimer<=0&&!state.rewardNpcs.some(n=>!n.dead)){spawnRewardNpc();state.rewardNpcTimer=(d.rewardEvery||10)*(.82+Math.random()*.44);}}
-  if(state.spawnLeft>0){state.spawnTimer-=dt;if(state.spawnTimer<=0){const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],e=spawnEnemy(typ,false);if(e)e.countsForClean=true;state.spawnLeft--;state.spawnTimer=state.cfg.spawn*d.spawn*(.74+Math.random()*.52);}}
-  else if(!state.bossSpawned&&state.enemies.length===0){state.environmentClean=50;state.contamination=50;state.bossSpawned=true;spawnEnemy(state.cfg.mix[0],true);}
-  const slow=state.sterile>0?.56:1;
-  for(const e of state.enemies){if(e.dead)continue;if(e.boss){updateBoss(e,dt,d);continue;}e.phase+=dt*(1.7+(e.base.pulse||0));e.flash=Math.max(0,e.flash-dt*6);const swayFactor=e.type==='flagella'?1.8:e.type==='spitter'?2.2:e.base.sway||.7,eSway=swayFactor*Math.sin(e.phase*e.wobble)*.012;e.x=clamp(e.baseX+eSway,.04,.96);let motion=1;if(e.type==='breather')motion=.72+.42*(.5+.5*Math.sin(e.phase*1.7));if(e.base.charge&&e.depth<.46)motion=1.85;if(e.base.fly)motion*=1.06;e.depth-=e.speed*dt*motion*slow;if(e.depth<=.08){const sc=enemyScreen(e),hitRadius=Math.max(46,Math.min(100,sc.r*.72+innerWidth*.022));if(Math.abs(playerScreenX()-sc.x)<hitRadius)damagePlayer(e.base.attack*d.damage);else{state.score+=35;sfx.dodgeSuccess();toast('↔ NÉ ĐƯỢC VIRUS!',.55);}e.dead=true;burstAt(sc.x,sc.y,e.color,8);}}
-  state.enemies=state.enemies.filter(e=>!e.dead);
-  for(const sh of state.enemyShots){sh.t+=dt;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r+=18*dt;if(sh.t>=sh.life){const hitRadius=Math.max(42,Math.min(82,innerWidth*.052));if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius)damagePlayer(sh.damage*d.damage);else{state.score+=20;sfx.dodgeSuccess();toast('↔ NÉ ĐÒN BOSS!',.5);}sh.dead=true;}}state.enemyShots=state.enemyShots.filter(s=>!s.dead);
-  for(const n of state.rewardNpcs){if(n.dead)continue;n.t+=dt;n.life-=dt;n.x+=n.vx*dt;if(n.life<=0||n.x<-.10||n.x>1.10)n.dead=true;}state.rewardNpcs=state.rewardNpcs.filter(n=>!n.dead);
-  for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max);}state.particles=state.particles.filter(p=>p.life>0);for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);for(const p of state.powerups){p.t+=dt;p.y+=Math.sin(p.t*3)*.15;p.life-=dt;if(p.life<=0)p.dead=true;}state.powerups=state.powerups.filter(p=>!p.dead);
-  if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.38;let target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){const s=enemyScreen(target),dx=Math.max(34,Math.min(innerWidth-34,playerScreenX()-innerWidth*.115)),dy=innerHeight*.66;state.tracers.push({x1:dx,y1:dy,x2:s.x,y2:s.y,t:0,life:.16,max:.16,travel:.09,color:'#70fff0',width:3.2,kind:'drone',seed:Math.random()*99});hitEnemy(target,.72,false,true);}}}
-  if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)&&state.spawnLeft<=0){state.bossDefeated=true;beginStageClear();}updateHUD();
-};
+/* L1 consolidated: legacy update implementation removed */
 
 // Preserve the bar style, but progress now follows 0→50% minor enemies and 50→100% boss cleanse.
 beginStageClear=function(){if(state.transition>0)return;state.transition=.001;state.mode='playing';state.environmentClean=Math.max(50,state.environmentClean);state.contamination=50;sfx.clear();toast('✨ ĐANG THANH TẨY TOÀN KHU...',2.4);};
 
 // Final render order: environment -> enemies/reward NPC -> combat FX -> doctor.
-render=function(t){drawBackground(t);if(state){const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs)drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();if(state.transition>0){const p=clamp(state.transition/3.0,0,1),a=Math.sin(p*Math.PI)*.16;ctx.fillStyle=`rgba(226,255,246,${a})`;ctx.fillRect(0,0,innerWidth,innerHeight);}}};
+/* L1 consolidated: legacy render implementation removed */
 
 
 /* === v2.4.0 A1+B1 FINAL · 8 STAGES · CLEAN/DIRTY DUAL LAYER · PROGRESSION LOCK === */
@@ -934,14 +684,8 @@ sourceXFor=function(type){
   return clamp(sources[(Math.random()*sources.length)|0]+(Math.random()-.5)*.035,.07,.93);
 };
 
-const newStateA1Base=newState;
-newState=function(stageIndex=0){
-  const s=newStateA1Base(clamp(stageIndex,0,A1_STAGE_COUNT-1));
-  s.rewardNpcTimer=3.2+Math.random()*1.2;
-  s.rewardNpcMax=Math.max(4,s.rewardNpcMax||0);
-  s.stageIntro=1.9;
-  return s;
-};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 function a1Unlocked(){
   try{const raw=parseInt(localStorage.getItem(A1_PROGRESS_KEY)||'1',10);return clamp(Number.isFinite(raw)?raw:1,1,A1_STAGE_COUNT);}catch{return 1;}
@@ -1003,33 +747,12 @@ stageCompletePanel=function(){
 $('#nextStageBtn').onclick=()=>{if(!state)return;const next=Math.min(A1_STAGE_COUNT-1,state.stageIndex+1);startGame(next);};
 
 function a1FormatTime(sec){const n=Math.max(0,Math.floor(sec||0)),m=Math.floor(n/60),s=n%60;return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
-const updateHUDA1Base=updateHUD;
-updateHUD=function(){
-  updateHUDA1Base();if(!state)return;
-  const stageLabel=`MÀN ${state.stageIndex+1} · ${state.cfg.name}`;
-  UI.stageName.textContent=stageLabel;
-  const hp=`${Math.max(0,state.health).toFixed(state.health%1?1:0)}/10`,hpPct=clamp(state.health/state.maxHealth*100,0,100);
-  if($('#leftHealthText'))$('#leftHealthText').textContent=hp;if($('#leftHealthFill'))$('#leftHealthFill').style.width=hpPct+'%';
-  if($('#leftStageNo'))$('#leftStageNo').textContent=`MÀN ${state.stageIndex+1}`;if($('#leftStageName'))$('#leftStageName').textContent=state.cfg.name;
-  const time=a1FormatTime(state.stageElapsed),enemyCount=Math.max(0,state.enemies.length+state.spawnLeft);
-  if($('#rightScoreText'))$('#rightScoreText').textContent=state.score.toLocaleString('vi-VN');if($('#rightTimeText'))$('#rightTimeText').textContent=time;if($('#rightEnemyText'))$('#rightEnemyText').textContent=enemyCount;if($('#rightComboText'))$('#rightComboText').textContent=`×${state.combo||0}`;
-  if($('#timeTextMobile'))$('#timeTextMobile').textContent=time;
-};
+
+/* L1 consolidated: legacy updateHUD implementation removed */
 
 // The logo is the special all-in-one item: it carries every support effect.
-const collectPowerupsA1Base=collectPowerups;
-collectPowerups=function(x,y){
-  for(const p of state.powerups){
-    if(p.dead||Math.hypot(x-p.x,y-p.y)>=42)continue;
-    if(p.kind!=='gpp')return collectPowerupsA1Base(x,y);
-    p.dead=true;
-    state.health=Math.min(state.maxHealth,state.health+2);
-    supportExtend('shield',6,10);supportExtend('drone',10,15);supportExtend('adrenaline',5,8);supportExtend('vaccine',7,11);supportExtend('sterile',6,10);supportExtend('gppBoost',8,12);
-    for(const e of [...state.enemies])if(!e.boss&&!e.dead)hitEnemy(e,1.20,false,true,false);
-    toast('✨ TRƯỜNG GPP · TOÀN BỘ HỖ TRỢ KÍCH HOẠT!',1.65);sfx.gpp();updateHUD();return true;
-  }
-  return false;
-};
+
+/* L1 consolidated: legacy collectPowerups implementation removed */
 
 // Dual image system: clean background below, supplied dirty background above.
 // The dirty layer recedes very slowly from the outside edges toward the centre.
@@ -1160,16 +883,10 @@ function drawB1StageIntro(){
   ctx.restore();
 }
 
-const updateB1MergedBase=update;
-update=function(dt){
-  updateB1MergedBase(dt);
-  if(state?.mode==='playing'){
-    if(state.stageIntro>0)state.stageIntro=Math.max(0,state.stageIntro-dt);
-    if(pointer.down&&performance.now()-weaponPressStarted>120)shoot(pointer.x,pointer.y);
-  }
-};
-const renderB1MergedBase=render;
-render=function(t){renderB1MergedBase(t);drawB1StageIntro();};
+
+/* L1 consolidated: legacy update implementation removed */
+
+/* L1 consolidated: legacy render implementation removed */
 
 // Keep lower centre clean: no fixed contact/intro dock. Pause/Home stay on the left control rail.
 const b1ContactDock=document.querySelector('.contact-dock');if(b1ContactDock)b1ContactDock.remove();
@@ -1383,8 +1100,8 @@ drawWeapon=function(t){
 
 // Prepare the current weapon pose before the scene draws tracers, so line origin and weapon
 // movement use the same frame even during fast dodge/dash.
-const v270RenderBase=render;
-render=function(t){v270PrepareWeaponPose(t);v270RenderBase(t);};
+
+/* L1 consolidated: legacy render implementation removed */
 
 /* === v3.1.0 D1 FINAL · 90s pressure curve · 3 boss summons · cinematic projectiles · reward confirmation === */
 const D1_BOSS_TIME=90;
@@ -1409,41 +1126,18 @@ Object.assign(DIFF.hard,{label:'KHÓ',enemyHp:1.14,damage:1.08,bossHp:1.12,bossR
 
 function d1Smooth(x){x=clamp(x,0,1);return x*x*(3-2*x)}
 function d1Pressure(elapsed=state?.stageElapsed||0){return .68+.32*d1Smooth(clamp(elapsed/D1_BOSS_TIME,0,1));}
-function d1SpeedTarget(diff=state?.difficulty||'normal',stage=state?.stageIndex||0){return (D1_SPEED_TARGETS[diff]||D1_SPEED_TARGETS.normal)[clamp(stage,0,7)];}
-function d1SpawnInterval(){
-  const stage=state.stageIndex,diff=state.difficulty,p=d1Smooth(clamp(state.stageElapsed/D1_BOSS_TIME,0,1));
-  const base=diff==='easy'?1.78:diff==='hard'?1.34:1.55;
-  const stageCut=stage*.035,pressureCut=p*(diff==='easy'?.42:diff==='hard'?.48:.45);
-  return Math.max(diff==='easy'?.84:diff==='hard'?.62:.72,base-stageCut-pressureCut)*( .88+Math.random()*.28 );
-}
-function d1ActiveCap(){const s=state.stageIndex,d=state.difficulty;return (d==='easy'?4:d==='hard'?6:5)+Math.floor(s/3)+(state.stageElapsed>60?1:0);}
+/* L1 consolidated: legacy d1SpeedTarget implementation removed */
+/* L1 consolidated: legacy d1SpawnInterval implementation removed */
+/* L1 consolidated: legacy d1ActiveCap implementation removed */
 function d1Countdown(){return Math.max(0,D1_BOSS_TIME-(state?.stageElapsed||0));}
 function d1FormatClock(sec){const n=Math.max(0,Math.ceil(sec)),m=Math.floor(n/60),s=n%60;return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
 
 // D1 state: the stage is a 90-second survival ramp. Natural NPC spawning stops at Boss time.
-const newStateD1Base=newState;
-newState=function(stageIndex=0){
-  const s=newStateD1Base(stageIndex),d=s.difficulty;
-  s.spawnLeft=0;s.spawnTimer=.72;s.d1BossAt=D1_BOSS_TIME;s.d1NaturalSpawns=0;s.d1MinorKills=0;s.d1BossStartedAt=0;
-  s._minorCleanTarget=(D1_EXPECTED_KILLS[d]||D1_EXPECTED_KILLS.normal)[s.stageIndex];
-  s.rewardNpcMax=DIFF[d].rewardMax;s.rewardNpcTimer=d==='easy'?4.0:4.8;
-  s.pickupFx=[];s.rewardBanner=null;s._supportJustAdded=null;s._supportJustUntil=0;
-  return s;
-};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 // D1 spawn model: small/far NPCs, slower baseline and perspective-aware movement.
-spawnEnemy=function(type,boss=false){
-  const base=ENEMY[type]||ENEMY.basic,d=DIFF[state.difficulty],style=BOSS_STYLE[state.stageIndex]||BOSS_STYLE[BOSS_STYLE.length-1];
-  const hp=(boss?state.cfg.bossHp*d.bossHp:base.hp*d.enemyHp)*(boss?1:(1+state.stageIndex*.025));
-  const x=boss?.5:sourceXFor(type),side=x<.5?-1:1;
-  const e={id:Math.random(),type,boss,name:boss?state.cfg.boss:null,bossKind:boss?state.cfg.bossKind:null,x,baseX:x,depth:boss?.69:.955+Math.random()*.035,hp,maxHp:hp,
-    speedBase:base.speed*(.90+Math.random()*.16),speed:base.speed*d1SpeedTarget()*.8,rad:boss?style.rad:base.rad,color:boss?style.color:base.color,
-    accent:boss?style.accent:null,shotColor:boss?style.shot:null,phase:Math.random()*6.28,wobble:Math.random()*1.8+1,attackTimer:boss?1.65:999,summon:999,
-    flash:0,dead:false,side,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false]};
-  state.enemies.push(e);
-  if(boss){state.bossIntro=2.05;state.d1BossStartedAt=state.stageElapsed;state.enemyShots.length=0;show(UI.bossBar);UI.bossName.textContent=state.cfg.boss;sfx.boss();toast('⚠ GIÂY 180 · BOSS XUẤT HIỆN!',2);}
-  return e;
-};
+/* L1 consolidated: legacy spawnEnemy implementation removed */
 
 function d1SummonCount(wave){
   const d=state.difficulty;
@@ -1479,52 +1173,7 @@ enemyScreen=function(e){
 };
 
 // D1 main update loop.
-update=function(dt){
-  if(!state||state.mode!=='playing')return;const d=DIFF[state.difficulty];state.stageElapsed+=dt;
-  if(state.stageIntro>0)state.stageIntro=Math.max(0,state.stageIntro-dt);
-  if(state.transition>0){state.transition+=dt;state.zoom=Math.min(1,state.transition/2.9);const p=clamp(state.transition/2.75,0,1);state.bossCleanse=p;state.environmentClean=50+50*(p*p*(3-2*p));state.contamination=100-state.environmentClean;state.cleanSparkle=Math.max(0,(p-.48)/.52);updateHUD();if(state.transition>3.15&&!state.nextPanel){state.nextPanel=true;stageCompletePanel();}return;}
-  state.zoom=Math.min(.10,state.stageElapsed*.00125);if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.bossIntro>0)state.bossIntro=Math.max(0,state.bossIntro-dt);
-  state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);
-  const axis=movementAxis();if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;const speedBoost=state.adrenaline>0?1.24:1;
-  if(state.dashTimer>0)state.playerVX=state.dashDir*2.42*speedBoost;else{const accel=6.3*speedBoost,maxSpeed=1.05*speedBoost,friction=8.0;if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;else state.playerVX*=Math.max(0,1-friction*dt);state.playerVX=clamp(state.playerVX,-maxSpeed,maxSpeed);}state.playerX=clamp(state.playerX+state.playerVX*dt,-1,1);if(Math.abs(state.playerX)>=1&&Math.sign(state.playerVX)===Math.sign(state.playerX))state.playerVX=0;
-  if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast)}if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo()}}
-  for(const f of ['shield','drone','adrenaline','vaccine','sterile','gppBoost'])if(state[f]>0)state[f]=Math.max(0,state[f]-dt);state.beam=Math.min(100,state.beam+18*dt);
-
-  // SUPPLY remains generous on Easy and stops naturally when the Boss appears.
-  if(!state.bossSpawned&&state.rewardNpcCount<state.rewardNpcMax){state.rewardNpcTimer-=dt;if(state.rewardNpcTimer<=0&&!state.rewardNpcs.some(n=>!n.dead)){spawnRewardNpc();state.rewardNpcTimer=(d.rewardEvery||9)*(.86+Math.random()*.30);}}
-
-  // Natural virus pressure exists only during the 90-second survival phase.
-  if(!state.bossSpawned&&state.stageElapsed<D1_BOSS_TIME){
-    const active=state.enemies.filter(e=>!e.dead&&!e.boss).length;state.spawnTimer-=dt;
-    if(state.spawnTimer<=0&&active<d1ActiveCap()){
-      const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],e=spawnEnemy(typ,false);if(e)e.countsForClean=true;state.d1NaturalSpawns++;state.spawnTimer=d1SpawnInterval();
-    }
-  }
-  if(!state.bossSpawned&&state.stageElapsed>=D1_BOSS_TIME){state.environmentClean=50;state.contamination=50;state.bossSpawned=true;state.spawnLeft=0;spawnEnemy(state.cfg.mix[0],true);}
-
-  const speedFactor=d1SpeedTarget()*d1Pressure(),slow=state.sterile>0?.58:1;
-  for(const e of state.enemies){
-    if(e.dead)continue;if(e.boss){updateBoss(e,dt,d);continue;}
-    e.phase+=dt*(1.35+(e.base.pulse||0)*.7);e.flash=Math.max(0,e.flash-dt*6);const swayFactor=e.type==='flagella'?1.5:e.type==='spitter'?1.8:e.base.sway||.7,eSway=swayFactor*Math.sin(e.phase*e.wobble)*.010;e.x=clamp(e.baseX+eSway,.04,.96);
-    const perspective=.67+Math.pow(clamp(1-e.depth,0,1),1.05)*.50;let motion=perspective;if(e.type==='breather')motion*=.78+.26*(.5+.5*Math.sin(e.phase*1.7));if(e.base.charge&&e.depth<.42)motion*=1.30;if(e.base.fly)motion*=1.03;if(e.bossSummoned)motion*=.94;
-    e.depth-=e.speedBase*speedFactor*dt*motion*slow;
-    if(e.depth<=.055){const sc=enemyScreen(e),hitRadius=Math.max(38,Math.min(82,sc.r*.70+innerWidth*.018));if(Math.abs(playerScreenX()-sc.x)<hitRadius)damagePlayer(e.base.attack*d.damage);else{state.score+=35;sfx.dodgeSuccess();toast('↔ NÉ ĐƯỢC VIRUS!',.50);}e.dead=true;burstAt(sc.x,sc.y,e.color,7);}
-  }
-  state.enemies=state.enemies.filter(e=>!e.dead);
-
-  for(const sh of state.enemyShots){sh.t+=dt;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r+=16*dt;if(sh.t>=sh.life){const hitRadius=Math.max(40,Math.min(76,innerWidth*.048));if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius)damagePlayer(sh.damage*d.damage);else{state.score+=20;sfx.dodgeSuccess();toast('↔ NÉ ĐÒN BOSS!',.48);}sh.dead=true;}}state.enemyShots=state.enemyShots.filter(s=>!s.dead);
-  for(const n of state.rewardNpcs){if(n.dead)continue;n.t+=dt;n.life-=dt;n.x+=n.vx*dt;if(n.life<=0||n.x<-.10||n.x>1.10)n.dead=true;}state.rewardNpcs=state.rewardNpcs.filter(n=>!n.dead);
-  for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max);}state.particles=state.particles.filter(p=>p.life>0);
-  for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);
-  for(const p of state.powerups){p.t+=dt;p.y+=Math.sin(p.t*3)*.12;p.life-=dt;if(p.life<=0)p.dead=true;}state.powerups=state.powerups.filter(p=>!p.dead);
-  if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.40;let target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){const s=enemyScreen(target),dx=Math.max(34,Math.min(innerWidth-34,playerScreenX()-innerWidth*.10)),dy=innerHeight*.66;state.tracers.push({x1:dx,y1:dy,x2:s.x,y2:s.y,t:0,life:.18,max:.18,travel:.10,color:'#70fff0',width:3.2,kind:'drone',seed:Math.random()*99});hitEnemy(target,.72,false,true);}}}
-
-  // 0→50% is earned during the 90-second survival phase; Boss death owns 50→100%.
-  if(!state.bossSpawned){const killClean=clamp((state.cleanMinorKills||0)/Math.max(1,state._minorCleanTarget)*50,0,49.5),timeFloor=clamp(state.stageElapsed/D1_BOSS_TIME*15,0,15);state.environmentClean=Math.max(killClean,timeFloor);state.contamination=100-state.environmentClean;}
-  if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)){state.bossDefeated=true;beginStageClear();}
-  if(pointer.down&&performance.now()-weaponPressStarted>120)shoot(pointer.x,pointer.y);
-  updateHUD();
-};
+/* L1 consolidated: legacy update implementation removed */
 
 // Cinematic, deliberately different projectile languages for all five weapons.
 addTracer=function(kind,x,y){
@@ -1601,17 +1250,9 @@ function drawD1PickupFeedback(t){if(!state)return;state.pickupFx=(state.pickupFx
     ctx.restore();}}
 
 // Premium item rendering: layered aura + orbit rings + readable icon/label.
-drawPowerups=function(){if(!state)return;for(const p of state.powerups){const m=D1_REWARD_META[p.kind]||D1_REWARD_META.drone,isGpp=p.kind==='gpp',r=isGpp?31:26,pulse=1+Math.sin(p.t*4.2)*.055;ctx.save();ctx.translate(p.x,p.y);ctx.scale(pulse,pulse);ctx.globalCompositeOperation='screen';const beam=ctx.createLinearGradient(0,-115,0,36);beam.addColorStop(0,'rgba(255,255,255,0)');beam.addColorStop(.42,m.color+'38');beam.addColorStop(.72,m.color+'88');beam.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=beam;ctx.fillRect(-15,-115,30,150);ctx.shadowColor=m.color;ctx.shadowBlur=isGpp?28:18;for(let k=0;k<(isGpp?3:2);k++){ctx.save();ctx.rotate(p.t*(k%2?-.8:.65)+k);ctx.strokeStyle=k===0?m.color:'rgba(255,255,255,.64)';ctx.lineWidth=k===0?2:1;ctx.setLineDash([5+k*2,5]);ctx.beginPath();ctx.ellipse(0,0,r*(1.35+k*.22),r*(.72+k*.13),.35*k,0,Math.PI*2);ctx.stroke();ctx.restore();}ctx.setLineDash([]);const orb=ctx.createRadialGradient(-r*.28,-r*.28,2,0,0,r*1.15);orb.addColorStop(0,'#ffffff');orb.addColorStop(.22,m.color);orb.addColorStop(1,'rgba(4,35,41,.96)');ctx.fillStyle=orb;ctx.strokeStyle='rgba(255,255,255,.82)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(isGpp&&logoIcon.complete){ctx.save();ctx.beginPath();ctx.arc(0,0,r*.72,0,Math.PI*2);ctx.clip();ctx.drawImage(logoIcon,-r*.72,-r*.72,r*1.44,r*1.44);ctx.restore();}else{ctx.font=`${r*.86}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText(m.icon,0,1);}for(let i=0;i<(isGpp?7:4);i++){const a=p.t*(1.2+i*.07)+i*Math.PI*2/(isGpp?7:4),rr=r*(1.42+(i%2)*.23);ctx.fillStyle=i%2?'#fff':m.color;ctx.beginPath();ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr*.64,1.2+(i%3)*.5,0,Math.PI*2);ctx.fill();}ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(2,27,33,.88)';d1RoundRect(-54,r+10,108,20,8);ctx.fill();ctx.strokeStyle=m.color;ctx.lineWidth=1;ctx.stroke();ctx.fillStyle='#fff';ctx.font='900 7px system-ui';ctx.textAlign='center';ctx.fillText(m.name,0,r+23);ctx.restore();}};
+/* L1 consolidated: legacy drawPowerups implementation removed */
 
-collectPowerups=function(x,y){if(!state)return false;for(const p of state.powerups){if(p.dead||Math.hypot(x-p.x,y-p.y)>=48)continue;const kind=p.kind,px=p.x,py=p.y;p.dead=true;
-  if(kind==='heal')state.health=Math.min(state.maxHealth,state.health+2);
-  else if(kind==='shield')supportExtend('shield',6,10);
-  else if(kind==='drone')supportExtend('drone',10,15);
-  else if(kind==='adrenaline')supportExtend('adrenaline',5,8);
-  else if(kind==='vaccine')supportExtend('vaccine',7,11);
-  else if(kind==='sterile')supportExtend('sterile',6,10);
-  else if(kind==='gpp'){state.health=Math.min(state.maxHealth,state.health+2);supportExtend('shield',6,10);supportExtend('drone',10,15);supportExtend('adrenaline',5,8);supportExtend('vaccine',7,11);supportExtend('sterile',6,10);supportExtend('gppBoost',8,12);for(const e of [...state.enemies])if(!e.boss&&!e.dead)hitEnemy(e,1.20,false,true,false);}
-  d1PickupFeedback(kind,px,py);updateHUD();return true;}return false;};
+/* L1 consolidated: legacy collectPowerups implementation removed */
 
 // Active support HUD: circular countdown around icon + one-time arrival animation.
 updateSupportUI=function(){if(!state)return;const active=supportActive(),now=performance.now(),key=active.map(x=>`${x.k}:${Math.ceil(x.left*4)}`).join('|');if(key===state._supportHudKey)return;state._supportHudKey=key;
@@ -1621,11 +1262,8 @@ updateSupportUI=function(){if(!state)return;const active=supportActive(),now=per
 };
 
 // D1 HUD: countdown to the exact Boss second and professional difficulty labels.
-const updateHUDD1Base=updateHUD;
-updateHUD=function(){updateHUDD1Base();if(!state)return;const boss=state.bossSpawned,timeText=boss?'BOSS':d1FormatClock(d1Countdown()),minor=state.enemies.filter(e=>!e.dead&&!e.boss).length;
-  if($('#rightTimeText'))$('#rightTimeText').textContent=timeText;if($('#timeTextMobile'))$('#timeTextMobile').textContent=timeText;if($('#rightEnemyText'))$('#rightEnemyText').textContent=minor;if(UI.enemy)UI.enemy.textContent=`Virus: ${minor}`;
-  if(UI.diffBadge){const label=DIFF[state.difficulty].label,s=state.difficulty==='easy'?'🛡 LÀM QUEN':state.difficulty==='hard'?'☣ THỬ THÁCH':'⚠ CÂN BẰNG';UI.diffBadge.textContent=`${label} · ${s}`;}
-};
+
+/* L1 consolidated: legacy updateHUD implementation removed */
 
 // Rank tuned for a mandatory 90-second survival phase + Boss fight.
 rankFor=function(acc,hp,time){const bossTime=Math.max(0,time-D1_BOSS_TIME),v=acc*.52+hp*3.7+(bossTime<24?14:bossTime<40?9:bossTime<60?5:2);return v>=84?'S+':v>=72?'S':v>=57?'A':'B';};
@@ -1642,12 +1280,12 @@ const d1StagePanel=$('#stageSelectPanel'),d1StageBtn=$('#stageSelectBtn'),d1Stag
 if(d1StageBtn)d1StageBtn.onclick=()=>{a1RenderStageMenu();show(d1StagePanel);};if(d1StageHero)d1StageHero.onclick=()=>{a1RenderStageMenu();show(d1StagePanel);};if(d1StageDone)d1StageDone.onclick=()=>hide(d1StagePanel);
 const d1RenderStageMenuBase=a1RenderStageMenu;
 a1RenderStageMenu=function(){d1RenderStageMenuBase();const img=$('#selectedStageHeroImg'),no=$('#selectedStageHeroNo'),name=$('#selectedStageHeroName');if(img){img.src=`assets/stage${a1SelectedStage+1}-clean.jpg`;img.alt=STAGES[a1SelectedStage].name;}if(no)no.textContent=`MÀN ${a1SelectedStage+1}`;if(name)name.textContent=STAGES[a1SelectedStage].name;};
-$$('.difficulty').forEach(b=>b.addEventListener('click',()=>{const box=$('#difficultyDetail'),key=b.dataset.difficulty;if(!box)return;const map={easy:['🛡 DỄ · LÀM QUEN','NPC chậm hơn rõ rệt · Supply nhiều · phù hợp người chơi mới'],normal:['⚠ TRUNG BÌNH · CÂN BẰNG','Màn 1 bắt đầu xấp xỉ Màn 5 cấp Dễ · áp lực tăng liên tục 1→90s'],hard:['☣ KHÓ · THỬ THÁCH','Màn 1 bắt đầu xấp xỉ Màn 5 Trung bình · mật độ và hành vi khắt khe hơn']};box.innerHTML=`<b>${map[key][0]}</b><span>${map[key][1]}</span>`;}));
+/* L1 consolidated: legacy difficulty copy handler removed */
 const d1GoHomeBase=goHome;goHome=function(){if(d1StagePanel)hide(d1StagePanel);d1GoHomeBase();a1RenderStageMenu();};
 
 // Draw pickup confirmation over the completed scene without occupying the lower centre.
-const d1RenderBase=render;
-render=function(t){d1RenderBase(t);drawD1PickupFeedback(t);};
+
+/* L1 consolidated: legacy render implementation removed */
 
 a1RenderStageMenu();
 
@@ -1684,32 +1322,17 @@ function f1SetUpgradePoints(n){try{localStorage.setItem(F1_UPGRADE_POINTS,String
 function f1RewardTarget(){const rail=$('#bossRewardRail');if(rail){const r=rail.getBoundingClientRect();return{x:r.left+r.width*.5,y:r.top+r.height*.5}}const v=gameplayViewport();return{x:v.left+v.width-24,y:innerHeight*.55}}
 function f1UpdateRewardRail(){const inv=f1Inventory();for(const k of F1_REWARD_ORDER){const count=inv[k]||0,el=document.getElementById(`bossRewardCount-${k}`),btn=document.querySelector(`[data-boss-reward="${k}"]`);if(el)el.textContent=`×${count}`;if(btn){btn.classList.toggle('empty',count<=0);btn.classList.toggle('ready',count>0);btn.setAttribute('aria-disabled',String(count<=0));}}}
 function f1ApplyUpgradesToState(s){const u=f1UpgradeState();s.f1Upgrades=u;s.maxHealth=10+(u.survival||0);s.health=Math.min(s.maxHealth,s.health+(u.survival||0));s.rewardNpcTimer=Math.max(2.6,(s.rewardNpcTimer||4.8)*(1-(u.supply||0)*.06));}
-const f1NewStateBase=newState;
-newState=function(stageIndex=0){const s=f1NewStateBase(stageIndex);f1ApplyUpgradesToState(s);Object.assign(s,{bossDrone:0,bossRewardFx:null,bossRewardPending:null,bossRewardShown:false,f1WeaponEffect:null,f1WeaponEffectUntil:0,f1AnnihilatorFx:0,f1CleanChimeMark:0,f1SparkleChime:false,f1BossKilledAt:0,f1BossKillDuration:0});return s;};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 function f1RewardWeaponPulse(kind,duration=900){if(!state)return;state.f1WeaponEffect=kind;state.f1WeaponEffectUntil=performance.now()+duration;}
-function f1UseReward(kind,fromCombo=false){if(!state||!['playing'].includes(state.mode)||state.transition>0)return false;const inv=f1Inventory();if((inv[kind]||0)<=0){toast('Vật phẩm Boss chưa sẵn sàng',.7);return false}
-  if(kind==='survival'){
-    if(state.health>=state.maxHealth-.01){toast('❤️ SINH TỒN ĐÃ ĐẦY',.9);return false}
-    state.health=Math.min(state.maxHealth,state.health+5);f1RewardWeaponPulse('survival',1100);tone(510,.13,'sine',.028,300,0,.13);setTimeout(()=>tone(840,.15,'sine',.020,260,0,.12),70);toast('❤️ HỘP SINH TỒN · +5',1.0);
-  }else if(kind==='eliteDrone'){
-    state.bossDrone=Math.max(state.bossDrone||0,20);state._bossDroneTimer=.05;f1RewardWeaponPulse('eliteDrone',20000);tone(450,.08,'square',.018,280,0,.10);setTimeout(()=>tone(920,.12,'triangle',.020,220,0,.12),70);toast('🛸 DRONE ĐẶC BIỆT NGOÀI · 20s',1.1);
-  }else if(kind==='annihilator'){
-    const v=gameplayViewport(),cx=playerScreenX(),cy=innerHeight*.70,range=Math.max(v.width*.50,innerHeight*.42),targets=state.enemies.filter(e=>!e.dead&&!e.boss).filter(e=>{const sc=enemyScreen(e);return Math.hypot(sc.x-cx,(sc.y-cy)*.82)<=range});
-    if(!targets.length){toast('💥 CHƯA CÓ NPC TRONG VÙNG HỦY DIỆT',1.0);return false}
-    state.f1AnnihilatorFx=1;f1RewardWeaponPulse('annihilator',1000);for(const e of targets){const sc=enemyScreen(e);e.dead=true;state.kills++;state.score+=e.base?.score||90;burstAt(sc.x,sc.y,'#ff9b58',18);}state.enemies=state.enemies.filter(e=>!e.dead);tone(145,.32,'sawtooth',.045,-65,0,.20);noiseBurst(.15,.035,560,0,.18);toast(`💥 BƠM HỦY DIỆT · ${targets.length} NPC`,1.15);
-  }else if(kind==='bossGpp'){
-    // One Logo equals the complete Boss reward kit in one activation.
-    if(state.health<state.maxHealth)state.health=Math.min(state.maxHealth,state.health+5);state.bossDrone=Math.max(state.bossDrone||0,20);state._bossDroneTimer=.04;const v=gameplayViewport(),cx=playerScreenX(),cy=innerHeight*.70,range=Math.max(v.width*.50,innerHeight*.42);const targets=state.enemies.filter(e=>!e.dead&&!e.boss).filter(e=>{const sc=enemyScreen(e);return Math.hypot(sc.x-cx,(sc.y-cy)*.82)<=range});for(const e of targets){const sc=enemyScreen(e);e.dead=true;state.kills++;state.score+=e.base?.score||90;burstAt(sc.x,sc.y,'#ffe16f',22)}state.enemies=state.enemies.filter(e=>!e.dead);state.f1AnnihilatorFx=1;f1RewardWeaponPulse('bossGpp',20000);sfx.gpp();setTimeout(()=>tone(1320,.18,'sine',.026,260,0,.18),90);toast('✨ GPP TỔNG HỢP · +5 + DRONE + HỦY DIỆT',1.5);
-  }
-  inv[kind]--;f1SaveInventory(inv);updateHUD();return true;
-}
+/* L1 consolidated: legacy f1UseReward implementation removed */
 for(const btn of document.querySelectorAll('[data-boss-reward]'))btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();f1UseReward(btn.dataset.bossReward)});
 addEventListener('keydown',e=>{const kind=F1_REWARD_KEYS[e.code];if(!kind||e.ctrlKey||e.altKey||e.metaKey)return;if(state?.mode==='playing'){e.preventDefault();f1UseReward(kind)}},true);
 
 // Make every dropped SUPPLY item usable by aiming/shooting at it, not only on the first pointerdown.
-const f1ShootBase=shoot;
-shoot=function(x,y){if(!state||state.mode!=='playing'||state.transition>0)return;if(collectPowerups(x,y)){state.lastFire=performance.now();return}return f1ShootBase(x,y);};
+
+/* L1 consolidated: legacy shoot implementation removed */
 canvas.addEventListener('pointercancel',()=>{pointer.down=false;});
 addEventListener('visibilitychange',()=>{if(document.hidden&&state){pointer.down=false;state.moveLeft=false;state.moveRight=false;state.mobileMoveAxis=0;}});
 
@@ -1730,27 +1353,14 @@ const claimBossRewardBtn=$('#claimBossRewardBtn');if(claimBossRewardBtn)claimBos
 beginStageClear=function(){if(!state||state.transition>0||state.bossRewardShown)return;state.transition=.001;state.mode='playing';state.environmentClean=Math.max(50,state.environmentClean||0);state.contamination=50;state.cleanSparkle=0;state.nextPanel=false;state.f1CleanChimeMark=0;state.f1SparkleChime=false;state.f1BossKilledAt=state.stageElapsed;state.f1BossKillDuration=Math.max(0,(state.stageElapsed||0)-(state.d1BossStartedAt||D1_BOSS_TIME));sfx.clear();toast('🧼 ĐANG LÀM SẠCH TOÀN KHU...',1.7);};
 
 // Override D1 update only for the post-Boss transition and F1 inventory timers; delegate normal combat untouched.
-const f1UpdateCombatBase=update;
-update=function(dt){
-  if(!state||state.mode!=='playing')return;
-  if(state.transition>0){
-    state.transition+=dt;const cleanP=clamp(state.transition/F1_CLEAN_SECONDS,0,1);state.environmentClean=50+50*d1Smooth(cleanP);state.contamination=100-state.environmentClean;state.zoom=Math.min(1,state.transition/F1_CLEAN_SECONDS);state.cleanSparkle=state.transition>F1_CLEAN_SECONDS?clamp((state.transition-F1_CLEAN_SECONDS)/F1_SPARKLE_SECONDS,0,1):0;
-    const mark=Math.floor(cleanP*5);if(mark>state.f1CleanChimeMark&&mark<=5){state.f1CleanChimeMark=mark;tone(420+mark*105,.11,'sine',.010+mark*.002,90,0,.08)}
-    if(state.transition>=F1_CLEAN_SECONDS&&!state.f1SparkleChime){state.f1SparkleChime=true;tone(880,.16,'sine',.020,220,0,.12);setTimeout(()=>tone(1180,.17,'triangle',.018,250,0,.12),100);setTimeout(()=>tone(1460,.20,'sine',.014,120,0,.10),210)}
-    if(state.transition>=F1_CLEAN_SECONDS+F1_SPARKLE_SECONDS&&!state.nextPanel){state.nextPanel=true;state.environmentClean=100;state.contamination=0;state.cleanSparkle=1;f1ShowBossRewards()}
-    updateHUD();return;
-  }
-  f1UpdateCombatBase(dt);
-  if(state?.mode!=='playing')return;
-  if(state.bossDrone>0){state.bossDrone=Math.max(0,state.bossDrone-dt);state._bossDroneTimer=(state._bossDroneTimer||0)-dt;if(state._bossDroneTimer<=0){state._bossDroneTimer=.22;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){const sc=enemyScreen(target),p=v270WeaponPose?.monitorCenter||{x:playerScreenX(),y:innerHeight*.66},u=f1UpgradeState();state.tracers.push({x1:p.x-22,y1:p.y-52,x2:sc.x,y2:sc.y,t:0,life:.24,max:.24,travel:.13,width:5.2,kind:'eliteDrone',seed:Math.random()*99});hitEnemy(target,1.25*(1+(u.drone||0)*.08),false,true,false)}}}
-  if(state.f1AnnihilatorFx>0)state.f1AnnihilatorFx=Math.max(0,state.f1AnnihilatorFx-dt*1.8);
-};
+
+/* L1 consolidated: legacy update implementation removed */
 
 // Persistent upgrades affect player weapon damage/rate without changing enemy progression logic.
-const f1HitEnemyBase=hitEnemy;
-hitEnemy=function(e,damage,countHit=true,drone=false,crit=false){const u=state?.f1Upgrades||f1UpgradeState(),mult=1+(u.damage||0)*.05;return f1HitEnemyBase(e,damage*mult,countHit,drone,crit)};
-const f1ShootUpgradeBase=shoot;
-shoot=function(x,y){if(!state||state.mode!=='playing'||state.transition>0)return;const u=state.f1Upgrades||f1UpgradeState(),w=WEAPONS[state.weapon],old=w.cooldown;if(u.fireRate)w.cooldown=old*(1-(u.fireRate||0)*.04);try{return f1ShootUpgradeBase(x,y)}finally{w.cooldown=old}};
+
+/* L1 consolidated: legacy hitEnemy implementation removed */
+
+/* L1 consolidated: legacy shoot implementation removed */
 
 function f1DrawWeaponRewardFx(t){if(!state||!v270WeaponPose)return;const p=v270WeaponPose,kind=(state.bossDrone>0&&(state.f1WeaponEffect==='eliteDrone'||state.f1WeaponEffect==='bossGpp'))?state.f1WeaponEffect:(performance.now()<state.f1WeaponEffectUntil?state.f1WeaponEffect:null);if(!kind&&!state.f1AnnihilatorFx)return;const meta=kind?F1_BOSS_REWARD_META[kind]:F1_BOSS_REWARD_META.annihilator;ctx.save();ctx.translate(p.pivotX,p.pivotY);ctx.rotate(p.tilt);ctx.scale(p.pulse,p.pulse);ctx.globalCompositeOperation='screen';const cx=p.imgX+p.drawW*.50,cy=p.imgY+p.drawH*.49,r=Math.max(18,p.drawW*.10),pulse=.5+.5*Math.sin(t*.008);ctx.globalAlpha=kind==='bossGpp'?.34:.26;ctx.strokeStyle=meta.color;ctx.lineWidth=Math.max(1.5,p.drawW*.004);ctx.shadowColor=meta.color;ctx.shadowBlur=16;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(cx,cy,r*(1+i*.34)+pulse*5,r*(.55+i*.18),t*.0008*(i%2?1:-1)+i,0,Math.PI*2);ctx.stroke()}for(let i=0;i<7;i++){const a=t*.0018+i*.9,rr=r*(.75+(i%3)*.25);ctx.fillStyle=i%2?'#fff':meta.color;ctx.beginPath();ctx.arc(cx+Math.cos(a)*rr,cy+Math.sin(a*1.3)*rr*.55,1.2+(i%3)*.6,0,Math.PI*2);ctx.fill()}ctx.shadowBlur=0;ctx.restore();
   if(state.f1AnnihilatorFx>0){const v=gameplayViewport(),cx2=playerScreenX(),cy2=innerHeight*.70,rr=Math.max(v.width*.50,innerHeight*.42)*(1-state.f1AnnihilatorFx*.25);ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=state.f1AnnihilatorFx*.34;ctx.strokeStyle='#ffb45e';ctx.lineWidth=8*(state.f1AnnihilatorFx+.2);ctx.shadowColor='#ff785b';ctx.shadowBlur=26;ctx.beginPath();ctx.arc(cx2,cy2,rr,0,Math.PI*2);ctx.stroke();ctx.restore();}}
@@ -1788,15 +1398,10 @@ d1Pressure=function(elapsed=state?.stageElapsed||0){
   if(t<2/3)return .74+.13*d1Smooth((t-1/3)*3);
   return .87+.13*d1Smooth((t-2/3)*3);
 };
-d1SpeedTarget=function(diff=state?.difficulty||'normal',stage=state?.stageIndex||0){return (D1_SPEED_TARGETS[diff]||D1_SPEED_TARGETS.normal)[clamp(stage,0,7)];};
+/* L1 consolidated: legacy d1SpeedTarget implementation removed */
 d1Countdown=function(){return Math.max(0,G1_BOSS_TIME-(state?.stageElapsed||0));};
-d1SpawnInterval=function(){
-  const t=clamp(state.stageElapsed/G1_BOSS_TIME,0,1),d=state.difficulty,s=state.stageIndex;
-  const base=d==='easy'?2.05:d==='hard'?1.56:1.78;
-  const pressure=t<1/3?0.08*d1Smooth(t*3):t<2/3?.23+.15*d1Smooth((t-1/3)*3):.40+.20*d1Smooth((t-2/3)*3);
-  return Math.max(d==='easy'?1.02:d==='hard'?.72:.84,base-s*.028-pressure)*(.88+Math.random()*.28);
-};
-d1ActiveCap=function(){const d=state.difficulty,s=state.stageIndex,t=state.stageElapsed;return (d==='easy'?4:d==='hard'?6:5)+Math.floor(s/3)+(t>120?1:0);};
+/* L1 consolidated: legacy d1SpawnInterval implementation removed */
+/* L1 consolidated: legacy d1ActiveCap implementation removed */
 
 // G1 bacteria family inspired by the user's reference silhouettes, rebuilt procedurally for the game.
 Object.assign(ENEMY,{
@@ -1824,32 +1429,14 @@ const G1_STAGE_MIXES=[
 ];
 for(let i=0;i<Math.min(STAGES.length,G1_STAGE_MIXES.length);i++)STAGES[i].mix=G1_STAGE_MIXES[i].slice();
 
-const g1NewStateBase=newState;
-newState=function(stageIndex=0){
-  const s=g1NewStateBase(stageIndex),baseTarget=(D1_EXPECTED_KILLS[s.difficulty]||D1_EXPECTED_KILLS.normal)[s.stageIndex]||36;
-  s.d1BossAt=G1_BOSS_TIME;s._minorCleanTarget=baseTarget*3;s.g1LastValidSpawnAt=0;s.g1StallWatch=0;s.g1SpawnRepairs=0;
-  // The old "campaign upgrade" was a misunderstanding. Do not apply stored gameplay stat upgrades.
-  s.f1Upgrades={damage:0,fireRate:0,survival:0,drone:0,supply:0};s.maxHealth=10;s.health=Math.min(10,s.health);
-  s.rewardNpcTimer=s.difficulty==='easy'?4.2:4.9;
-  return s;
-};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 // Fully D1-compatible mini spawn; fixes the old cluster NaN/stall bug in stages 2/4/8.
-spawnMini=function(px,py){
-  if(!state)return null;const base=ENEMY.spore,x=clamp(.32+Math.random()*.36,.08,.92);
-  const e={id:Math.random(),type:'spore',boss:false,name:null,x,baseX:x,depth:.46+Math.random()*.09,hp:1.1,maxHp:1.1,
-    speedBase:base.speed*(.82+Math.random()*.16),speed:base.speed*d1SpeedTarget()*.72,rad:14,color:base.color,phase:Math.random()*6.28,wobble:1.8,
-    attackTimer:999,summon:999,flash:0,dead:false,side:x<.5?-1:1,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:'mini'};
-  state.enemies.push(e);return e;
-};
+/* L1 consolidated: legacy spawnMini implementation removed */
 
-const g1SpawnEnemyD1Base=spawnEnemy;
-spawnEnemy=function(type,boss=false){
-  const e=g1SpawnEnemyD1Base(type,boss);if(!e)return e;
-  if(boss){toast('⚠ GIÂY 180 · BOSS XUẤT HIỆN!',2);e.g1DarkIntro=2.2;return e;}
-  e.g1Motion=e.base?.g1Motion||type;e.g1Lane=e.baseX;e.g1TargetX=e.baseX;e.g1Decision=.55+Math.random()*1.3;e.g1Pause=Math.random()*.5;e.g1Burst=0;e.g1GhostX=e.baseX;
-  return e;
-};
+
+/* L1 consolidated: legacy spawnEnemy implementation removed */
 
 // Ensure newly summoned Boss minions are valid and visible even if a future archetype is malformed.
 function g1RepairEnemy(e){
@@ -1889,48 +1476,7 @@ function g1Behavior(e,dt,speedFactor,slow){
 }
 
 // Final G1 update combines F1 post-boss flow with 180s survival, anti-stall and varied NPC AI.
-update=function(dt){
-  if(!state||state.mode!=='playing')return;const d=DIFF[state.difficulty];
-  if(state.transition>0){
-    state.transition+=dt;const cleanP=clamp(state.transition/F1_CLEAN_SECONDS,0,1);state.environmentClean=50+50*d1Smooth(cleanP);state.contamination=100-state.environmentClean;state.zoom=Math.min(1,state.transition/F1_CLEAN_SECONDS);state.cleanSparkle=state.transition>F1_CLEAN_SECONDS?clamp((state.transition-F1_CLEAN_SECONDS)/F1_SPARKLE_SECONDS,0,1):0;
-    const mark=Math.floor(cleanP*5);if(mark>state.f1CleanChimeMark&&mark<=5){state.f1CleanChimeMark=mark;tone(420+mark*105,.11,'sine',.010+mark*.002,90,0,.08)}
-    if(state.transition>=F1_CLEAN_SECONDS&&!state.f1SparkleChime){state.f1SparkleChime=true;tone(880,.16,'sine',.020,220,0,.12);setTimeout(()=>tone(1180,.17,'triangle',.018,250,0,.12),100);setTimeout(()=>tone(1460,.20,'sine',.014,120,0,.10),210)}
-    if(state.transition>=F1_CLEAN_SECONDS+F1_SPARKLE_SECONDS&&!state.nextPanel){state.nextPanel=true;state.environmentClean=100;state.contamination=0;state.cleanSparkle=1;f1ShowBossRewards()}updateHUD();return;
-  }
-  state.stageElapsed+=dt;if(state.stageIntro>0)state.stageIntro=Math.max(0,state.stageIntro-dt);state.zoom=Math.min(.10,state.stageElapsed*.00072);
-  if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.bossIntro>0)state.bossIntro=Math.max(0,state.bossIntro-dt);state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);
-  const axis=movementAxis();if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;const speedBoost=state.adrenaline>0?1.24:1;if(state.dashTimer>0)state.playerVX=state.dashDir*2.42*speedBoost;else{const accel=6.3*speedBoost,maxSpeed=1.05*speedBoost,friction=8.0;if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;else state.playerVX*=Math.max(0,1-friction*dt);state.playerVX=clamp(state.playerVX,-maxSpeed,maxSpeed);}state.playerX=clamp(state.playerX+state.playerVX*dt,-1,1);if(Math.abs(state.playerX)>=1&&Math.sign(state.playerVX)===Math.sign(state.playerX))state.playerVX=0;
-  if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast)}if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo()}}for(const f of ['shield','drone','adrenaline','vaccine','sterile','gppBoost'])if(state[f]>0)state[f]=Math.max(0,state[f]-dt);state.beam=Math.min(100,state.beam+18*dt);
-
-  if(!state.bossSpawned&&state.rewardNpcCount<state.rewardNpcMax){state.rewardNpcTimer-=dt;if(state.rewardNpcTimer<=0&&!state.rewardNpcs.some(n=>!n.dead)){spawnRewardNpc();state.rewardNpcTimer=(d.rewardEvery||9)*(.88+Math.random()*.28);}}
-  if(!state.bossSpawned&&state.stageElapsed<G1_BOSS_TIME){
-    const active=state.enemies.filter(e=>!e.dead&&!e.boss).length;state.spawnTimer-=dt;
-    // Anti-stall: never leave the player with an empty stage because a child NPC became invalid.
-    if(active===0&&state.spawnTimer>.75)state.spawnTimer=Math.min(state.spawnTimer,.32);
-    if(state.spawnTimer<=0&&active<d1ActiveCap()){const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],e=spawnEnemy(typ,false);if(e)e.countsForClean=true;state.d1NaturalSpawns++;state.spawnTimer=d1SpawnInterval();}
-  }
-  if(!state.bossSpawned&&state.stageElapsed>=G1_BOSS_TIME-.001){state.environmentClean=50;state.contamination=50;state.bossSpawned=true;state.spawnLeft=0;spawnEnemy(state.cfg.mix[0],true);}
-
-  const speedFactor=d1SpeedTarget()*d1Pressure(),slow=state.sterile>0?.58:1;
-  for(const e of state.enemies){
-    if(e.dead)continue;if(e.boss){updateBoss(e,dt,d);continue;}g1Behavior(e,dt,speedFactor,slow);
-    if(e.depth<=.055){const sc=enemyScreen(e),hitRadius=Math.max(36,Math.min(78,sc.r*.68+innerWidth*.016));if(Math.abs(playerScreenX()-sc.x)<hitRadius)damagePlayer(e.base.attack*d.damage);else{state.score+=35;sfx.dodgeSuccess();toast('↔ NÉ ĐƯỢC VI KHUẨN!',.48);}e.dead=true;burstAt(sc.x,sc.y,e.color,7);}
-  }
-  state.enemies=state.enemies.filter(e=>!e.dead);
-  for(const sh of state.enemyShots){sh.t+=dt;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r+=16*dt;if(sh.t>=sh.life){const hitRadius=Math.max(40,Math.min(76,innerWidth*.048));if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius)damagePlayer(sh.damage*d.damage);else{state.score+=20;sfx.dodgeSuccess();toast('↔ NÉ ĐÒN BOSS!',.48);}sh.dead=true;}}state.enemyShots=state.enemyShots.filter(s=>!s.dead);
-  for(const n of state.rewardNpcs){if(n.dead)continue;n.t+=dt;n.life-=dt;n.x+=n.vx*dt;if(n.life<=0||n.x<-.10||n.x>1.10)n.dead=true;}state.rewardNpcs=state.rewardNpcs.filter(n=>!n.dead);
-  for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max);}state.particles=state.particles.filter(p=>p.life>0);
-  for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);
-  for(const p of state.powerups){p.t+=dt;p.y+=Math.sin(p.t*3)*.12;p.life-=dt;if(p.life<=0)p.dead=true;}state.powerups=state.powerups.filter(p=>!p.dead);
-  if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.40;let target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){const s=enemyScreen(target),dx=Math.max(34,Math.min(innerWidth-34,playerScreenX()-innerWidth*.10)),dy=innerHeight*.66;state.tracers.push({x1:dx,y1:dy,x2:s.x,y2:s.y,t:0,life:.18,max:.18,travel:.10,color:'#70fff0',width:3.2,kind:'drone',seed:Math.random()*99});hitEnemy(target,.72,false,true);}}}
-  if(state.bossDrone>0){state.bossDrone=Math.max(0,state.bossDrone-dt);state._bossDroneTimer=(state._bossDroneTimer||0)-dt;if(state._bossDroneTimer<=0){state._bossDroneTimer=.22;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target){const sc=enemyScreen(target),p=v270WeaponPose?.monitorCenter||{x:playerScreenX(),y:innerHeight*.66};state.tracers.push({x1:p.x-22,y1:p.y-52,x2:sc.x,y2:sc.y,t:0,life:.24,max:.24,travel:.13,width:5.2,kind:'eliteDrone',seed:Math.random()*99});hitEnemy(target,1.25,false,true,false)}}}
-  if(state.f1AnnihilatorFx>0)state.f1AnnihilatorFx=Math.max(0,state.f1AnnihilatorFx-dt*1.8);
-
-  // G1 cleansing: the old kill quota is tripled and time gates prevent reaching 50% too early.
-  if(!state.bossSpawned){const t=clamp(state.stageElapsed/G1_BOSS_TIME,0,1),killRatio=clamp((state.cleanMinorKills||0)/Math.max(1,state._minorCleanTarget),0,1),timePart=36*t,killPart=Math.min(13.5*t,49.5*killRatio);state.environmentClean=clamp(timePart+killPart,0,49.5);state.contamination=100-state.environmentClean;}
-  if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)){state.bossDefeated=true;beginStageClear();}
-  if(pointer.down&&performance.now()-weaponPressStarted>120)shoot(pointer.x,pointer.y);updateHUD();
-};
+/* L1 consolidated: legacy update implementation removed */
 
 // Rank now measures Boss speed after a mandatory three-minute survival phase.
 rankFor=function(acc,hp,time){const bossTime=Math.max(0,time-G1_BOSS_TIME),v=acc*.52+hp*3.7+(bossTime<24?14:bossTime<40?9:bossTime<60?5:2);return v>=84?'S+':v>=72?'S':v>=57?'A':'B';};
@@ -1989,8 +1535,8 @@ if(claimBossRewardBtn)claimBossRewardBtn.onclick=f1ClaimBossRewards;
 const oldUpgradePanel=document.getElementById('upgradePanel');if(oldUpgradePanel){oldUpgradePanel.hidden=true;oldUpgradePanel.classList.add('hidden');}
 
 // Final menu/HUD wording for G1.
-const g1UpdateHUDBase=updateHUD;updateHUD=function(){g1UpdateHUDBase();if(!state)return;const t=state.bossSpawned?'BOSS':d1FormatClock(d1Countdown());if($('#rightTimeText'))$('#rightTimeText').textContent=t;if($('#timeTextMobile'))$('#timeTextMobile').textContent=t;};
-for(const b of $$('.difficulty'))b.addEventListener('click',()=>{const box=$('#difficultyDetail'),key=b.dataset.difficulty;if(!box)return;const map={easy:['🛡 DỄ · LÀM QUEN','NPC chậm · từng loại hành vi được giới thiệu dần trong 3 phút'],normal:['⚠ TRUNG BÌNH · CÂN BẰNG','Tổ hợp nhiều kiểu vi khuẩn · áp lực tăng theo 3 chặng tới giây 180'],hard:['☣ KHÓ · THỬ THÁCH','AI phối hợp nhiều hành vi hơn nhưng tốc độ vẫn có giới hạn để xử lý']};box.innerHTML=`<b>${map[key][0]}</b><span>${map[key][1]}</span>`;});
+/* L1 consolidated: legacy updateHUD implementation removed */
+/* L1 consolidated: legacy difficulty copy handler removed */
 
 
 
@@ -2004,12 +1550,8 @@ const G2_BOSS_HP_MULT=3;
 const G2_INSTALL_MARK='bstq-pwa-installed-v1';
 
 // Boss is now a real endurance encounter. HP is tripled after all stage/difficulty scaling.
-const g2SpawnEnemyBase=spawnEnemy;
-spawnEnemy=function(type,boss=false){
-  const e=g2SpawnEnemyBase(type,boss);
-  if(boss&&e&&!e.g2BossScaled){e.hp*=G2_BOSS_HP_MULT;e.maxHp*=G2_BOSS_HP_MULT;e.g2BossScaled=true;}
-  return e;
-};
+
+/* L1 consolidated: legacy spawnEnemy implementation removed */
 
 // Fast-Boss reward windows scale with the tougher encounter so two-item rewards remain achievable.
 f1GenerateBossReward=function(){
@@ -2031,24 +1573,11 @@ f1RewardCard=function(kind){
 };
 
 function g2SetWeaponScreenFx(kind,ms=1300){if(!state)return;state.g2ScreenFx=kind;state.g2ScreenFxUntil=performance.now()+ms;}
-const g2CollectPowerupsBase=collectPowerups;
-collectPowerups=function(x,y){
-  const target=state?.powerups?.find(p=>!p.dead&&Math.hypot(x-p.x,y-p.y)<48),kind=target?.kind;
-  const ok=g2CollectPowerupsBase(x,y);
-  if(ok&&kind)g2SetWeaponScreenFx(kind,kind==='heal'?1500:1900);
-  return ok;
-};
 
-const g2UseRewardBase=f1UseReward;
-f1UseReward=function(kind,fromCombo=false){
-  const ok=g2UseRewardBase(kind,fromCombo);if(!ok)return false;
-  if(kind==='eliteDrone'){
-    state.bossDrone=Math.max(state.bossDrone||0,20);state.f1WeaponEffect='eliteDrone';state.f1WeaponEffectUntil=performance.now()+20000;g2SetWeaponScreenFx('eliteDrone',20000);toast('🛸 DRONE ĐẶC BIỆT NGOÀI · 20s',1.15);
-  }else if(kind==='bossGpp'){
-    state.bossDrone=Math.max(state.bossDrone||0,20);state.f1WeaponEffect='bossGpp';state.f1WeaponEffectUntil=performance.now()+20000;g2SetWeaponScreenFx('bossGpp',20000);
-  }else g2SetWeaponScreenFx(kind,kind==='annihilator'?1500:1800);
-  return true;
-};
+/* L1 consolidated: legacy collectPowerups implementation removed */
+
+
+/* L1 consolidated: legacy f1UseReward implementation removed */
 
 const G2_SCREEN_STYLE={
   heal:{a:'#68f29a',b:'#dffff0',name:'HỒI PHỤC'},shield:{a:'#59d9ff',b:'#d5f9ff',name:'KHIÊN'},drone:{a:'#58f0df',b:'#a48cff',name:'DRONE'},adrenaline:{a:'#ff8148',b:'#ffe26f',name:'ADRENALINE'},vaccine:{a:'#b883ff',b:'#69e8ff',name:'VACCINE'},sterile:{a:'#6ff1cf',b:'#effff9',name:'STERILE'},gpp:{a:'#ffe06c',b:'#62eaff',name:'GPP'},gppBoost:{a:'#ffe06c',b:'#9c79ff',name:'GPP'},survival:{a:'#68f29a',b:'#ffffff',name:'+5'},eliteDrone:{a:'#c17cff',b:'#ffe06c',name:'DRONE 20s'},annihilator:{a:'#ff714e',b:'#ffd873',name:'HỦY DIỆT'},bossGpp:{a:'#ffe06c',b:'#62eaff',name:'GPP'}
@@ -2097,18 +1626,14 @@ function g2DrawEliteDrone(t){if(!state||state.bossDrone<=0)return;const p=g2Elit
   ctx.fillStyle='#fff4a1';ctx.beginPath();ctx.arc(0,0,r*.18,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(2,23,31,.78)';ctx.font=`900 ${Math.max(5,r*.34)}px system-ui`;ctx.textAlign='center';ctx.fillText(`${Math.ceil(state.bossDrone)}s`,0,r*.92);ctx.restore();}
 
 // Final shot/tracer must fade normally after Boss death; never freeze through the cleansing sequence.
-const g2UpdateBase=update;
-update=function(dt){
-  const wasTransition=!!(state&&state.mode==='playing'&&state.transition>0);g2UpdateBase(dt);if(!state)return;
-  if(wasTransition){for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);}
-  if(state.bossDrone>0){const p=g2EliteDronePose(performance.now());for(const tr of state.tracers)if(tr.kind==='eliteDrone'){tr.x1=p.x;tr.y1=p.y;}}
-};
+
+/* L1 consolidated: legacy update implementation removed */
 
 // Layer the visible elite Drone and brand overlays above the scene but below DOM HUD.
 function g2DrawGppPickupBrand(t){if(!state||!logoIcon.complete)return;for(const f of state.pickupFx||[]){if(f.kind!=='gpp'||t-f.start>=f.dur)continue;const q=clamp((t-f.start)/f.dur,0,1),e=1-Math.pow(1-q,3),x=f.x+(f.tx-f.x)*e,y=f.y+(f.ty-f.y)*e-Math.sin(q*Math.PI)*70,sc=.75+.35*Math.sin(q*Math.PI);ctx.save();ctx.translate(x,y);ctx.scale(sc,sc);ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.clip();ctx.fillStyle='#fff';ctx.fillRect(-15,-15,30,30);ctx.drawImage(logoIcon,-15,-15,30,30);ctx.restore();}
   const b=state.rewardBanner;if(b?.kind==='gpp'&&t<b.until){const v=gameplayViewport(),mobile=!v.desktop,w=Math.min(300,innerWidth*.40),x=mobile?(innerWidth-w)/2:v.left+14,y=mobile?70:innerHeight*.22;ctx.save();ctx.beginPath();ctx.roundRect(x+17,y+15,28,28,7);ctx.clip();ctx.fillStyle='#fff';ctx.fillRect(x+17,y+15,28,28);ctx.drawImage(logoIcon,x+17,y+15,28,28);ctx.restore();}}
 
-const g2RenderBase=render;render=function(t){g2RenderBase(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);};
+/* L1 consolidated: legacy render implementation removed */
 
 // GPP is a brand asset, not an emoji, including the active-support HUD.
 updateSupportUI=function(){
@@ -2135,7 +1660,7 @@ addEventListener('appinstalled',()=>{try{localStorage.setItem(G2_INSTALL_MARK,'1
 // UPDATE appears only when a newer deployed version or waiting service worker is detected.
 let g2RemoteUpdate=false;
 function g2VerParts(v){return String(v||'').split('.').map(x=>parseInt(x,10)||0)}
-function g2IsNewer(v,cur=G2_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false}
+/* L1 consolidated: legacy g2IsNewer implementation removed */
 g1RefreshUpdateUI=function(){g1SetVisible(G1_UPDATE_IDS,!!g1WaitingWorker||g2RemoteUpdate);};
 async function g2CheckVersion(){try{const r=await fetch(`./version.json?t=${Date.now()}`,{cache:'no-store'});if(r.ok){const v=await r.json();g2RemoteUpdate=g2IsNewer(v.version);g1RefreshUpdateUI();}}catch{}}
 g1ApplyUpdate=async function(){ensureAudio();if(g1WaitingWorker){g1Reloading=true;g1WaitingWorker.postMessage({type:'SKIP_WAITING'});return}if(g1SwReg){try{await g1SwReg.update()}catch{}if(g1SwReg.waiting){g1WaitingWorker=g1SwReg.waiting;g1Reloading=true;g1WaitingWorker.postMessage({type:'SKIP_WAITING'});return}}if(g2RemoteUpdate)location.reload();else g1RefreshUpdateUI();};
@@ -2148,7 +1673,6 @@ g1RefreshInstallUI();g1RefreshUpdateUI();f1UpdateRewardRail();
 
 
 /* === v3.4.0 H1 FINAL · interactive campaign map · briefing gate · harder distant Boss · 2× NPC pressure · full cleanup · expanded item FX === */
-const H1_VERSION='3.4.0';
 const H1_BOSS_EXTRA_MULT=2;
 const H1_NPC_SPEED_MULT=2;
 const H1_NPC_SPAWN_MULT=2;
@@ -2193,8 +1717,8 @@ const h1BriefBack=$('#briefBackBtn');if(h1BriefBack)h1BriefBack.onclick=()=>{h1P
 const h1GoHomeBase=goHome;goHome=function(){h1PendingStage=null;hide($('#missionBriefPanel'));h1GoHomeBase();h1RefreshMap();};
 
 // --- H1 Boss: twice as durable as v3.3 (therefore 6× the pre-hardening baseline), visually farther yet larger. ---
-const h1SpawnEnemyBase=spawnEnemy;
-spawnEnemy=function(type,boss=false){const e=h1SpawnEnemyBase(type,boss);if(boss&&e&&!e.h1BossScaled){e.hp*=H1_BOSS_EXTRA_MULT;e.maxHp*=H1_BOSS_EXTRA_MULT;e.h1BossScaled=true;e.attackTimer=Math.min(e.attackTimer||1.3,1.15);}return e;};
+
+/* L1 consolidated: legacy spawnEnemy implementation removed */
 const h1EnemyScreenBase=enemyScreen;
 enemyScreen=function(e){
   if(!e?.boss)return h1EnemyScreenBase(e);const h=innerHeight,horizon=h*.405,v=gameplayViewport(),phase=e.phase||0,scale=1.10+.045*Math.sin(phase*.58);return{x:v.center+(e.x-.5)*v.width*.66,y:horizon+h*.115+Math.sin(phase*.47)*2.5,scale,r:e.rad*scale*1.13};
@@ -2203,25 +1727,22 @@ const h1UpdateBossBase=updateBoss;
 updateBoss=function(e,dt,d){h1UpdateBossBase(e,dt,d);if(!e||e.dead||state?.bossIntro>0)return;const ratio=Math.max(0,e.hp/e.maxHp),phase=ratio>.75?1:ratio>.50?2:ratio>.25?3:4;const cap=Math.max(.48,1.12-phase*.12);if(Number.isFinite(e.attackTimer))e.attackTimer=Math.min(e.attackTimer,cap);};
 
 // --- H1 natural NPC pressure: at least 2× speed and 2× spawn frequency versus v3.3, while preserving archetype differences. ---
-const h1SpeedTargetBase=d1SpeedTarget;d1SpeedTarget=function(diff=state?.difficulty||'normal',stage=state?.stageIndex||0){return h1SpeedTargetBase(diff,stage)*H1_NPC_SPEED_MULT;};
-const h1SpawnIntervalBase=d1SpawnInterval;d1SpawnInterval=function(){return Math.max(.30,h1SpawnIntervalBase()/H1_NPC_SPAWN_MULT);};
-const h1ActiveCapBase=d1ActiveCap;d1ActiveCap=function(){return Math.min(20,Math.max(6,Math.round(h1ActiveCapBase()*1.9)));};
+/* L1 consolidated: legacy d1SpeedTarget implementation removed */
+/* L1 consolidated: legacy d1SpawnInterval implementation removed */
+/* L1 consolidated: legacy d1ActiveCap implementation removed */
 
 // --- Capture the last Boss position, then hard-clean every combat layer before the 5s cleanse begins. ---
-const h1HitEnemyBase=hitEnemy;
-hitEnemy=function(e,...args){if(e?.boss&&state){try{const s=enemyScreen(e);state.h1LastBossScreen={x:s.x,y:s.y,r:s.r};}catch{}}return h1HitEnemyBase(e,...args);};
-function h1CombatCleanup(){
-  if(!state)return;const p=state.h1LastBossScreen||{x:gameplayViewport().center,y:innerHeight*.50,r:90};state.h1BossDeathFx={start:performance.now(),dur:760,x:p.x,y:p.y,r:p.r};
-  state.enemyShots.length=0;state.tracers.length=0;state.hitMarkers.length=0;state.particles.length=0;state.powerups.length=0;state.rewardNpcs.length=0;state.enemies.length=0;state.muzzleFlash=0;state.recoil=0;state.shake=0;state._bossDroneTimer=999;pointer.down=false;
-}
+
+/* L1 consolidated: legacy hitEnemy implementation removed */
+/* L1 consolidated: legacy h1CombatCleanup implementation removed */
 const h1BeginStageClearBase=beginStageClear;
 beginStageClear=function(){if(!state||state.transition>0||state.bossRewardShown)return;h1CombatCleanup();h1BeginStageClearBase();};
 function h1DrawBossDeathFx(t){const f=state?.h1BossDeathFx;if(!f)return;const q=clamp((t-f.start)/f.dur,0,1);if(q>=1){state.h1BossDeathFx=null;return;}ctx.save();ctx.globalCompositeOperation='screen';const a=1-q,r=f.r*(.8+q*2.2);for(let i=0;i<4;i++){ctx.globalAlpha=a*(.22-i*.035);ctx.strokeStyle=i%2?'#9c6cff':'#80ffce';ctx.lineWidth=Math.max(1,4-i);ctx.beginPath();ctx.arc(f.x,f.y,r*(.55+i*.19),0,Math.PI*2);ctx.stroke();}for(let i=0;i<18;i++){const ang=i*.349+t*.0006*(i%2?1:-1),rr=r*(.35+q*(.45+(i%4)*.08));ctx.globalAlpha=a*.28;ctx.fillStyle=i%3===0?'#ffe680':i%2?'#8effd5':'#a679ff';ctx.beginPath();ctx.arc(f.x+Math.cos(ang)*rr,f.y+Math.sin(ang)*rr*.65,1.5+(i%3),0,Math.PI*2);ctx.fill();}ctx.restore();}
 
 // --- H1 item presentation: 3× standard / 4× special expansion from the weapon monitor. Shield becomes a full player field for 12s. ---
 SUPPORT_ITEMS.shield.duration=12;D1_REWARD_META.shield.duration=12;
-const h1CollectPowerupsBase=collectPowerups;
-collectPowerups=function(x,y){const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind,ok=h1CollectPowerupsBase(x,y);if(ok&&state&&(kind==='shield'||kind==='gpp')){state.shield=Math.max(state.shield||0,12);state._supportHudKey='';}return ok;};
+
+/* L1 consolidated: legacy collectPowerups implementation removed */
 const h1SetWeaponScreenFxBase=g2SetWeaponScreenFx;
 g2SetWeaponScreenFx=function(kind,ms=1300){if(state){state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=state.h1FxStart+Math.min(2600,Math.max(1500,ms));}return h1SetWeaponScreenFxBase(kind,ms);};
 function h1DrawExpandedItemFx(t){
@@ -2233,10 +1754,10 @@ function h1DrawExpandedItemFx(t){
 function h1DrawShieldField(t){if(!state||state.transition>0||state.shield<=0)return;const v=gameplayViewport(),cx=playerScreenX(),cy=innerHeight*.68,rx=Math.min(v.width*.40,innerHeight*.52),ry=innerHeight*.48,pulse=.5+.5*Math.sin(t*.006);ctx.save();ctx.beginPath();ctx.rect(v.left,0,v.width,innerHeight);ctx.clip();ctx.globalCompositeOperation='screen';const g=ctx.createRadialGradient(cx,cy,rx*.18,cx,cy,rx);g.addColorStop(0,'rgba(125,238,255,.02)');g.addColorStop(.62,'rgba(83,211,255,.035)');g.addColorStop(.90,'rgba(92,225,255,.10)');g.addColorStop(1,'rgba(170,249,255,.18)');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,Math.PI,Math.PI*2);ctx.lineTo(cx+rx,cy);ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI);ctx.closePath();ctx.fill();ctx.strokeStyle=`rgba(151,246,255,${.30+.12*pulse})`;ctx.lineWidth=2.2;ctx.shadowColor='#67e7ff';ctx.shadowBlur=20;ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,Math.PI,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;for(let i=1;i<=3;i++){ctx.globalAlpha=.08+.03*pulse;ctx.strokeStyle=i%2?'#9ff6ff':'#60cfff';ctx.beginPath();ctx.ellipse(cx,cy,rx*(.58+i*.12),ry*(.58+i*.12),0,t*.00015*i,t*.00015*i+Math.PI*1.35);ctx.stroke();}ctx.restore();}
 
 // Final H1 render: existing G1/G2 scene first, then transient Boss death and large but readable item fields.
-const h1RenderBase=render;render=function(t){h1RenderBase(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);};
+/* L1 consolidated: legacy render implementation removed */
 
 // Version comparison must use this H1 build so UPDATE stays hidden until a genuinely newer deployment exists.
-g2IsNewer=function(v,cur=H1_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+/* L1 consolidated: legacy g2IsNewer implementation removed */
 
 // H1 menu initial state.
 a1RenderStageMenu();h1RefreshMap();g1RefreshInstallUI();g1RefreshUpdateUI();
@@ -2254,7 +1775,7 @@ for(const id of G1_INSTALL_IDS){const b=document.getElementById(id);if(b)b.oncli
 
 
 /* === v3.5.0 H1 BALANCE · sparse Boss patterns · smart map preview · richer SUPPLY · leaderboard client === */
-const H15_VERSION='3.9.0';
+const H15_VERSION=L1_VERSION;
 
 // --- Boss fire: fewer, more legible projectiles with a visible telegraph and real breathing room. ---
 function h15BossShotCount(phase,diff){
@@ -2325,12 +1846,12 @@ window.addEventListener('resize',()=>requestAnimationFrame(()=>h15PlaceMapPrevie
 
 // --- More support without random droughts: higher cap plus a guaranteed SUPPLY window. ---
 Object.assign(DIFF.easy,{rewardEvery:10.0,rewardMax:13});Object.assign(DIFF.normal,{rewardEvery:12.0,rewardMax:11});Object.assign(DIFF.hard,{rewardEvery:14.0,rewardMax:9});
-const h15NewStateBase=newState;
-newState=function(stageIndex=0){const s=h15NewStateBase(stageIndex),d=s.difficulty;s.rewardNpcMax=DIFF[d].rewardMax;s.rewardNpcTimer=d==='easy'?3.0:d==='hard'?4.2:3.6;s.h15LastSupplyAt=0;s.h15SupplyGuarantee=d==='easy'?14:d==='hard'?20:17;return s;};
+
+/* L1 consolidated: legacy newState implementation removed */
 const h15SpawnRewardBase=spawnRewardNpc;
 spawnRewardNpc=function(){const before=state?.rewardNpcs?.length||0,r=h15SpawnRewardBase();if(state&&(state.rewardNpcs.length>before||state.rewardNpcs.some(n=>!n.dead)))state.h15LastSupplyAt=state.stageElapsed||0;return r;};
-const h15UpdateBase=update;
-update=function(dt){h15UpdateBase(dt);if(!state||state.mode!=='playing'||state.transition>0||state.bossSpawned)return;const active=state.rewardNpcs?.some(n=>!n.dead);if(!active&&state.rewardNpcCount<state.rewardNpcMax&&(state.stageElapsed-(state.h15LastSupplyAt||0))>=(state.h15SupplyGuarantee||18)){spawnRewardNpc();state.rewardNpcTimer=Math.max(state.rewardNpcTimer||0,4.5);}};
+
+/* L1 consolidated: legacy update implementation removed */
 
 // --- Optional leaderboard client. Cross-device sharing automatically activates once a HTTPS endpoint is configured. ---
 const H15_LB_KEY='bstqLeaderboardV1',H15_LB_ENDPOINT=(window.BSTQ_LEADERBOARD_ENDPOINT||'').trim();let h15PendingRecord=null;
@@ -2351,10 +1872,10 @@ function h15ConsiderRecord(){if(!state)return;const acc=state.shots?Math.round(s
 const h15StageCompleteBase=stageCompletePanel;stageCompletePanel=function(){h15StageCompleteBase();h15ConsiderRecord();};
 
 // Final render layer for the Boss telegraph.
-const h15RenderBase=render;render=function(t){h15RenderBase(t);h15DrawBossTelegraph(t);};
+/* L1 consolidated: legacy render implementation removed */
 
 // Version UI must compare against this build.
-g2IsNewer=function(v,cur=H15_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+/* L1 consolidated: legacy g2IsNewer implementation removed */
 
 
 
@@ -2364,22 +1885,12 @@ function h16IsMobileControl(){return matchMedia('(hover:none) and (pointer:coars
 function h16ReadFireMode(){if(h16IsMobileControl())return'auto';try{return localStorage.getItem(H16_FIRE_MODE_KEY)==='manual'?'manual':'auto'}catch{return'auto'}}
 let h16PreferredFireMode=h16ReadFireMode();
 function h16CurrentFireMode(){return h16IsMobileControl()?'auto':(state?.h16FireMode||h16PreferredFireMode||'auto');}
-function h16UpdateFireModeUI(){
-  const mode=h16CurrentFireMode(),mobile=h16IsMobileControl();
-  for(const b of document.querySelectorAll('[data-fire-mode]')){const m=b.dataset.fireMode;b.classList.toggle('active',m===mode);if(b.id==='pauseFireModeManual')b.disabled=mobile;}
-  const hint=$('#pauseFireModeHint');if(hint)hint.textContent=mobile?'Điện thoại: AUTO cố định · chạm NPC/Boss để khóa mục tiêu.':'PC: AUTO tự bắn hoặc THỦ CÔNG bằng chuột · đổi được ngay khi Pause.';
-  const hud=$('#fireModeHud');if(hud){hud.classList.toggle('manual',mode==='manual');hud.textContent=mode==='auto'?(mobile?'⚡ AUTO · CHẠM ĐỂ KHÓA':'⚡ AUTO · CLICK ĐỂ KHÓA'):'🎯 THỦ CÔNG · CHUỘT NGẮM/BẮN';}
-}
-function h16SetFireMode(mode,{persist=true,announce=true}={}){
-  if(h16IsMobileControl())mode='auto';mode=mode==='manual'?'manual':'auto';h16PreferredFireMode=mode;
-  if(persist&&!h16IsMobileControl()){try{localStorage.setItem(H16_FIRE_MODE_KEY,mode)}catch{}}
-  if(state){state.h16FireMode=mode;state.h16ManualLock=null;state.h16AutoTarget=null;pointer.down=false;}
-  h16UpdateFireModeUI();if(announce&&state?.mode==='playing')toast(mode==='auto'?'⚡ AUTO FIRE · CLICK/CHẠM ĐỂ KHÓA':'🎯 BẮN THỦ CÔNG · CHUỘT NGẮM/BẮN',1.15);
-}
+/* L1 consolidated: legacy h16UpdateFireModeUI implementation removed */
+/* L1 consolidated: legacy h16SetFireMode implementation removed */
 for(const b of document.querySelectorAll('[data-fire-mode]'))b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();h16SetFireMode(b.dataset.fireMode);});
 
-const h16NewStateBase=newState;
-newState=function(stageIndex=0){const s=h16NewStateBase(stageIndex);s.h16FireMode=h16IsMobileControl()?'auto':h16PreferredFireMode;s.h16ManualLock=null;s.h16AutoTarget=null;s.h16LockFxUntil=0;s.h16LockSerial=0;s.h16AutoBombAt=0;return s;};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 function h16TargetRef(kind,entity){return entity?{kind,id:entity.id}:null;}
 function h16ResolveTarget(ref){
@@ -2396,57 +1907,25 @@ function h16TargetAt(x,y){
 function h16CriticalMinor(){const gate=state?.difficulty==='easy'?.84:state?.difficulty==='hard'?.76:.80;return(state?.enemies||[]).filter(e=>!e.dead&&!e.boss&&e.depth<=gate).sort((a,b)=>{
   const wa=(a.base?.charge?-.18:0)+(a.type==='spitter'?-.10:0)+(a.type==='elite'?-.08:0),wb=(b.base?.charge?-.18:0)+(b.type==='spitter'?-.10:0)+(b.type==='elite'?-.08:0);return(a.depth+wa)-(b.depth+wb);
 })[0]||null;}
-function h16ChooseAutoTarget(){
-  if(!state)return null;
-  const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
-  let sticky=h16ResolveTarget(state.h16AutoTarget);const critical=h16CriticalMinor();
-  if(sticky?.entity?.boss&&critical&&critical.depth<.46)sticky=null;
-  if(sticky)return sticky;
-  if(critical){state.h16AutoTarget=h16TargetRef('enemy',critical);return h16ResolveTarget(state.h16AutoTarget);}
-  const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
-  // SUPPLY becomes an automatic fallback only when combat is clear; players may always tap it to prioritize it immediately.
-  const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
-  state.h16AutoTarget=null;return null;
-}
+/* L1 consolidated: legacy h16ChooseAutoTarget implementation removed */
 function h16LockTarget(target){
   if(!state)return;if(!target){state.h16ManualLock=null;state.h16AutoTarget=null;return;}
   state.h16ManualLock=h16TargetRef(target.kind,target.entity);state.h16AutoTarget=null;state.h16LockFxUntil=performance.now()+520;state.h16LockSerial=(state.h16LockSerial||0)+1;
   const label=target.kind==='reward'?'SUPPLY':target.entity.boss?'BOSS':target.entity.type==='elite'?'NPC ELITE':'NPC';tone(target.entity?.boss?330:690,.055,'triangle',.014,150,0,.05);toast(`🔒 ĐÃ KHÓA ${label}`,0.72);
 }
-canvas.addEventListener('pointerdown',e=>{
-  if(!state||state.mode!=='playing'||h16CurrentFireMode()!=='auto')return;const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;
-  if(collectPowerups(p.x,p.y)){state.lastFire=performance.now();e.preventDefault();e.stopImmediatePropagation();return;}
-  h16LockTarget(h16TargetAt(p.x,p.y));
-},true);
+/* L1 consolidated: legacy canvas pointerdown removed */
 
 // Existing mouse/touch listeners remain installed for MANUAL mode. In AUTO mode their shot calls are suppressed.
-const h16ShootBase=shoot;
-shoot=function(x,y){if(!state||state.mode!=='playing'||state.transition>0)return;if(h16CurrentFireMode()==='auto'&&!state.h16AutoShot)return;return h16ShootBase(x,y);};
-function h16AutoFireTick(){
-  if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto'||state.stageIntro>0||state.bossIntro>0)return;const t=h16ChooseAutoTarget();if(!t)return;
-  const s=t.kind==='reward'?rewardNpcScreen(t.entity):enemyScreen(t.entity),w=WEAPONS[state.weapon],now=performance.now();
-  if(h16IsMobileControl()){pointer.x=s.x;pointer.y=s.y;}
-  // Bombs remain automatic but are paced so AUTO does not throw all three in a second.
-  if(w.kind==='bomb'&&now-(state.h16AutoBombAt||0)<1450)return;
-  const before=state.lastFire;state.h16AutoShot=true;try{shoot(s.x,s.y)}finally{state.h16AutoShot=false;}
-  if(state.lastFire!==before){weaponSingleFlashUntil=now+420;if(w.kind==='bomb')state.h16AutoBombAt=now;}
-}
-const h16UpdateBase=update;
-update=function(dt){h16UpdateBase(dt);if(state?.mode==='playing')h16AutoFireTick();};
+
+/* L1 consolidated: legacy shoot implementation removed */
+/* L1 consolidated: legacy h16AutoFireTick implementation removed */
+
+/* L1 consolidated: legacy update implementation removed */
 
 const h16CrosshairBase=drawCrosshair;
 drawCrosshair=function(){if(state&&h16CurrentFireMode()==='auto'&&h16IsMobileControl())return;h16CrosshairBase();};
-function h16DrawTargetLock(t){
-  if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto')return;const manual=h16ResolveTarget(state.h16ManualLock),target=manual||h16ChooseAutoTarget();if(!target)return;
-  const s=target.kind==='reward'?rewardNpcScreen(target.entity):enemyScreen(target.entity),boss=target.kind==='enemy'&&target.entity.boss,r=Math.max(target.kind==='reward'?35:boss?66:32,s.r*(boss?1.32:1.42)),pulse=.5+.5*Math.sin(t*.010),locked=!!manual,col=target.kind==='reward'?'#7dfff0':boss?'#ffcf6a':locked?'#ffe77d':'#7fffe8';
-  ctx.save();ctx.translate(s.x,s.y);ctx.globalCompositeOperation='screen';ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=locked?20:12;ctx.lineCap='round';ctx.lineWidth=locked?2.8:1.8;ctx.globalAlpha=locked?.88:.56;
-  const rot=t*.0012*(boss?.55:1);for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,0,r*(1+i*.14)+pulse*2.5,rot+i*2.1,rot+i*2.1+1.05);ctx.stroke();}
-  ctx.rotate(-rot*.65);const br=r*1.05,ln=Math.max(8,r*.24);for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ctx.beginPath();ctx.moveTo(sx*br,sy*(br-ln));ctx.lineTo(sx*br,sy*br);ctx.lineTo(sx*(br-ln),sy*br);ctx.stroke();}
-  ctx.rotate(rot*.65);ctx.globalAlpha=.82;ctx.beginPath();ctx.arc(0,0,Math.max(5,r*.12),0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(-r*.22,0);ctx.lineTo(r*.22,0);ctx.moveTo(0,-r*.22);ctx.lineTo(0,r*.22);ctx.stroke();
-  if(performance.now()<(state.h16LockFxUntil||0)){const q=1-(state.h16LockFxUntil-performance.now())/520;ctx.globalAlpha=.46*(1-q);ctx.lineWidth=5*(1-q)+1;ctx.beginPath();ctx.arc(0,0,r*(.72+q*.82),0,Math.PI*2);ctx.stroke();}
-  ctx.shadowBlur=8;ctx.globalAlpha=.92;ctx.fillStyle='rgba(2,25,30,.86)';const label=target.kind==='reward'?'🔒 SUPPLY':boss?'🔒 BOSS LOCK':locked?'🔒 ĐÃ KHÓA':'⚡ AUTO LOCK';ctx.font=`1000 ${Math.max(7,Math.min(12,r*.16))}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';const tw=ctx.measureText(label).width+14;ctx.beginPath();ctx.roundRect(-tw/2,-r*1.48,tw,18,8);ctx.fill();ctx.fillStyle=col;ctx.fillText(label,0,-r*1.48+9);ctx.restore();
-}
-const h16RenderBase=render;render=function(t){h16RenderBase(t);h16DrawTargetLock(t);};
+/* L1 consolidated: legacy h16DrawTargetLock implementation removed */
+/* L1 consolidated: legacy render implementation removed */
 
 // Re-apply the remembered mode when resuming and force AUTO whenever the device uses coarse touch controls.
 // newState() already applies the correct mode when VÀO NGHÊNH CHIẾN creates a stage.
@@ -2454,13 +1933,12 @@ const h16ResumeBase=resumeGame;resumeGame=function(){const r=h16ResumeBase();if(
 window.addEventListener('resize',()=>{if(h16IsMobileControl()&&state)state.h16FireMode='auto';h16UpdateFireModeUI();},{passive:true});
 
 // Current build version for PWA update checks and leaderboard records.
-g2IsNewer=function(v,cur=H15_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+/* L1 consolidated: legacy g2IsNewer implementation removed */
 h16UpdateFireModeUI();
 
 h1RefreshMap();h15PlaceMapPreview(a1SelectedStage);g1RefreshInstallUI();g1RefreshUpdateUI();
 
 /* === v3.7.0 H1 · REAL MOBILE AUTO TARGET/FIRE + PC LIVE MODE + NPC COUNTERFIRE + ITEM/HIT REPAIR === */
-const H17_VERSION='3.7.0';
 function h17IsMobileGameplay(){
   const ua=navigator.userAgent||'', uaMobile=!!navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(ua);
   const touch=Number(navigator.maxTouchPoints||0)>0;
@@ -2470,26 +1948,18 @@ function h17IsMobileGameplay(){
 // Real phones/tablets are always AUTO even when a browser reports a mouse/fine pointer in landscape/PWA mode.
 h16IsMobileControl=h17IsMobileGameplay;
 
-const h17NewStateBase=newState;
-newState=function(stageIndex=0){
-  const s=h17NewStateBase(stageIndex);s.h17NpcShots=[];s.h17DamageIFrame=0;s.h17PlayerHitFx=null;s.h17LastAutoShotAt=0;
-  if(h17IsMobileGameplay())s.h16FireMode='auto';return s;
-};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 // Faster NPC pressure, but only a moderate step above v3.6 so motion remains readable.
-const h17SpeedTargetBase=d1SpeedTarget;
-d1SpeedTarget=function(diff=state?.difficulty||'normal',stage=state?.stageIndex||0){return h17SpeedTargetBase(diff,stage)*1.18;};
+
+/* L1 consolidated: legacy d1SpeedTarget implementation removed */
 
 function h17ShooterChance(type){
   return ({spitter:.95,flyer:.62,elite:.70,support:.58,nucleus:.40,flagella:.28,shield:.18,basic:.08,zigzag:.12,sprinter:.14,dodger:.12,arc:.10}[type]||0);
 }
-const h17SpawnEnemyBase=spawnEnemy;
-spawnEnemy=function(type,boss=false){
-  const e=h17SpawnEnemyBase(type,boss);if(!e||boss)return e;
-  const diff=state?.difficulty||'normal',scale=diff==='easy'?.62:diff==='hard'?1:.82;
-  e.h17Ranged=!e.bossSummoned&&Math.random()<h17ShooterChance(type)*scale;
-  e.h17ShotCooldown=2.4+Math.random()*2.2;e.h17ShotWarn=0;e.h17ShotQueued=false;e.h17ThreatPulse=0;return e;
-};
+
+/* L1 consolidated: legacy spawnEnemy implementation removed */
 function h17MaxNpcShots(){const mobile=h17IsMobileGameplay(),diff=state?.difficulty||'normal';return diff==='hard'?(mobile?3:3):(mobile?2:3);}
 function h17NpcShotDamage(){const diff=state?.difficulty||'normal';return diff==='easy'?.07:diff==='hard'?.12:.09;}
 function h17NpcWarnSeconds(){const diff=state?.difficulty||'normal';return diff==='easy'?.60:diff==='hard'?.44:.52;}
@@ -2537,51 +2007,17 @@ damagePlayer=function(amount){
 function h17ThreatScore(e){
   const shooter=e.h17Ranged?120:0,warning=e.h17ShotWarn>0?220:0,fast=(e.g1Motion==='sprinter'||e.type==='charger'||e.type==='sprinter')?70:0,support=e.base?.support?65:0,close=(1-clamp(e.depth,0,1))*180;return warning+shooter+fast+support+close;
 }
-const h17ChooseAutoTargetBase=h16ChooseAutoTarget;
-h16ChooseAutoTarget=function(){
-  if(!state)return null;const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
-  if(h17IsMobileGameplay()){
-    let sticky=h16ResolveTarget(state.h16AutoTarget);
-    const minors=(state.enemies||[]).filter(e=>!e.dead&&!e.boss).sort((a,b)=>h17ThreatScore(b)-h17ThreatScore(a));
-    if(sticky&&sticky.kind==='enemy'&&!sticky.entity.dead){const best=minors[0];if(!best||best.id===sticky.entity.id||h17ThreatScore(best)<h17ThreatScore(sticky.entity)+145)return sticky;}
-    if(minors[0]){state.h16AutoTarget=h16TargetRef('enemy',minors[0]);return h16ResolveTarget(state.h16AutoTarget);}
-    const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
-    const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
-    state.h16AutoTarget=null;return null;
-  }
-  return h17ChooseAutoTargetBase();
-};
+
+/* L1 consolidated: legacy h16ChooseAutoTarget implementation removed */
 // No post-briefing dead time on mobile: once gameplay begins it immediately selects a target and fires.
-h16AutoFireTick=function(){
-  if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto'||state.bossIntro>0)return;const t=h16ChooseAutoTarget();if(!t)return;
-  const s=t.screen|| (t.kind==='reward'?rewardNpcScreen(t.entity):enemyScreen(t.entity));if(!s)return;pointer.x=s.x;pointer.y=s.y;
-  const w=WEAPONS[state.weapon],now=performance.now();if(w.kind==='bomb'&&now-(state.h16AutoBombAt||0)<1450)return;
-  const before=state.lastFire;state.h16AutoShot=true;try{shoot(s.x,s.y)}finally{state.h16AutoShot=false;}
-  if(state.lastFire!==before){state.h17LastAutoShotAt=now;weaponSingleFlashUntil=now+420;if(w.kind==='bomb')state.h16AutoBombAt=now;}
-};
+/* L1 consolidated: legacy h16AutoFireTick implementation removed */
 
 // Capture AUTO taps before the legacy manual pointer handler: power-up tap uses the item; NPC/Boss tap only locks target.
-canvas.addEventListener('pointerdown',e=>{
-  if(!state||state.mode!=='playing'||h16CurrentFireMode()!=='auto')return;const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;ensureAudio();
-  if(collectPowerups(p.x,p.y)){state.lastFire=performance.now();e.preventDefault();e.stopImmediatePropagation();return;}
-  const target=h16TargetAt(p.x,p.y);if(target){h16LockTarget(target);e.preventDefault();e.stopImmediatePropagation();}
-},true);
+/* L1 consolidated: legacy canvas pointerdown removed */
 
 // Ensure every ordinary support item has both a gameplay function and a fresh weapon-monitor effect.
-const h17CollectPowerupsBase=collectPowerups;
-collectPowerups=function(x,y){
-  const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind,before=state?{health:state.health,shield:state.shield,drone:state.drone,adrenaline:state.adrenaline,vaccine:state.vaccine,sterile:state.sterile,gppBoost:state.gppBoost}:null;
-  const ok=h17CollectPowerupsBase(x,y);if(!ok||!state||!kind)return ok;
-  // Repair guards: guarantee the intended minimum effect even if an older override did not extend it.
-  if(kind==='heal')state.health=Math.min(state.maxHealth||10,Math.max(state.health,(before?.health||0)+2));
-  if(kind==='shield')state.shield=Math.max(state.shield||0,12);
-  if(kind==='drone')state.drone=Math.max(state.drone||0,10);
-  if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);
-  if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);
-  if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);
-  if(kind==='gpp'){state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);state.gppBoost=Math.max(state.gppBoost||0,8);}
-  g2SetWeaponScreenFx(kind,kind==='heal'?1700:2200);state._supportHudKey='';updateHUD();return true;
-};
+
+/* L1 consolidated: legacy collectPowerups implementation removed */
 
 function h17DrawNpcCounterfire(t){
   if(!state)return;ctx.save();ctx.beginPath();const v=gameplayViewport();ctx.rect(v.left,0,v.width,innerHeight);ctx.clip();
@@ -2592,30 +2028,30 @@ function h17DrawNpcCounterfire(t){
 function h17DrawPlayerHitFx(t){
   const f=state?.h17PlayerHitFx;if(!f)return;const q=clamp((t-f.start)/f.dur,0,1);if(q>=1){state.h17PlayerHitFx=null;return;}const v=gameplayViewport(),cx=playerScreenX(),cy=innerHeight*.70,side=f.fromX<cx?-1:1,col=f.shielded?'#8cf5ff':'#ff8fa3';ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=(1-q)*.55;ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.shadowColor=col;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(cx,cy,32+q*34,side<0?Math.PI*.55:-Math.PI*.45,side<0?Math.PI*1.45:Math.PI*.45);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<5;i++){const yy=innerHeight*(.30+i*.095),x=side<0?v.left+5:v.left+v.width-5;ctx.globalAlpha=(1-q)*(.17+i*.025);ctx.fillStyle=col;ctx.fillRect(side<0?x:x-4,yy,4,22);}ctx.restore();
 }
-const h17DrawTargetLockBase=h16DrawTargetLock;
-h16DrawTargetLock=function(t){h17DrawTargetLockBase(t);if(!state||h16CurrentFireMode()!=='auto')return;const tar=h16ResolveTarget(state.h16ManualLock)||h16ResolveTarget(state.h16AutoTarget);if(!tar||tar.kind!=='enemy'||!tar.entity.h17Ranged)return;const s=tar.screen||enemyScreen(tar.entity);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle='#ff9fe8';ctx.font=`1000 ${Math.max(8,Math.min(13,s.r*.18))}px system-ui`;ctx.textAlign='center';ctx.fillText('↯ PHẢN KÍCH',s.x,s.y+s.r*1.47);ctx.restore();};
 
-const h17CombatCleanupBase=h1CombatCleanup;
-h1CombatCleanup=function(){if(state){if(state.h17NpcShots)state.h17NpcShots.length=0;state.h17PlayerHitFx=null;state.h17DamageIFrame=0;for(const e of state.enemies||[]){e.h17ShotWarn=0;e.h17ShotQueued=false;}}return h17CombatCleanupBase();};
+/* L1 consolidated: legacy h16DrawTargetLock implementation removed */
 
-const h17UpdateBase=update;
-update=function(dt){h17UpdateBase(dt);if(state?.mode==='playing')h17UpdateNpcCounterfire(dt);};
-const h17RenderBase=render;
-render=function(t){h17RenderBase(t);h17DrawNpcCounterfire(t);h17DrawPlayerHitFx(t);};
+
+/* L1 consolidated: legacy h1CombatCleanup implementation removed */
+
+
+/* L1 consolidated: legacy update implementation removed */
+
+/* L1 consolidated: legacy render implementation removed */
 
 // Keep live PC mode buttons synced and force true mobile state after orientation/resume changes.
-const h17UpdateFireModeUIBase=h16UpdateFireModeUI;
-h16UpdateFireModeUI=function(){h17UpdateFireModeUIBase();const mode=h16CurrentFireMode();for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]'))b.classList.toggle('active',b.dataset.fireMode===mode);const hud=$('#fireModeHud');if(hud&&h17IsMobileGameplay())hud.textContent='⚡ AUTO · TỰ CHỌN MỤC TIÊU · CHẠM ĐỂ KHÓA';};
+
+/* L1 consolidated: legacy h16UpdateFireModeUI implementation removed */
 function h17ForceMobileAuto(){if(!h17IsMobileGameplay())return;if(state){state.h16FireMode='auto';state.h16AutoTarget=null;}h16PreferredFireMode='auto';h16UpdateFireModeUI();}
 window.addEventListener('orientationchange',()=>setTimeout(h17ForceMobileAuto,80),{passive:true});window.addEventListener('pageshow',h17ForceMobileAuto,{passive:true});
 const h17ResumeBase=resumeGame;resumeGame=function(){const r=h17ResumeBase();h17ForceMobileAuto();return r;};
 
 // Update build comparison and UI now that v3.7 is active.
-g2IsNewer=function(v,cur=H17_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+/* L1 consolidated: legacy g2IsNewer implementation removed */
 h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 /* === v3.8.0 H1 · CONTROL SIDE + ITEM GUARANTEE + END-RESULT LEADERBOARD PREVIEW === */
-const H18_VERSION='3.9.0',H18_CONTROL_SIDE_KEY='bstq-h18-mobile-control-side-v1';
+const H18_VERSION=L1_VERSION,H18_CONTROL_SIDE_KEY='bstq-h18-mobile-control-side-v1';
 let h18PendingShare=null,h18PreviewOnly=false;
 function h18ReadControlSide(){try{return localStorage.getItem(H18_CONTROL_SIDE_KEY)==='right'?'right':'left'}catch{return'left'}}
 let h18ControlSide=h18ReadControlSide();
@@ -2632,31 +2068,18 @@ window.addEventListener('orientationchange',()=>setTimeout(()=>h18ApplyControlSi
 window.addEventListener('pageshow',()=>h18ApplyControlSide(h18ControlSide,{persist:false}),{passive:true});
 
 // Always expose the exact running build on the main menu.
-function h18RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent=`PHIÊN BẢN · v${H18_VERSION} H1`;if(b)b.textContent=`v${H18_VERSION} H1`;document.title=`Bác Sĩ Truy Quét · TRƯỜNG GPP · v${H18_VERSION} H1`;}
-h18RefreshVersion();
+/* L1 consolidated: legacy h18RefreshVersion implementation removed */
+/* L1 consolidated: stale H18 version refresh removed */
 
 // Final ordinary-item guarantee. Every pickup must change real gameplay state AND refresh its monitor/expanded FX.
-const h18CollectPowerupsBase=collectPowerups;
-collectPowerups=function(x,y){
-  const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind,before=state?{health:state.health,shield:state.shield,drone:state.drone,adrenaline:state.adrenaline,vaccine:state.vaccine,sterile:state.sterile,gppBoost:state.gppBoost}:null;
-  const ok=h18CollectPowerupsBase(x,y);if(!ok||!state||!kind)return ok;const max=state.maxHealth||10;
-  if(kind==='heal')state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));
-  else if(kind==='shield')state.shield=Math.max(state.shield||0,12);
-  else if(kind==='drone')state.drone=Math.max(state.drone||0,10);
-  else if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);
-  else if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);
-  else if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);
-  else if(kind==='gpp'){
-    state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);state.gppBoost=Math.max(state.gppBoost||0,8);
-  }
-  g2SetWeaponScreenFx(kind,kind==='heal'?1800:2300);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2300;state._supportHudKey='';updateHUD();return true;
-};
+
+/* L1 consolidated: legacy collectPowerups implementation removed */
 
 function h18ScoreRecord(){if(!state)return null;const acc=state.shots?Math.round(state.hits/state.shots*100):100,rank=rankFor(acc,state.health,state.stageElapsed),bossSeconds=Math.max(0,state.stageElapsed-G1_BOSS_TIME);return{score:Math.round(state.score),stage:state.stageIndex,difficulty:state.difficulty,rank,accuracy:acc,bossSeconds:Math.round(bossSeconds*10)/10,version:H18_VERSION,__preview:true};}
 function h18PreviewMatches(rec){const f=h15CurrentFilters();return !!rec&&rec.difficulty===f.difficulty&&(f.stage==='all'||String(rec.stage)===String(f.stage));}
 function h18DiffLabel(d){return d==='easy'?'DỄ':d==='hard'?'KHÓ':'TRUNG BÌNH';}
 function h18RenderCurrentResult(position,total){const box=$('#leaderboardCurrentResult');if(!box)return;if(!h18PendingShare){box.classList.add('hidden');box.replaceChildren();return;}box.classList.remove('hidden');const pos=Number.isFinite(position)?`#${position}`:'—';box.innerHTML=`<div><b>ĐIỂM VỪA ĐẠT</b><span>Màn ${h18PendingShare.stage+1} · ${h18DiffLabel(h18PendingShare.difficulty)} · ${h18PendingShare.rank}</span></div><div><strong>${Number(h18PendingShare.score).toLocaleString('vi-VN')}</strong><em>${pos} TẠM TÍNH</em></div>`;}
-const h18LeaderRowsBase=h15RenderLeaderRows;
+
 h15RenderLeaderRows=function(entries){
   const box=$('#leaderboardList');if(!box)return;let all=[...(Array.isArray(entries)?entries:[])],preview=h18PreviewMatches(h18PendingShare)?{...h18PendingShare,name:'BẠN · CHƯA CÔNG KHAI',__preview:true}:null;
   if(preview)all.push(preview);all.sort((a,b)=>Number(b.score)-Number(a.score)||Number(a.bossSeconds||999)-Number(b.bossSeconds||999));const pidx=preview?all.indexOf(preview):-1;h18RenderCurrentResult(pidx>=0?pidx+1:null,all.length);
@@ -2677,20 +2100,19 @@ $('#leaderboardShareBtn')?.addEventListener('click',async()=>{
 $('#leaderboardSkipShareBtn')?.addEventListener('click',()=>{if(!h18PendingShare)return;h18PreviewOnly=true;h15PendingRecord=null;$('#leaderboardRecordPrompt')?.classList.add('hidden');const rb=state?.cfg?.final?$('#victoryLeaderboardRecordBtn'):$('#leaderboardRecordBtn');if(rb){rb.textContent='🏆 XEM BẢNG XẾP HẠNG';rb.classList.remove('hidden');}toast('👀 CHỈ XEM · THÀNH TÍCH CHƯA ĐƯỢC CÔNG KHAI',1.1);h15RefreshLeaderboard();});
 
 // A new round clears the previous unsaved preview; saved scores remain untouched.
-const h18NewStateBase=newState;
-newState=function(stageIndex=0){const s=h18NewStateBase(stageIndex);h18PendingShare=null;h18PreviewOnly=false;h15PendingRecord=null;$('#leaderboardCurrentResult')?.classList.add('hidden');return s;};
+
+/* L1 consolidated: legacy newState implementation removed */
 
 // PC live mode selector remains visible in the right combat rail; mobile remains AUTO-only.
-const h18UpdateFireModeUIBase=h16UpdateFireModeUI;
-h16UpdateFireModeUI=function(){h18UpdateFireModeUIBase();const block=$('#gameFireModeBlock');if(block)block.classList.toggle('hidden',h17IsMobileGameplay());for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]'))b.classList.toggle('active',b.dataset.fireMode===h16CurrentFireMode());};
+
+/* L1 consolidated: legacy h16UpdateFireModeUI implementation removed */
 
 // Version/update comparison uses this build.
-g2IsNewer=function(v,cur=H18_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
-h18ApplyControlSide(h18ControlSide,{persist:false});h18RefreshVersion();h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
+/* L1 consolidated: legacy g2IsNewer implementation removed */
+h18ApplyControlSide(h18ControlSide,{persist:false});/* L1 consolidated: stale H18 version refresh removed */h16UpdateFireModeUI();g1RefreshInstallUI();g1RefreshUpdateUI();
 
 
 /* === v3.9.0 J1 · NPC VISIBILITY · GAMEPLAY-ONLY FIRE MODES · 3s AUTO ITEMS · UI BALANCE === */
-const J1_VERSION='3.9.0';
 
 // Mobile detection must not misclassify Windows/touchscreen PCs; only true mobile/tablet UAs are forced to AUTO.
 function j1IsRealMobile(){
@@ -2714,109 +2136,148 @@ function j1NpcEngageable(e){
   const depthGate=j1IsRealMobile()?.965:(diff==='easy'?.93:diff==='hard'?.89:.91);
   return Number.isFinite(sc?.x)&&Number.isFinite(sc?.y)&&Number.isFinite(sc?.r)&&sc.r>=10&&e.depth<=depthGate;
 }
-const j1ChooseAutoTargetBase=h16ChooseAutoTarget;
-h16ChooseAutoTarget=function(){
-  if(!state)return null;
-  const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;
-  if(j1IsRealMobile()){
-    let sticky=h16ResolveTarget(state.h16AutoTarget);
-    if(sticky?.kind==='enemy'&&!sticky.entity.boss&&!j1NpcEngageable(sticky.entity))sticky=null;
-    if(sticky&&sticky.kind==='enemy'&&!sticky.entity.dead)return sticky;
-    const visible=(state.enemies||[]).filter(j1NpcEngageable).sort((a,b)=>h17ThreatScore(b)-h17ThreatScore(a));
-    if(visible[0]){state.h16AutoTarget=h16TargetRef('enemy',visible[0]);return h16ResolveTarget(state.h16AutoTarget);}
-    const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}
-    const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}
-    state.h16AutoTarget=null;return null;
-  }
-  return j1ChooseAutoTargetBase();
-};
+
+/* L1 consolidated: legacy h16ChooseAutoTarget implementation removed */
 
 // Spawn anti-stall: if a stage is active and there is no living NPC before Boss time, force the next natural spawn promptly.
-const j1UpdateBase=update;
-update=function(dt){
-  j1UpdateBase(dt);
-  j1RefreshFireButtons();
-  if(!state||state.mode!=='playing'||state.transition>0)return;
-  if(!state.bossSpawned&&state.stageElapsed<G1_BOSS_TIME){
-    const alive=(state.enemies||[]).some(e=>!e.dead&&!e.boss);
-    if(!alive&&state.stageElapsed>.35)state.spawnTimer=Math.min(Number.isFinite(state.spawnTimer)?state.spawnTimer:.08,.08);
-  }
-  j1AutoActivatePowerups();
-};
+
+/* L1 consolidated: legacy update implementation removed */
 
 // Keep PC mode buttons live only in the right gameplay rail. Mobile is always AUTO.
-const j1SetFireModeBase=h16SetFireMode;
-h16SetFireMode=function(mode,opts={}){
-  if(j1IsRealMobile())mode='auto';
-  const r=j1SetFireModeBase(mode,opts);
-  if(state){state.h16FireMode=j1IsRealMobile()?'auto':(mode==='manual'?'manual':'auto');state.h16ManualLock=null;state.h16AutoTarget=null;pointer.down=false;}
-  j1RefreshFireButtons();return r;
-};
+
+/* L1 consolidated: legacy h16SetFireMode implementation removed */
 function j1RefreshFireButtons(){
   const mobile=j1IsRealMobile(),block=$('#gameFireModeBlock'),mode=mobile?'auto':h16CurrentFireMode();
-  if(block)block.classList.toggle('hidden',mobile||!state||state.mode==='menu');
+  if(block)block.classList.toggle('hidden',mobile||!state||state.mode!=='playing');
   for(const b of document.querySelectorAll('#gameFireModeBlock [data-fire-mode]')){b.classList.toggle('active',b.dataset.fireMode===mode);b.disabled=mobile;}
 }
-const j1FireUiBase=h16UpdateFireModeUI;
-h16UpdateFireModeUI=function(){j1FireUiBase();j1RefreshFireButtons();};
+
+/* L1 consolidated: legacy h16UpdateFireModeUI implementation removed */
 const j1ResumeBase=resumeGame;resumeGame=function(){const r=j1ResumeBase();j1RefreshFireButtons();return r;};
 const j1PauseBase=pauseGame;pauseGame=function(){const r=j1PauseBase();j1RefreshFireButtons();return r;};
 const j1GoHomeBase=goHome;goHome=function(){const r=j1GoHomeBase();j1RefreshFireButtons();return r;};
 
 // 3-second power-up grace period. If the player ignores a field item, it activates automatically.
 // If activating would be useless (e.g. full health), it waits safely until the effect can actually help.
-const j1DropPowerupBase=dropSpecificPowerup;
-dropSpecificPowerup=function(kind,x,y){
-  const before=state?.powerups?.length||0;j1DropPowerupBase(kind,x,y);
-  const p=state?.powerups?.[state.powerups.length-1];if(p&&state.powerups.length>before){p.j1BornAt=performance.now();p.j1AutoAt=p.j1BornAt+3000;p.life=Math.max(p.life||0,20);p.j1Waiting=false;}
-};
-function j1CanAutoUse(kind){
-  if(!state)return false;const max=state.maxHealth||10;
-  if(kind==='heal')return state.health<max-.05;
-  if(kind==='shield')return (state.shield||0)<10;
-  if(kind==='drone')return (state.drone||0)<8;
-  if(kind==='adrenaline')return (state.adrenaline||0)<4;
-  if(kind==='vaccine')return (state.vaccine||0)<5;
-  if(kind==='sterile')return (state.sterile||0)<4;
-  return true; // GPP is always valuable because it combines several effects.
-}
-function j1AutoActivatePowerups(){
-  if(!state?.powerups?.length)return;const now=performance.now();
-  for(const p of state.powerups){
-    if(p.dead)continue;
-    if(!p.j1BornAt){p.j1BornAt=now;p.j1AutoAt=now+3000;p.life=Math.max(p.life||0,20);}
-    if(now<(p.j1AutoAt||0))continue;
-    if(!j1CanAutoUse(p.kind)){p.j1Waiting=true;p.life=Math.max(p.life||0,1.2);continue;}
-    p.j1Waiting=false;
-    if(collectPowerups(p.x,p.y)){toast(`⚡ TỰ KÍCH HOẠT · ${(D1_REWARD_META[p.kind]?.name||SUPPORT_ITEMS[p.kind]?.name||p.kind).toUpperCase()}`,1.0);break;}
-  }
-}
-const j1DrawPowerupsBase=drawPowerups;
-drawPowerups=function(){
-  j1DrawPowerupsBase();if(!state?.powerups?.length)return;const now=performance.now();
-  for(const p of state.powerups){if(p.dead||!p.j1AutoAt)continue;const left=Math.max(0,(p.j1AutoAt-now)/1000),waiting=now>=p.j1AutoAt&&!j1CanAutoUse(p.kind);ctx.save();ctx.translate(p.x,p.y);ctx.globalCompositeOperation='screen';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='1000 8px system-ui';ctx.fillStyle=waiting?'#fff0a0':'#ffffff';ctx.shadowColor=waiting?'#ffd760':'#73fff0';ctx.shadowBlur=7;ctx.fillText(waiting?'ĐỢI':`${Math.max(1,Math.ceil(left))}`,0,-42);ctx.shadowBlur=0;ctx.strokeStyle=waiting?'rgba(255,216,96,.78)':'rgba(116,255,239,.80)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,35,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(left/3,0,1));ctx.stroke();ctx.restore();}
-};
+
+/* L1 consolidated: legacy dropSpecificPowerup implementation removed */
+/* L1 consolidated: legacy j1CanAutoUse implementation removed */
+/* L1 consolidated: legacy j1AutoActivatePowerups implementation removed */
+
+/* L1 consolidated: legacy drawPowerups implementation removed */
 
 // Final item repair: all ordinary items must produce both real gameplay state and weapon-screen FX.
-const j1CollectBase=collectPowerups;
-collectPowerups=function(x,y){
-  const p=state?.powerups?.find(o=>!o.dead&&Math.hypot(x-o.x,y-o.y)<48),kind=p?.kind;
-  const before=state&&kind?{health:state.health,shield:state.shield,drone:state.drone,adrenaline:state.adrenaline,vaccine:state.vaccine,sterile:state.sterile,gppBoost:state.gppBoost}:null;
-  const ok=j1CollectBase(x,y);if(!ok||!state||!kind)return ok;const max=state.maxHealth||10;
-  if(kind==='heal')state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));
-  if(kind==='shield')state.shield=Math.max(state.shield||0,12);
-  if(kind==='drone')state.drone=Math.max(state.drone||0,10);
-  if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);
-  if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);
-  if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);
-  if(kind==='gpp'){state.health=Math.min(max,Math.max(state.health,(before?.health||0)+2));state.shield=Math.max(state.shield||0,12);state.drone=Math.max(state.drone||0,10);state.adrenaline=Math.max(state.adrenaline||0,5);state.vaccine=Math.max(state.vaccine||0,7);state.sterile=Math.max(state.sterile||0,6);state.gppBoost=Math.max(state.gppBoost||0,8);}
-  g2SetWeaponScreenFx(kind,kind==='heal'?1800:2400);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2400;state._supportHudKey='';updateHUD();return true;
-};
+
+/* L1 consolidated: legacy collectPowerups implementation removed */
 
 // J1 version is the authoritative build identity.
-function j1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent=`PHIÊN BẢN · v${J1_VERSION} J1`;if(b)b.textContent=`v${J1_VERSION} J1`;document.title=`Bác Sĩ Truy Quét · TRƯỜNG GPP · v${J1_VERSION} J1`;}
-g2IsNewer=function(v,cur=J1_VERSION){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0)}return false;};
+/* L1 consolidated: legacy j1RefreshVersion implementation removed */
+/* L1 consolidated: legacy g2IsNewer implementation removed */
 
-j1RefreshVersion();j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
+/* L1 consolidated: stale J1 version refresh removed */j1RefreshFireButtons();g1RefreshInstallUI();g1RefreshUpdateUI();
+
+
+/* === v4.0.0 L1 · CONSOLIDATED CORE · HIGH-SPEED NPC · WEAPON EVOLUTION · GPP ULTIMATE === */
+const L1_DIFF={
+  easy:{speed:.90,density:.68,capLo:3,capHi:4},
+  normal:{speed:1,density:1,capLo:4,capHi:5},
+  hard:{speed:1.12,density:1.50,capLo:6,capHi:8}
+};
+const L1_WEAPON_LEVELS=[
+  {shots:1,cooldown:.76,spread:0,range:1,pierce:0,label:'LV1'},
+  {shots:1,cooldown:.68,spread:0,range:1.05,pierce:0,label:'LV2'},
+  {shots:2,cooldown:.64,spread:22,range:1.08,pierce:0,label:'LV3 · 2 TIA'},
+  {shots:2,cooldown:.60,spread:26,range:1.15,pierce:0,label:'LV4 · TẦM XA'},
+  {shots:3,cooldown:.55,spread:24,range:1.20,pierce:0,label:'LV5 · 3 TIA'},
+  {shots:3,cooldown:.51,spread:26,range:1.24,pierce:1,label:'LV6 · XUYÊN'},
+  {shots:5,cooldown:.46,spread:20,range:1.30,pierce:1,label:'LV7 · 5 TIA'},
+  {shots:5,cooldown:.42,spread:18,range:1.36,pierce:2,label:'LV8 · OVERDRIVE'}
+];
+const L1_POWER_EFFECTS={
+  heal:{includeInLogo:true,max:10},shield:{includeInLogo:true,max:12},drone:{includeInLogo:true,max:12},adrenaline:{includeInLogo:true,max:8},vaccine:{includeInLogo:true,max:10},sterile:{includeInLogo:true,max:8},gppBoost:{includeInLogo:true,max:12},bossDrone:{includeInLogo:true,max:20},overdrive:{includeInLogo:true,max:12}
+};
+function l1Difficulty(){return L1_DIFF[state?.difficulty]||L1_DIFF.normal;}
+function l1WeaponLevel(){return clamp((state?.stageIndex||0)+1,1,8);}
+function l1WeaponProfile(){const base=L1_WEAPON_LEVELS[l1WeaponLevel()-1];if((state?.l1LogoUltimate||0)>0)return {...L1_WEAPON_LEVELS[7],cooldown:.36,range:1.45,pierce:3,label:'★ GPP ULTIMATE · MAX'};return base;}
+function l1NpcClass(type){if(['sprinter','flyer','charger','spore','ambusher'].includes(type))return'fast';if(['crawler','support','shield','nucleus','elite','breather','cluster'].includes(type))return'heavy';return'normal';}
+function l1TypeSpeed(type){const c=l1NpcClass(type);return c==='fast'?2.05:c==='heavy'?3.45:2.30;}
+function l1NpcHp(type){if(type==='elite')return 10;if(l1NpcClass(type)==='heavy')return 7;if(l1NpcClass(type)==='fast')return 3.5;return 5;}
+function d1SpeedTarget(diff=state?.difficulty||'normal',stage=state?.stageIndex||0){const base=(D1_SPEED_TARGETS.normal||[])[clamp(stage,0,7)]||.52;return base*H1_NPC_SPEED_MULT*1.18*(L1_DIFF[diff]?.speed||1);}
+function d1ActiveCap(){const d=l1Difficulty(),s=state?.stageIndex||0,t=state?.stageElapsed||0,progress=clamp(s/7*.68+t/G1_BOSS_TIME*.32,0,1);return Math.round(d.capLo+(d.capHi-d.capLo)*progress);}
+function d1SpawnInterval(){const d=l1Difficulty(),active=(state?.enemies||[]).filter(e=>!e.dead&&!e.boss).length,cap=d1ActiveCap(),fill=cap?active/cap:0;const normal=.78-(state?.stageIndex||0)*.025-clamp((state?.stageElapsed||0)/G1_BOSS_TIME,0,1)*.18;let sec=Math.max(.38,normal)/d.density;if(fill<.35)sec*=.42;else if(fill<.65)sec*=.68;return sec*(.86+Math.random()*.24);}
+function l1CanAutoUse(kind){if(!state)return false;const max=state.maxHealth||10;if(kind==='heal')return state.health<max-.05;if(kind==='shield')return(state.shield||0)<10;if(kind==='drone')return(state.drone||0)<8;if(kind==='adrenaline')return(state.adrenaline||0)<4;if(kind==='vaccine')return(state.vaccine||0)<5;if(kind==='sterile')return(state.sterile||0)<4;return true;}
+function activateLogoUltimate(source='gpp'){
+  if(!state)return false;for(const [key,effect] of Object.entries(L1_POWER_EFFECTS)){if(!effect.includeInLogo)continue;if(key==='heal')state.health=state.maxHealth||effect.max;else if(key==='overdrive')state.l1LogoUltimate=Math.max(state.l1LogoUltimate||0,effect.max);else state[key]=Math.max(state[key]||0,effect.max);}state._bossDroneTimer=.03;
+  for(const e of [...state.enemies])if(!e.dead&&!e.boss)hitEnemy(e,Math.max(3,e.hp*.72),false,true,false,{logo:true});
+  state.f1AnnihilatorFx=1;g2SetWeaponScreenFx(source==='bossGpp'?'bossGpp':'gpp',2400);state.h1FxKind='gpp';state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2600;sfx.gpp();toast('★ GPP ULTIMATE · TOÀN BỘ COMBO · MAX',1.55);updateHUD();return true;
+}
+function createGameState(stageIndex=0){
+  stageIndex=clamp(stageIndex,0,A1_STAGE_COUNT-1);const cfg=STAGES[stageIndex],difficulty=window.__difficulty||'normal',d=DIFF[difficulty],baseTarget=(D1_EXPECTED_KILLS[difficulty]||D1_EXPECTED_KILLS.normal)[stageIndex]||36;
+  h18PendingShare=null;h18PreviewOnly=false;h15PendingRecord=null;$('#leaderboardCurrentResult')?.classList.add('hidden');
+  return {mode:'playing',stageIndex,cfg,difficulty,health:10,maxHealth:10,score:stageIndex===0?0:(state?.score||0),enemies:[],particles:[],tracers:[],hitMarkers:[],enemyShots:[],powerups:[],rewardNpcs:[],spawnLeft:0,bossSpawned:false,bossDefeated:false,spawnTimer:.16,contamination:100,kills:0,shots:0,hits:0,combo:0,comboTimer:0,weapon:0,lastFire:0,bombs:3,beam:100,shield:0,drone:0,adrenaline:0,vaccine:0,sterile:0,gppBoost:0,bossDrone:0,stageElapsed:0,transition:0,zoom:0,shake:0,toastTimer:0,nextPanel:false,playerX:0,playerVX:0,moveLeft:false,moveRight:false,mobileMoveAxis:0,lastMoveDir:1,dashCooldown:0,dashTimer:0,dashDir:0,dodgeTilt:0,recoil:0,muzzleFlash:0,dodgeMessage:0,rewardNpcTimer:difficulty==='easy'?3:difficulty==='hard'?4.2:3.6,rewardNpcCount:0,rewardNpcMax:d.rewardMax||4,_rewardSerial:0,_supportHudKey:'',environmentClean:0,bossCleanse:0,cleanSparkle:0,stageIntro:1.9,d1BossAt:G1_BOSS_TIME,d1NaturalSpawns:0,d1MinorKills:0,d1BossStartedAt:0,_minorCleanTarget:baseTarget*3,pickupFx:[],rewardBanner:null,_supportJustAdded:null,_supportJustUntil:0,f1Upgrades:{damage:0,fireRate:0,survival:0,drone:0,supply:0},bossRewardFx:null,bossRewardPending:null,bossRewardShown:false,f1WeaponEffect:null,f1WeaponEffectUntil:0,f1AnnihilatorFx:0,f1CleanChimeMark:0,f1SparkleChime:false,f1BossKilledAt:0,f1BossKillDuration:0,g1LastValidSpawnAt:0,g1StallWatch:0,g1SpawnRepairs:0,h15LastSupplyAt:0,h15SupplyGuarantee:difficulty==='easy'?14:difficulty==='hard'?20:17,h16FireMode:j1IsRealMobile()?'auto':h16PreferredFireMode,h16ManualLock:null,h16AutoTarget:null,h16LockFxUntil:0,h16LockSerial:0,h16AutoBombAt:0,h17NpcShots:[],h17DamageIFrame:0,h17PlayerHitFx:null,h17LastAutoShotAt:0,l1LogoUltimate:0,l1GameTime:0,l1WeaponLevel:stageIndex+1};
+}
+function newState(stageIndex=0){return createGameState(stageIndex);}
+function spawnEnemy(type,boss=false){
+  if(!state)return null;const base=ENEMY[type]||ENEMY.basic,d=DIFF[state.difficulty],style=BOSS_STYLE[state.stageIndex]||BOSS_STYLE[BOSS_STYLE.length-1],x=boss?.5:sourceXFor(type),side=x<.5?-1:1;
+  const hp=boss?state.cfg.bossHp*d.bossHp*G2_BOSS_HP_MULT*H1_BOSS_EXTRA_MULT:l1NpcHp(type);
+  const e={id:Math.random(),type,boss,name:boss?state.cfg.boss:null,bossKind:boss?state.cfg.bossKind:null,x,baseX:x,depth:boss?.69:.955+Math.random()*.035,hp,maxHp:hp,speedBase:base.speed*(.90+Math.random()*.16),speed:base.speed,rad:boss?style.rad:base.rad,color:boss?style.color:base.color,accent:boss?style.accent:null,shotColor:boss?style.shot:null,phase:Math.random()*6.28,wobble:Math.random()*1.8+1,attackTimer:boss?1.15:999,summon:999,flash:0,dead:false,side,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:base?.g1Motion||type,g1Lane:x,g1TargetX:x,g1Decision:.55+Math.random()*1.3,g1Pause:Math.random()*.5,g1Burst:0,g1GhostX:x,h17Ranged:false,h17ShotCooldown:2.4+Math.random()*2.2,h17ShotWarn:0,h17ShotQueued:false,h17ThreatPulse:0};
+  if(!boss){const scale=state.difficulty==='easy'?.62:state.difficulty==='hard'?1:.82;e.h17Ranged=!e.bossSummoned&&Math.random()<h17ShooterChance(type)*scale;}
+  state.enemies.push(e);if(boss){e.g2BossScaled=true;e.h1BossScaled=true;e.g1DarkIntro=2.2;state.bossIntro=2.05;state.d1BossStartedAt=state.stageElapsed;state.enemyShots.length=0;show(UI.bossBar);UI.bossName.textContent=state.cfg.boss;sfx.boss();toast('⚠ GIÂY 180 · BOSS XUẤT HIỆN!',2);}return e;
+}
+function spawnMini(px,py){if(!state)return null;const base=ENEMY.spore,x=clamp(.32+Math.random()*.36,.08,.92),hp=2.5;const e={id:Math.random(),type:'spore',boss:false,name:null,x,baseX:x,depth:.46+Math.random()*.09,hp,maxHp:hp,speedBase:base.speed*(.82+Math.random()*.16),speed:base.speed,rad:14,color:base.color,phase:Math.random()*6.28,wobble:1.8,attackTimer:999,summon:999,flash:0,dead:false,side:x<.5?-1:1,base,lastBossPhase:1,guard:0,orbit:Math.random()*6.28,bossSummoned:false,countsForClean:false,d1SummonDone:[false,false,false],g1Motion:'mini',h17Ranged:false};state.enemies.push(e);return e;}
+function dropSpecificPowerup(kind,x,y){if(!state)return;state.powerups.push({id:`p-${Date.now()}-${Math.random()}`,x,y,kind,t:0,life:20,dead:false,beam:1,l1AutoRemaining:3,l1Waiting:false});}
+function activatePowerup(p,{auto=false}={}){if(!state||!p||p.dead)return false;const kind=p.kind,max=state.maxHealth||10;if(auto&&!l1CanAutoUse(kind)){p.l1Waiting=true;return false;}p.dead=true;p.l1Waiting=false;if(kind==='heal')state.health=Math.min(max,state.health+2);else if(kind==='shield')state.shield=Math.max(state.shield||0,12);else if(kind==='drone')state.drone=Math.max(state.drone||0,10);else if(kind==='adrenaline')state.adrenaline=Math.max(state.adrenaline||0,5);else if(kind==='vaccine')state.vaccine=Math.max(state.vaccine||0,7);else if(kind==='sterile')state.sterile=Math.max(state.sterile||0,6);else if(kind==='gpp')activateLogoUltimate('gpp');d1PickupFeedback(kind,p.x,p.y);g2SetWeaponScreenFx(kind,kind==='heal'?1800:2400);state.h1FxKind=kind;state.h1FxStart=performance.now();state.h1FxBurstUntil=performance.now()+2400;state._supportHudKey='';if(kind!=='gpp')sfx.power();updateHUD();return true;}
+function collectPowerupAt(x,y){if(!state)return false;const p=state.powerups.filter(o=>!o.dead).map(o=>({o,d:Math.hypot(x-o.x,y-o.y)})).filter(a=>a.d<48).sort((a,b)=>a.d-b.d)[0]?.o;return p?activatePowerup(p):false;}
+function collectPowerups(x,y){return collectPowerupAt(x,y);}
+function drawPowerups(){if(!state)return;for(const p of state.powerups){if(p.dead)continue;const m=D1_REWARD_META[p.kind]||D1_REWARD_META.drone,isGpp=p.kind==='gpp',r=isGpp?31:26,pulse=1+Math.sin(p.t*4.2)*.055;ctx.save();ctx.translate(p.x,p.y);ctx.scale(pulse,pulse);ctx.shadowColor=m.color;ctx.shadowBlur=isGpp?18:10;ctx.fillStyle='rgba(4,42,48,.92)';ctx.strokeStyle=m.color;ctx.lineWidth=isGpp?3:2;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(isGpp&&logoIcon.complete){ctx.save();ctx.beginPath();ctx.arc(0,0,r*.76,0,Math.PI*2);ctx.clip();ctx.drawImage(logoIcon,-r*.76,-r*.76,r*1.52,r*1.52);ctx.restore();}else{ctx.font='24px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='white';ctx.fillText(m.icon,0,1);}const left=Math.max(0,p.l1AutoRemaining??3),waiting=left<=0&&!l1CanAutoUse(p.kind);ctx.font='1000 8px system-ui';ctx.fillStyle=waiting?'#fff0a0':'#fff';ctx.textAlign='center';ctx.fillText(waiting?'ĐỢI':`${Math.max(1,Math.ceil(left))}`,0,-42);ctx.restore();}}
+function l1TargetAt(x,y){if(!state)return null;const hits=[];for(const n of state.rewardNpcs||[]){if(n.dead)continue;const s=rewardNpcScreen(n),dist=Math.hypot(x-s.x,y-s.y),r=Math.max(j1IsRealMobile()?44:36,s.r*(j1IsRealMobile()?1.85:1.6));if(dist<=r)hits.push({kind:'reward',entity:n,screen:s,dist,norm:dist/r,z:2000});}for(const e of state.enemies||[]){if(e.dead)continue;const s=enemyScreen(e),dist=Math.hypot(x-s.x,y-s.y),r=Math.max(e.boss?(j1IsRealMobile()?66:58):(j1IsRealMobile()?44:36),s.r*(e.boss?1.42:(j1IsRealMobile()?1.78:1.55)));if(dist<=r)hits.push({kind:'enemy',entity:e,screen:s,dist,norm:dist/r,z:(1-e.depth)*1000});}hits.sort((a,b)=>b.z-a.z||a.norm-b.norm||a.dist-b.dist);return hits[0]||null;}
+function h16ChooseAutoTarget(){if(!state)return null;const manual=h16ResolveTarget(state.h16ManualLock);if(manual)return manual;if(state.h16ManualLock)state.h16ManualLock=null;let sticky=h16ResolveTarget(state.h16AutoTarget);if(sticky?.kind==='enemy'&&!sticky.entity.boss&&!j1NpcEngageable(sticky.entity))sticky=null;if(sticky)return sticky;const visible=(state.enemies||[]).filter(e=>!e.dead&&!e.boss&&j1NpcEngageable(e)).sort((a,b)=>h17ThreatScore(b)-h17ThreatScore(a));if(visible[0]){state.h16AutoTarget=h16TargetRef('enemy',visible[0]);return h16ResolveTarget(state.h16AutoTarget);}const boss=(state.enemies||[]).find(e=>!e.dead&&e.boss);if(boss){state.h16AutoTarget=h16TargetRef('enemy',boss);return h16ResolveTarget(state.h16AutoTarget);}const supply=(state.rewardNpcs||[]).filter(n=>!n.dead).sort((a,b)=>a.life-b.life)[0];if(supply){state.h16AutoTarget=h16TargetRef('reward',supply);return h16ResolveTarget(state.h16AutoTarget);}state.h16AutoTarget=null;return null;}
+function l1PredictScreen(target){const s=target.kind==='reward'?rewardNpcScreen(target.entity):enemyScreen(target.entity);if(target.kind!=='enemy'||target.entity.boss)return s;const e=target.entity,lead=.10,prog=Math.max(.001,1-e.depth),dx=((e.x-(e._l1PrevX??e.x))/Math.max(.001,state?._l1LastDt||.016))*lead*gameplayViewport().width*(.22+.78*prog);return {...s,x:clamp(s.x+dx,gameplayViewport().left+4,gameplayViewport().left+gameplayViewport().width-4)};}
+function h16AutoFireTick(){if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto'||state.bossIntro>0)return;const t=h16ChooseAutoTarget();if(!t)return;const s=l1PredictScreen(t);pointer.x=s.x;pointer.y=s.y;const w=WEAPONS[state.weapon],now=performance.now();if(w.kind==='bomb'&&now-(state.h16AutoBombAt||0)<1450)return;const before=state.lastFire;state.h16AutoShot=true;try{shoot(s.x,s.y)}finally{state.h16AutoShot=false;}if(state.lastFire!==before){state.h17LastAutoShotAt=now;weaponSingleFlashUntil=now+420;if(w.kind==='bomb')state.h16AutoBombAt=now;}}
+function h16SetFireMode(mode,{persist=true,announce=true}={}){if(j1IsRealMobile())mode='auto';mode=mode==='manual'?'manual':'auto';h16PreferredFireMode=mode;if(persist&&!j1IsRealMobile())try{localStorage.setItem(H16_FIRE_MODE_KEY,mode)}catch{}if(state){state.h16FireMode=mode;state.h16ManualLock=null;state.h16AutoTarget=null;pointer.down=false;}h16UpdateFireModeUI();if(announce&&state?.mode==='playing')toast(mode==='auto'?'⚡ AUTO FIRE · CLICK/CHẠM ĐỂ KHÓA':'🎯 BẮN THỦ CÔNG · CHUỘT NGẮM/BẮN',1.0);}
+function h16UpdateFireModeUI(){const mobile=j1IsRealMobile(),mode=mobile?'auto':h16CurrentFireMode();for(const b of document.querySelectorAll('[data-fire-mode]')){b.classList.toggle('active',b.dataset.fireMode===mode);b.disabled=mobile;}const block=$('#gameFireModeBlock');if(block)block.classList.toggle('hidden',mobile||!state||state.mode!=='playing');const hud=$('#fireModeHud');if(hud){hud.classList.toggle('manual',mode==='manual');hud.textContent=mode==='auto'?(mobile?'⚡ AUTO · TỰ CHỌN · CHẠM ĐỂ KHÓA':'⚡ AUTO · CLICK ĐỂ KHÓA'):'🎯 THỦ CÔNG · CHUỘT NGẮM/BẮN';}}
+function h16DrawTargetLock(t){if(!state||state.mode!=='playing'||state.transition>0||h16CurrentFireMode()!=='auto')return;const manual=h16ResolveTarget(state.h16ManualLock),target=manual||h16ChooseAutoTarget();if(!target)return;const s=target.screen||l1PredictScreen(target),boss=target.kind==='enemy'&&target.entity.boss,r=Math.max(target.kind==='reward'?35:boss?66:32,s.r*(boss?1.32:1.42)),locked=!!manual,col=target.kind==='reward'?'#7dfff0':boss?'#ffcf6a':locked?'#ffe77d':'#7fffe8';ctx.save();ctx.translate(s.x,s.y);ctx.globalCompositeOperation='screen';ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=locked?20:12;ctx.lineWidth=locked?2.8:1.8;ctx.globalAlpha=locked?.9:.6;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ctx.beginPath();ctx.moveTo(sx*r,sy*(r-r*.25));ctx.lineTo(sx*r,sy*r);ctx.lineTo(sx*(r-r*.25),sy*r);ctx.stroke();}ctx.fillStyle=col;ctx.font='1000 9px system-ui';ctx.textAlign='center';ctx.fillText(locked?'🔒 ĐÃ KHÓA':boss?'🔒 BOSS':'⚡ AUTO',0,-r-10);if(target.kind==='enemy'&&target.entity.h17Ranged)ctx.fillText('↯ PHẢN KÍCH',0,r+15);ctx.restore();}
+function aimHit(x,y,weapon){
+  if(!state)return{hit:false,x,y,crit:false};const profile=l1WeaponProfile(),range=profile.range||1;
+  const rewardCandidates=(state.rewardNpcs||[]).filter(n=>!n.dead).map(n=>{const s=rewardNpcScreen(n),dist=Math.hypot(x-s.x,y-s.y),r=s.r*(1.30+(range-1)*.24);return{n,s,dist,r}}).filter(c=>c.dist<c.r).sort((a,b)=>a.dist-b.dist);
+  const candidates=[];for(const e of state.enemies){if(e.dead)continue;const s=enemyScreen(e),dist=Math.hypot(x-s.x,y-s.y),r=s.r*(1.12+(range-1)*.34);if(dist<r)candidates.push({e,s,dist,r});}candidates.sort((a,b)=>a.e.depth-b.e.depth||a.dist-b.dist);
+  if(weapon.kind==='spray'){let hit=false,target=null;for(const c of rewardCandidates){if(c.dist<145*range){hitRewardNpc(c.n,weapon.damage*1.2);hit=true;target=target||c.s;}}for(const e of state.enemies){const s=enemyScreen(e),dist=Math.hypot(x-s.x,y-s.y);if(dist<145*range&&e.depth<Math.min(.78,.62+(range-1)*.3)){hitEnemy(e,weapon.damage*(1.15-e.depth*.35),true,false,false);hit=true;target=target||s;}}return{hit,x:target?.x||x,y:target?.y||y,crit:false};}
+  if(weapon.kind==='bomb'){explode(x,y,weapon.damage);for(const c of(state.rewardNpcs||[]).filter(n=>!n.dead).map(n=>({n,s:rewardNpcScreen(n)}))){if(Math.hypot(x-c.s.x,y-c.s.y)<220*range)hitRewardNpc(c.n,weapon.damage*.7);}return{hit:true,x,y,crit:false};}
+  const reward=rewardCandidates[0],enemy=candidates[0];if(reward&&(!enemy||reward.dist/reward.r<=enemy.dist/enemy.r)){hitRewardNpc(reward.n,weapon.damage*(weapon.kind==='pierce'?1.25:1));return{hit:true,x:reward.s.x,y:reward.s.y,crit:false};}
+  if(!enemy)return{hit:false,x,y,crit:false};const maxTargets=Math.max(1,1+(profile.pierce||0)+(weapon.kind==='pierce'?1:0));let hit=false,crit=false;const chosen=weapon.kind==='beam'?[enemy]:candidates.slice(0,maxTargets);
+  for(const c of chosen){const ratio=c.dist/Math.max(1,c.s.r),cc=ratio<(weapon.kind==='beam'?.30:weapon.kind==='pierce'?.32:.35)||!!(weapon.kind==='pierce'&&c.e.base?.core);const mult=weapon.kind==='beam'?(cc?1.35:1):weapon.kind==='pierce'?(cc?1.35:1):(cc?1.6:1);hitEnemy(c.e,weapon.damage*mult,true,false,cc);hit=true;crit=crit||cc;}
+  if(crit&&weapon.kind==='shot')toast('🎯 CORE HIT!',.55);return{hit,x:enemy.s.x,y:enemy.s.y,crit};
+}
+function hitEnemy(e,damage,countHit=true,drone=false,crit=false,meta={}){if(!state||!e||e.dead)return;let dmg=damage;if(e.base?.shield&&e.hp>e.maxHp*.45)dmg*=.62;if(e.boss&&(meta.sideShot||state._l1SideShot))dmg*=.30;e.hp-=dmg;e.flash=1;const s=enemyScreen(e);burstAt(s.x,s.y,e.color,drone?3:(crit?9:5));state.hitMarkers.push({x:s.x,y:s.y,life:crit?.28:.18,max:crit?.28:.18,crit});sfx.hit(s.x);if(crit)sfx.crit(s.x);if(e.boss){state.h1LastBossScreen={x:s.x,y:s.y,r:s.r};UI.bossFill.style.width=Math.max(0,e.hp/e.maxHp*100)+'%';UI.bossHp.textContent=Math.max(0,Math.ceil(e.hp/e.maxHp*100))+'%';}if(e.hp<=0){e.dead=true;sfx.kill(s.x);state.kills++;state.score+=e.boss?2500:(e.base?.score||100);if(e.countsForClean&&!e.boss){state.cleanMinorKills=(state.cleanMinorKills||0)+1;state.d1MinorKills=(state.d1MinorKills||0)+1;}state.combo++;state.comboTimer=1.8;setCombo();burstAt(s.x,s.y,e.color,e.boss?32:12);if(e.base?.cluster&&!e.boss){spawnMini(s.x,s.y);spawnMini(s.x,s.y);}if(!e.boss&&Math.random()<.09)spawnPowerup(s.x,s.y);if(e.boss){state.f1BossKilledAt=state.stageElapsed;state.f1BossKillDuration=Math.max(0,state.stageElapsed-(state.d1BossStartedAt||G1_BOSS_TIME));for(const other of state.enemies)if(other!==e&&!other.boss)other.dead=true;hide(UI.bossBar);toast('💥 BOSS ĐÃ BỊ KHỬ NHIỄM!',1.8);}}}
+function l1ShotOffsets(n,spread){if(n<=1)return[0];if(n===2)return[0,((state?.shots||0)%2?-1:1)*spread*.72];if(n===3)return[0,-spread,spread];if(n>=5)return[0,-spread,spread,-spread*2,spread*2].slice(0,n);return[0];}
+function l1ApplyShotAt(x,y,w,profile){const offsets=(w.kind==='bomb'||w.kind==='spray')?[0]:l1ShotOffsets(profile.shots,profile.spread),results=[];for(let i=0;i<offsets.length;i++){const ox=offsets[i];state._l1SideShot=i>0;const res=aimHit(x+ox,y,w);results.push(res);addTracer(w.kind,res.x,res.y);}state._l1SideShot=false;return results;}
+function shoot(x,y){if(!state||state.mode!=='playing'||state.transition>0)return;if(h16CurrentFireMode()==='auto'&&!state.h16AutoShot)return;if(h16CurrentFireMode()!=='auto'&&collectPowerupAt(x,y)){state.lastFire=performance.now();return;}const now=performance.now(),w=WEAPONS[state.weapon],p=l1WeaponProfile();let rate=p.cooldown;if(state.adrenaline>0)rate*=.82;if(state.gppBoost>0)rate*=.90;if(now-state.lastFire<w.cooldown*rate)return;if(w.kind==='bomb'&&state.bombs<=0){toast('Bom vitamin đã hết',.9);return;}if(w.kind==='beam'&&state.beam<5){toast('Tia miễn dịch đang hồi',.8);return;}state.lastFire=now;state.shots++;if(w.kind==='bomb')state.bombs--;if(w.kind==='beam')state.beam=Math.max(0,state.beam-4.5);state.recoil=Math.min(1,state.recoil+(w.kind==='bomb'?.85:w.kind==='pierce'?.62:.34));state.muzzleFlash=1;sfx.weapon(w.kind,x);const results=l1ApplyShotAt(x,y,w,p);if(results.some(r=>r.hit))state.hits++;const m=getMuzzlePoint();muzzleBurst(m.x,m.y,w.kind);}
+function updateHUD(){if(!state)return;const hp=`${Math.max(0,state.health).toFixed(state.health%1?1:0)}/${state.maxHealth||10}`,hpPct=clamp(state.health/(state.maxHealth||10)*100,0,100),clean=Math.round(state.environmentClean||0),minor=state.enemies.filter(e=>!e.dead&&!e.boss).length,time=state.bossSpawned?'BOSS':d1FormatClock(d1Countdown());UI.healthText.textContent=hp;UI.healthFill.style.width=hpPct+'%';UI.cleanText.textContent=`KHỬ NHIỄM ${clean}%`;UI.cleanFill.style.width=clean+'%';UI.score.textContent=state.score.toLocaleString('vi-VN');UI.enemy.textContent=`Virus: ${minor}`;UI.stageName.textContent=`MÀN ${state.stageIndex+1} · ${state.cfg.name}`;if(UI.diffBadge)UI.diffBadge.textContent=`${DIFF[state.difficulty].label} · ${state.difficulty==='easy'?'MẬT ĐỘ THẤP':state.difficulty==='hard'?'MẬT ĐỘ CAO':'CÂN BẰNG'}`;if($('#leftHealthText'))$('#leftHealthText').textContent=hp;if($('#leftHealthFill'))$('#leftHealthFill').style.width=hpPct+'%';if($('#leftStageNo'))$('#leftStageNo').textContent=`MÀN ${state.stageIndex+1}`;if($('#leftStageName'))$('#leftStageName').textContent=state.cfg.name;if($('#rightScoreText'))$('#rightScoreText').textContent=state.score.toLocaleString('vi-VN');if($('#rightTimeText'))$('#rightTimeText').textContent=time;if($('#timeTextMobile'))$('#timeTextMobile').textContent=time;if($('#rightEnemyText'))$('#rightEnemyText').textContent=minor;if($('#rightComboText'))$('#rightComboText').textContent=`×${state.combo||0}`;const w=WEAPONS[state.weapon],wp=l1WeaponProfile();UI.weaponIcon.textContent=w.icon;UI.weaponName.textContent=`${w.name} · ${wp.label}`;UI.weaponStatus.textContent=(state.l1LogoUltimate>0?'★ ULTIMATE · ':`LV${l1WeaponLevel()} · `)+`${wp.shots} TIA · ${Math.round(1/wp.cooldown*10)/10}× TỐC`;updateSupportUI();}
+function cleanupCombat(){if(!state)return;const p=state.h1LastBossScreen||{x:gameplayViewport().center,y:innerHeight*.50,r:90};state.h1BossDeathFx={start:performance.now(),dur:760,x:p.x,y:p.y,r:p.r};state.enemyShots.length=0;state.h17NpcShots.length=0;state.tracers.length=0;state.hitMarkers.length=0;state.particles.length=0;state.powerups.length=0;state.rewardNpcs.length=0;for(const e of state.enemies||[]){e.h15AttackSerial=(e.h15AttackSerial||0)+1;e.h17ShotWarn=0;e.h17ShotQueued=false;}state.enemies.length=0;state.h17PlayerHitFx=null;state.h17DamageIFrame=0;state.muzzleFlash=0;state.recoil=0;state.shake=0;pointer.down=false;}
+function h1CombatCleanup(){return cleanupCombat();}
+function updateGame(dt){if(!state||state.mode!=='playing')return;const d=DIFF[state.difficulty];state._l1LastDt=dt;state.l1GameTime+=dt;if(state.transition>0){state.transition+=dt;const cleanP=clamp(state.transition/F1_CLEAN_SECONDS,0,1);state.environmentClean=50+50*d1Smooth(cleanP);state.contamination=100-state.environmentClean;state.zoom=Math.min(1,state.transition/F1_CLEAN_SECONDS);state.cleanSparkle=state.transition>F1_CLEAN_SECONDS?clamp((state.transition-F1_CLEAN_SECONDS)/F1_SPARKLE_SECONDS,0,1):0;if(state.transition>=F1_CLEAN_SECONDS+F1_SPARKLE_SECONDS&&!state.nextPanel){state.nextPanel=true;state.environmentClean=100;state.contamination=0;state.cleanSparkle=1;f1ShowBossRewards();}updateHUD();return;}state.stageElapsed+=dt;if(state.stageIntro>0)state.stageIntro=Math.max(0,state.stageIntro-dt);state.zoom=Math.min(.10,state.stageElapsed*.00072);if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.bossIntro>0)state.bossIntro=Math.max(0,state.bossIntro-dt);state.dashCooldown=Math.max(0,state.dashCooldown-dt);state.dashTimer=Math.max(0,state.dashTimer-dt);state.dodgeTilt*=Math.pow(.001,dt);state.recoil=Math.max(0,state.recoil-dt*7.5);state.muzzleFlash=Math.max(0,state.muzzleFlash-dt*10);state.dodgeMessage=Math.max(0,state.dodgeMessage-dt);const axis=movementAxis();if(Math.abs(axis)>.03)state.lastMoveDir=axis<0?-1:1;const speedBoost=state.adrenaline>0?1.24:1;if(state.dashTimer>0)state.playerVX=state.dashDir*2.42*speedBoost;else{const accel=6.3*speedBoost,maxSpeed=1.05*speedBoost,friction=8;if(Math.abs(axis)>.03)state.playerVX+=axis*accel*dt;else state.playerVX*=Math.max(0,1-friction*dt);state.playerVX=clamp(state.playerVX,-maxSpeed,maxSpeed);}state.playerX=clamp(state.playerX+state.playerVX*dt,-1,1);if(Math.abs(state.playerX)>=1&&Math.sign(state.playerVX)===Math.sign(state.playerX))state.playerVX=0;if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)hide(UI.toast);}if(state.comboTimer>0){state.comboTimer-=dt;if(state.comboTimer<=0){state.combo=0;setCombo();}}for(const f of ['shield','drone','adrenaline','vaccine','sterile','gppBoost','bossDrone','l1LogoUltimate'])if(state[f]>0)state[f]=Math.max(0,state[f]-dt);state.beam=Math.min(100,state.beam+18*dt);
+  if(!state.bossSpawned&&state.rewardNpcCount<state.rewardNpcMax){state.rewardNpcTimer-=dt;if(state.rewardNpcTimer<=0&&!state.rewardNpcs.some(n=>!n.dead)){spawnRewardNpc();state.rewardNpcTimer=(d.rewardEvery||9)*(.88+Math.random()*.28);}}
+  if(!state.bossSpawned&&state.stageElapsed<G1_BOSS_TIME){const active=state.enemies.filter(e=>!e.dead&&!e.boss).length,cap=d1ActiveCap();state.spawnTimer-=dt;if(active===0)state.spawnTimer=Math.min(state.spawnTimer,.05);else if(active<Math.ceil(cap*.45))state.spawnTimer=Math.min(state.spawnTimer,.14);if(state.spawnTimer<=0&&active<cap){const typ=state.cfg.mix[(Math.random()*state.cfg.mix.length)|0],e=spawnEnemy(typ,false);if(e)e.countsForClean=true;state.d1NaturalSpawns++;state.spawnTimer=d1SpawnInterval();}}
+  if(!state.bossSpawned&&state.stageElapsed>=G1_BOSS_TIME-.001){state.environmentClean=50;state.contamination=50;state.bossSpawned=true;state.spawnLeft=0;spawnEnemy(state.cfg.mix[0],true);}
+  const slow=state.sterile>0?.58:1;for(const e of state.enemies){if(e.dead)continue;if(e.boss){updateBoss(e,dt,d);continue;}e._l1PrevX=e.x;g1Behavior(e,dt,d1SpeedTarget()*d1Pressure()*l1TypeSpeed(e.type),slow);if(e.depth<=.055){const sc=enemyScreen(e),hitRadius=Math.max(36,Math.min(78,sc.r*.68+innerWidth*.016));if(Math.abs(playerScreenX()-sc.x)<hitRadius)damagePlayer(e.base.attack*d.damage);else{state.score+=35;sfx.dodgeSuccess();}e.dead=true;burstAt(sc.x,sc.y,e.color,7);}}
+  state.enemies=state.enemies.filter(e=>!e.dead);for(const sh of state.enemyShots){sh.t+=dt;sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;sh.r+=16*dt;if(sh.t>=sh.life){const hitRadius=Math.max(40,Math.min(76,innerWidth*.048));if(Math.abs(playerScreenX()-playerScreenX(sh.targetPlayerX))<hitRadius)damagePlayer(sh.damage*d.damage);else state.score+=20;sh.dead=true;}}state.enemyShots=state.enemyShots.filter(s=>!s.dead);for(const n of state.rewardNpcs){if(n.dead)continue;n.t+=dt;n.life-=dt;n.x+=n.vx*dt;if(n.life<=0||n.x<-.10||n.x>1.10)n.dead=true;}state.rewardNpcs=state.rewardNpcs.filter(n=>!n.dead);for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=12*dt;p.a=Math.max(0,p.life/p.max);}state.particles=state.particles.filter(p=>p.life>0);for(const tr of state.tracers){tr.t+=dt;tr.life-=dt;}state.tracers=state.tracers.filter(tr=>tr.life>0);for(const hm of state.hitMarkers)hm.life-=dt;state.hitMarkers=state.hitMarkers.filter(hm=>hm.life>0);
+  let autoUsed=false;for(const p of state.powerups){if(p.dead)continue;p.t+=dt;p.y+=Math.sin(p.t*3)*.12;p.life-=dt;if(p.l1AutoRemaining==null)p.l1AutoRemaining=3;else p.l1AutoRemaining=Math.max(0,p.l1AutoRemaining-dt);if(!autoUsed&&p.l1AutoRemaining<=0&&l1CanAutoUse(p.kind)){autoUsed=activatePowerup(p,{auto:true});if(autoUsed)toast(`⚡ TỰ KÍCH HOẠT · ${(D1_REWARD_META[p.kind]?.name||p.kind).toUpperCase()}`,1);}else if(p.l1AutoRemaining<=0)p.l1Waiting=true;if(p.life<=0&&!p.l1Waiting)p.dead=true;}state.powerups=state.powerups.filter(p=>!p.dead);
+  if(state.drone>0&&state.enemies.length){state._droneTimer=(state._droneTimer||0)-dt;if(state._droneTimer<=0){state._droneTimer=.40;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target)hitEnemy(target,.72,false,true);}}if(state.bossDrone>0){state._bossDroneTimer=(state._bossDroneTimer||0)-dt;if(state._bossDroneTimer<=0){state._bossDroneTimer=.22;const target=state.enemies.filter(e=>!e.dead&&!e.boss).sort((a,b)=>a.depth-b.depth)[0]||state.enemies.find(e=>!e.dead&&e.boss);if(target)hitEnemy(target,1.25,false,true,false);}}if(state.f1AnnihilatorFx>0)state.f1AnnihilatorFx=Math.max(0,state.f1AnnihilatorFx-dt*1.8);if(!state.bossSpawned){const tt=clamp(state.stageElapsed/G1_BOSS_TIME,0,1),killRatio=clamp((state.cleanMinorKills||0)/Math.max(1,state._minorCleanTarget),0,1);state.environmentClean=clamp(36*tt+Math.min(13.5*tt,49.5*killRatio),0,49.5);state.contamination=100-state.environmentClean;}if(state.bossSpawned&&!state.bossDefeated&&!state.enemies.some(e=>e.boss)){state.bossDefeated=true;beginStageClear();}
+  if(!state.bossSpawned&&!state.rewardNpcs.some(n=>!n.dead)&&state.rewardNpcCount<state.rewardNpcMax&&(state.stageElapsed-(state.h15LastSupplyAt||0))>=(state.h15SupplyGuarantee||18)){spawnRewardNpc();state.rewardNpcTimer=Math.max(state.rewardNpcTimer||0,4.5);}h17UpdateNpcCounterfire(dt);if(h16CurrentFireMode()==='auto')h16AutoFireTick();else if(pointer.down&&performance.now()-weaponPressStarted>120)shoot(pointer.x,pointer.y);h16UpdateFireModeUI();updateHUD();}
+function update(dt){return updateGame(dt);}
+function renderGame(t){v270PrepareWeaponPose(t);drawBackground(t);if(!state)return;const sorted=[...state.enemies].sort((a,b)=>b.depth-a.depth);for(const e of sorted)drawEnemy(e,t);for(const n of state.rewardNpcs||[])drawRewardNpc(n,t);drawEnemyShots();drawTracers();drawPowerups();drawParticles();drawHitMarkers();drawDrone(t);drawPlayerShadow(t);drawWeapon(t);drawCrosshair();drawBossIntro();drawB1StageIntro();drawD1PickupFeedback(t);g2DrawEliteDrone(t);g2DrawGppPickupBrand(t);h1DrawBossDeathFx(t);h1DrawExpandedItemFx(t);h1DrawShieldField(t);h15DrawBossTelegraph(t);h16DrawTargetLock(t);h17DrawNpcCounterfire(t);h17DrawPlayerHitFx(t);}
+function render(t){return renderGame(t);}
+function g2IsNewer(v,cur='4.0.0'){const a=g2VerParts(v),b=g2VerParts(cur);for(let i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return(a[i]||0)>(b[i]||0);}return false;}
+function f1UseReward(kind,fromCombo=false){if(!state||state.mode!=='playing'||state.transition>0)return false;const inv=f1Inventory();if((inv[kind]||0)<=0){toast('Vật phẩm Boss chưa sẵn sàng',.7);return false;}if(kind==='survival'){if(state.health>=state.maxHealth-.01){toast('❤️ SINH TỒN ĐÃ ĐẦY',.8);return false;}state.health=Math.min(state.maxHealth,state.health+5);g2SetWeaponScreenFx('survival',1800);}else if(kind==='eliteDrone'){state.bossDrone=Math.max(state.bossDrone||0,20);state._bossDroneTimer=.03;g2SetWeaponScreenFx('eliteDrone',20000);}else if(kind==='annihilator'){const targets=state.enemies.filter(e=>!e.dead&&!e.boss);if(!targets.length)return false;for(const e of targets){if(Math.random()<.5)hitEnemy(e,e.hp+1,false,true);}state.f1AnnihilatorFx=1;g2SetWeaponScreenFx('annihilator',1600);}else if(kind==='bossGpp')activateLogoUltimate('bossGpp');inv[kind]--;f1SaveInventory(inv);updateHUD();return true;}
+function l1RefreshVersion(){const v=$('#menuVersion'),b=$('#menuVersionBadge');if(v)v.textContent='PHIÊN BẢN · v4.0.0 L1';if(b)b.textContent='v4.0.0 L1';document.title='Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.0.0 L1';}
+async function l1EnterLandscape(){if(!j1IsRealMobile())return true;try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch{}try{await screen.orientation?.lock?.('landscape');}catch{}document.documentElement.classList.add('l1-gameplay-landscape');return innerWidth>=innerHeight;}
+function l1LeaveLandscape(){document.documentElement.classList.remove('l1-gameplay-landscape');try{screen.orientation?.unlock?.();}catch{}}
+let l1PausedForOrientation=false;function l1UpdateOrientationGate(){const gate=$('#l1OrientationGate');if(!gate)return;const need=!!state&&state.mode!=='menu'&&j1IsRealMobile()&&innerHeight>innerWidth;gate.classList.toggle('hidden',!need);if(need&&state?.mode==='playing'){l1PausedForOrientation=true;pauseGame();}else if(!need&&l1PausedForOrientation&&state?.mode==='paused'){l1PausedForOrientation=false;resumeGame();}if(!state||state.mode==='menu')l1PausedForOrientation=false;}
+window.addEventListener('resize',l1UpdateOrientationGate,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(l1UpdateOrientationGate,100),{passive:true});
+canvas.addEventListener('pointerdown',e=>{if(!state||state.mode!=='playing')return;e.preventDefault();const p=pointerPos(e);pointer.x=p.x;pointer.y=p.y;ensureAudio();if(collectPowerupAt(p.x,p.y)){state.lastFire=performance.now();return;}if(h16CurrentFireMode()==='auto'){pointer.down=false;const target=l1TargetAt(p.x,p.y);h16LockTarget(target);return;}pointer.down=true;weaponPressStarted=performance.now();weaponSingleFlashUntil=weaponPressStarted+190;shoot(p.x,p.y);},{capture:true});
+const l1EngageBtn=$('#engageBtn');if(l1EngageBtn){const old=l1EngageBtn.onclick;l1EngageBtn.onclick=async e=>{await l1EnterLandscape();old?.call(l1EngageBtn,e);setTimeout(l1UpdateOrientationGate,80);};}
+const l1HomeHooks=['homeBtn','gameOverHomeBtn','victoryHomeBtn','stageHomeBtn'];for(const id of l1HomeHooks){const b=$('#'+id);if(!b)continue;const old=b.onclick;b.onclick=e=>{l1LeaveLandscape();old?.call(b,e);};}
+const L1_DIFFICULTY_COPY={easy:['🛡 DỄ · MẬT ĐỘ THẤP','NPC ít hơn rõ rệt · tốc độ giảm nhẹ 10% · hỏa lực vũ khí giữ nguyên'],normal:['⚠ TRUNG BÌNH · CÂN BẰNG','Mật độ chuẩn L1 · tốc độ chuẩn · hỏa lực giống mọi cấp'],hard:['☣ KHÓ · MẬT ĐỘ CAO','NPC nhiều hơn rõ rệt · tốc độ tăng khoảng 12% · hỏa lực vũ khí giữ nguyên']};for(const b of $$('.difficulty'))b.addEventListener('click',()=>{const box=$('#difficultyDetail'),m=L1_DIFFICULTY_COPY[b.dataset.difficulty];if(box&&m)box.innerHTML=`<b>${m[0]}</b><span>${m[1]}</span>`;});
+l1RefreshVersion();h16UpdateFireModeUI();
 
 })();

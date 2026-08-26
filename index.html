@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v3.9.0 J1</title>
+  <title>Bác Sĩ Truy Quét · TRƯỜNG GPP · v4.0.0 L1</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/app-icon-192.png" />
   <link rel="apple-touch-icon" href="assets/app-icon-192.png" />
@@ -23,7 +23,7 @@
           <div class="d1-brand-row">
             <div class="brand-lockup d1-brand-lockup"><img src="assets/logo-gpp.png" alt="Logo TRƯỜNG GPP" class="brand-logo-full" /></div>
             <div class="d1-title-block">
-              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v3.9.0 J1</b></p>
+              <p class="eyebrow">TRƯỜNG GPP · CHIẾN DỊCH 8 KHU VỰC <b id="menuVersionBadge" class="h18-title-version">v4.0.0 L1</b></p>
               <h1>BÁC SĨ<br/>TRUY QUÉT</h1>
               <p class="lead">3 phút sinh tồn tăng áp lực · Boss xuất hiện đúng giây 180</p>
             </div>
@@ -63,16 +63,16 @@
           <div class="d1-diff-heading"><span>CHỌN CẤP ĐỘ</span><small>Mỗi cấp vẫn có đủ 8 màn</small></div>
           <div class="difficulty-row d1-difficulty-row" role="group" aria-label="Chọn độ khó">
             <button class="difficulty d1-difficulty easy-card" data-difficulty="easy">
-              <span class="diff-symbol">🛡</span><span class="diff-copy"><b>DỄ</b><strong>LÀM QUEN</strong><small>NPC chậm · phản ứng thoải mái · Supply nhiều</small></span><em>01</em>
+              <span class="diff-symbol">🛡</span><span class="diff-copy"><b>DỄ</b><strong>LÀM QUEN</strong><small>NPC ít hơn rõ rệt · tốc độ giảm nhẹ · hỏa lực giữ nguyên</small></span><em>01</em>
             </button>
             <button class="difficulty d1-difficulty normal-card selected" data-difficulty="normal">
-              <span class="diff-symbol">⚠</span><span class="diff-copy"><b>TRUNG BÌNH</b><strong>CÂN BẰNG</strong><small>Màn 1 ≈ Màn 5 của cấp Dễ</small></span><em>02</em>
+              <span class="diff-symbol">⚠</span><span class="diff-copy"><b>TRUNG BÌNH</b><strong>CÂN BẰNG</strong><small>Mật độ chuẩn L1 · tốc độ chuẩn · hỏa lực giữ nguyên</small></span><em>02</em>
             </button>
             <button class="difficulty d1-difficulty hard-card" data-difficulty="hard">
-              <span class="diff-symbol">☣</span><span class="diff-copy"><b>KHÓ</b><strong>THỬ THÁCH</strong><small>Màn 1 ≈ Màn 5 của cấp Trung bình</small></span><em>03</em>
+              <span class="diff-symbol">☣</span><span class="diff-copy"><b>KHÓ</b><strong>THỬ THÁCH</strong><small>NPC dày hơn rõ rệt · tốc độ tăng nhẹ · hỏa lực giữ nguyên</small></span><em>03</em>
             </button>
           </div>
-          <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH</b><span>Nhịp độ cân bằng · độ khó tăng liên tục từ giây 1 → 180</span></div>
+          <div id="difficultyDetail" class="d1-difficulty-detail"><b>⚠ TRUNG BÌNH · CÂN BẰNG</b><span>Mật độ chuẩn L1 · tốc độ chuẩn · hỏa lực giống mọi cấp</span></div>
           <div id="menuMobileControlSide" class="h18-control-side-card mobile-only" aria-label="Chọn bên điều khiển trên điện thoại">
             <span>🕹 VỊ TRÍ ĐIỀU KHIỂN</span>
             <div class="h18-control-side-buttons">
@@ -85,7 +85,7 @@
             <div><b>3×</b><span>BOSS TRIỆU HỒI</span></div>
             <div><b>8</b><span>KHU VỰC</span></div>
           </div>
-          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v3.9.0 J1</div>
+          <div id="menuVersion" class="h18-menu-version" aria-label="Phiên bản game">PHIÊN BẢN · v4.0.0 L1</div>
           <div class="author-line d1-author-line">
             <strong>Tác giả: Ngô Quang Trường</strong>
             <span>TRƯỜNG GPP · 0829076979 · Zalo: truongphotoart</span>
@@ -228,19 +228,7 @@
         <button id="claimBossRewardBtn" class="primary-btn f1-claim-btn">NHẬN THƯỞNG</button>
       </div>
     </section>
-
-    <section id="upgradePanel" class="overlay panel-overlay hidden" hidden aria-hidden="true">
-      <div class="panel-card glass f1-upgrade-panel">
-        <button class="panel-close" data-close="upgradePanel">✕</button>
-        <p class="eyebrow">NÂNG CẤP CHIẾN DỊCH</p>
-        <h2>CHỌN NÂNG CẤP VĨNH VIỄN</h2>
-        <p class="f1-upgrade-note">Mỗi Boss bị tiêu diệt nhận 1 điểm nâng cấp. Nâng cấp áp dụng cho các màn tiếp theo.</p>
-        <div id="upgradePoints" class="f1-upgrade-points">ĐIỂM NÂNG CẤP: 0</div>
-        <div id="upgradeGrid" class="f1-upgrade-grid"></div>
-      </div>
-    </section>
-
-    <section id="gameOverPanel" class="overlay panel-overlay hidden">
+<section id="gameOverPanel" class="overlay panel-overlay hidden">
       <div class="panel-card glass result-card">
         <img class="panel-logo" src="assets/icon-192.png" alt="TRƯỜNG GPP" /><p class="eyebrow">NHIỆM VỤ THẤT BẠI</p>
         <h2>Thanh sinh tồn đã cạn</h2>
@@ -264,6 +252,8 @@
         <button id="victoryHomeBtn" class="secondary-btn">⌂ Màn hình chính</button>
       </div>
     </section>
+
+    <div id="l1OrientationGate" class="l1-orientation-gate hidden"><div><b>↻ XOAY ĐIỆN THOẠI NGANG</b><span>Gameplay L1 chạy ở chế độ ngang để ngắm và khóa mục tiêu chính xác.</span></div></div>
 
     <section id="hud" class="hud hidden" aria-live="polite">
       <aside class="status-rail desktop-only" aria-label="Trạng thái chiến đấu">
