@@ -1,0 +1,41 @@
+GPP CĂN CHIẾU V1.1.14 – ANDROID TRUE FULLSCREEN PWA
+==========================================================
+
+MỤC TIÊU
+- Cài trên Android như ứng dụng PWA.
+- Khi mở từ icon ngoài màn hình, ứng dụng chạy ở chế độ fullscreen.
+- Ưu tiên ẩn thanh trình duyệt, thanh trạng thái và vùng hệ thống theo khả năng Android/trình duyệt.
+
+THAY ĐỔI
+- manifest.webmanifest:
+  + display = fullscreen
+  + display_override = fullscreen, standalone
+  + nền đen hoàn toàn
+- CSS dùng 100dvh.
+- viewport-fit=cover.
+- Vùng chiếu khóa full màn hình.
+- Khi ẨN GIAO DIỆN:
+  + ẩn 100% giao diện
+  + chỉ còn ảnh/video và nền đen
+  + thử yêu cầu fullscreen thật nếu đang mở bằng trình duyệt.
+- Cache tăng lên V1.1.14 để điện thoại không giữ bản cũ.
+
+CÁCH CÀI ĐÚNG
+1. Tải bản này lên GitHub Pages.
+2. Mở link bằng Chrome trên Android.
+3. Chọn CÀI ỨNG DỤNG / Thêm vào màn hình chính.
+4. Sau khi cài, đóng tab trình duyệt.
+5. Mở GPP Căn Chiếu từ icon ngoài màn hình điện thoại.
+6. Khi cần trình chiếu sạch, bấm ẨN GIAO DIỆN.
+
+LƯU Ý
+- Hiệu quả ẩn thanh pin/Wi-Fi phụ thuộc Android và trình duyệt của từng máy.
+- Chế độ PWA fullscreen là cách nhẹ nhất trước khi chuyển thành APK immersive.
+- Nếu máy vẫn hiện thanh hệ thống, bước tiếp theo là đóng gói APK Android ở chế độ immersive/kiosk.
+
+GIỮ NGUYÊN
+- Multi-Zone.
+- 4 góc kéo.
+- tay nắm giữa để di chuyển cả khung.
+- HIỆN / ẨN / XÓA từng khung.
+- PWA cài trực tiếp trên Android.
